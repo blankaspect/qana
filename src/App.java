@@ -62,6 +62,8 @@ import uk.org.blankaspect.util.PropertyString;
 import uk.org.blankaspect.util.ResourceProperties;
 import uk.org.blankaspect.util.StringUtilities;
 
+import uk.org.blankaspect.windows.FileAssociations;
+
 //----------------------------------------------------------------------
 
 
@@ -93,8 +95,12 @@ class App
     private static final    String  VERSION_PROPERTY_KEY    = "version";
     private static final    String  BUILD_PROPERTY_KEY      = "build";
     private static final    String  RELEASE_PROPERTY_KEY    = "release";
+    private static final    String  OS_NAME_KEY             = "os.name";
 
     private static final    String  BUILD_PROPERTIES_PATHNAME   = "resources/build.properties";
+
+    private static final    String  ASSOC_SCRIPT_DIR_PREFIX = NAME_KEY + "_";
+    private static final    String  ASSOC_SCRIPT_FILENAME   = NAME_KEY + "Associations";
 
     private static final    String  DEBUG_STR               = " Debug";
     private static final    String  CONFIG_ERROR_STR        = "Configuration error";
@@ -166,7 +172,8 @@ class App
                                                                 "To save the keys, specify the location " +
                                                                 "of the key database in the preferences.";
     private static final    String  SELECT_STR              = "Select";
-
+    private static final    String  WINDOWS_STR             = "Windows";
+    private static final    String  FILE_ASSOCIATIONS_STR   = "File associations";
     private static final    String  FILE_PARTS_STR          = "The output directory already contains " +
                                                                 "%1 file part%2.\n" +
                                                                 "Do you want to delete %3 file%4?";
@@ -565,115 +572,6 @@ class App
 ////////////////////////////////////////////////////////////////////////
 //  Member classes : inner classes
 ////////////////////////////////////////////////////////////////////////
-
-
-    // INITIALISATION CLASS
-
-
-    /**
-     * The run() method of this class creates the main window and performs the remaining initialisation of
-     * the application from the event-dispatching thread.
-     */
-
-    private class DoInitialisation
-        implements Runnable
-    {
-
-    ////////////////////////////////////////////////////////////////////
-    //  Constructors
-    ////////////////////////////////////////////////////////////////////
-
-        private DoInitialisation( String[] arguments )
-        {
-            this.arguments = arguments;
-        }
-
-        //--------------------------------------------------------------
-
-    ////////////////////////////////////////////////////////////////////
-    //  Instance methods : Runnable interface
-    ////////////////////////////////////////////////////////////////////
-
-        public void run( )
-        {
-            // Create main window
-            mainWindow = new MainWindow( );
-
-            // Read seed file
-            AppConfig config = AppConfig.getInstance( );
-            try
-            {
-                int[] lengthBuffer = new int[1];
-                File directory = config.getSeedFileDirectory( );
-                if ( directory != null )
-                    TaskProgressDialog.showDialog( mainWindow, READ_SEED_FILE_STR,
-                                                   new Task.ReadSeedFile( prng, directory, lengthBuffer ) );
-                if ( (lengthBuffer[0] < Fortuna.RESEED_ENTROPY_THRESHOLD) && config.isWarnNotSeeded( ) )
-                    showWarningMessage( SHORT_NAME + " | " + READ_SEED_FILE_STR, PRNG_NOT_SEEDED_STR );
-            }
-            catch ( AppException e )
-            {
-                showErrorMessage( SHORT_NAME + " | " + READ_SEED_FILE_STR, e );
-            }
-
-            // Read persistent keys
-            File keyFile = config.getKeyDatabaseFile( );
-            if ( keyFile != null )
-            {
-                if ( !keyFile.exists( ) )
-                    showWarningMessage( SHORT_NAME + " | " + KEY_DATABASE_STR,
-                                        StringUtilities.substitute( NO_KEY_DATABASE1_STR,
-                                                                    Util.getPathname( keyFile ) ) );
-                else
-                {
-                    try
-                    {
-                        TaskProgressDialog.showDialog( mainWindow, READ_KEYS_STR,
-                                                       new Task.ReadKeyList( persistentKeyList, keyFile ) );
-                    }
-                    catch ( TaskCancelledException e )
-                    {
-                        System.exit( 1 );
-                    }
-                    catch ( AppException e )
-                    {
-                        showErrorMessage( SHORT_NAME + " | " + KEY_DATABASE_STR, e );
-                    }
-                }
-            }
-
-            // Start interval timer
-            intervalTimer = new Timer( TIMER_INTERVAL, AppCommand.TIMER_EXPIRED );
-            intervalTimer.setRepeats( false );
-            intervalTimer.start( );
-
-            // Command-line arguments: process files
-            if ( arguments.length > 0 )
-            {
-                // Create list of files from command-line arguments
-                File[] files = new File[arguments.length];
-                for ( int i = 0; i < arguments.length; ++i )
-                    files[i] = new File( PropertyString.parsePathname( arguments[i] ) );
-
-                // Process files
-                processFiles( files );
-
-                // Update title and menus
-                mainWindow.updateTitleAndMenus( );
-            }
-        }
-
-        //--------------------------------------------------------------
-
-    ////////////////////////////////////////////////////////////////////
-    //  Instance variables
-    ////////////////////////////////////////////////////////////////////
-
-        private String[]    arguments;
-
-    }
-
-    //==================================================================
 
 
     // RANDOM DATA INPUT STREAM CLASS
@@ -1498,6 +1396,7 @@ class App
         boolean isArchiveDocument = (archiveDocument != null);
         boolean notFull = !isDocumentsFull( );
         boolean documentChanged = isArchiveDocument && archiveDocument.isChanged( );
+        boolean isWindows = System.getProperty( OS_NAME_KEY, "" ).contains( WINDOWS_STR );
 
         AppConfig config = AppConfig.getInstance( );
 
@@ -1515,6 +1414,7 @@ class App
         AppCommand.CLEAR_GLOBAL_KEY.setEnabled( globalKey != null );
         AppCommand.TOGGLE_AUTO_USE_GLOBAL_KEY.setSelected( config.isAutoUseGlobalKey( ) );
         AppCommand.TOGGLE_SHOW_FULL_PATHNAMES.setSelected( config.isShowFullPathnames( ) );
+        AppCommand.MANAGE_FILE_ASSOCIATIONS.setEnabled( isWindows );
     }
 
     //------------------------------------------------------------------
@@ -1625,12 +1525,16 @@ class App
                     onGenerateGarbage( );
                     break;
 
-                case EDIT_PREFERENCES:
-                    onEditPreferences( );
-                    break;
-
                 case TOGGLE_SHOW_FULL_PATHNAMES:
                     onToggleShowFullPathnames( );
+                    break;
+
+                case MANAGE_FILE_ASSOCIATIONS:
+                    onManageFileAssociations( );
+                    break;
+
+                case EDIT_PREFERENCES:
+                    onEditPreferences( );
                     break;
             }
         }
@@ -1695,7 +1599,7 @@ class App
 
     //------------------------------------------------------------------
 
-    private void openDocument( File file )
+    private boolean openDocument( File file )
         throws AppException
     {
         // Test for file
@@ -1711,12 +1615,20 @@ class App
             if ( (document != null) && Util.isSameFile( file, document.getFile( ) ) )
             {
                 mainWindow.selectView( i );
-                return;
+                return true;
             }
         }
 
         // Read document and add it to list
-        addDocument( readDocument( file ) );
+        try
+        {
+            addDocument( readDocument( file ) );
+            return true;
+        }
+        catch ( TaskCancelledException e )
+        {
+            return false;
+        }
     }
 
     //------------------------------------------------------------------
@@ -1725,7 +1637,15 @@ class App
         throws AppException
     {
         // Read document
-        ArchiveDocument document = readDocument( file );
+        ArchiveDocument document = null;
+        try
+        {
+            document = readDocument( file );
+        }
+        catch ( TaskCancelledException e )
+        {
+            // ignore
+        }
 
         // Replace document in list
         int index = mainWindow.getTabIndex( );
@@ -1824,7 +1744,7 @@ class App
 
     //------------------------------------------------------------------
 
-    private void init( String[] arguments )
+    private void init( final String[] arguments )
     {
         // Set runtime debug flag
         debug = (System.getProperty( DEBUG_PROPERTY_KEY ) != null);
@@ -1886,7 +1806,80 @@ class App
         }
 
         // Perform remaining initialisation from event-dispatching thread
-        SwingUtilities.invokeLater( new DoInitialisation( arguments ) );
+        SwingUtilities.invokeLater( new Runnable( )
+        {
+            @Override
+            public void run( )
+            {
+                // Create main window
+                mainWindow = new MainWindow( );
+
+                // Read seed file
+                AppConfig config = AppConfig.getInstance( );
+                try
+                {
+                    int[] lengthBuffer = new int[1];
+                    File directory = config.getSeedFileDirectory( );
+                    if ( directory != null )
+                        TaskProgressDialog.showDialog( mainWindow, READ_SEED_FILE_STR,
+                                                       new Task.ReadSeedFile( prng, directory,
+                                                                              lengthBuffer ) );
+                    if ( (lengthBuffer[0] < Fortuna.RESEED_ENTROPY_THRESHOLD) && config.isWarnNotSeeded( ) )
+                        showWarningMessage( SHORT_NAME + " | " + READ_SEED_FILE_STR, PRNG_NOT_SEEDED_STR );
+                }
+                catch ( AppException e )
+                {
+                    showErrorMessage( SHORT_NAME + " | " + READ_SEED_FILE_STR, e );
+                }
+
+                // Read persistent keys
+                File keyFile = config.getKeyDatabaseFile( );
+                if ( keyFile != null )
+                {
+                    if ( !keyFile.exists( ) )
+                        showWarningMessage( SHORT_NAME + " | " + KEY_DATABASE_STR,
+                                            StringUtilities.substitute( NO_KEY_DATABASE1_STR,
+                                                                        Util.getPathname( keyFile ) ) );
+                    else
+                    {
+                        try
+                        {
+                            TaskProgressDialog.showDialog( mainWindow, READ_KEYS_STR,
+                                                           new Task.ReadKeyList( persistentKeyList,
+                                                                                 keyFile ) );
+                        }
+                        catch ( TaskCancelledException e )
+                        {
+                            System.exit( 1 );
+                        }
+                        catch ( AppException e )
+                        {
+                            showErrorMessage( SHORT_NAME + " | " + KEY_DATABASE_STR, e );
+                        }
+                    }
+                }
+
+                // Start interval timer
+                intervalTimer = new Timer( TIMER_INTERVAL, AppCommand.TIMER_EXPIRED );
+                intervalTimer.setRepeats( false );
+                intervalTimer.start( );
+
+                // Command-line arguments: process files
+                if ( arguments.length > 0 )
+                {
+                    // Create list of files from command-line arguments
+                    File[] files = new File[arguments.length];
+                    for ( int i = 0; i < arguments.length; ++i )
+                        files[i] = new File( PropertyString.parsePathname( arguments[i] ) );
+
+                    // Process files
+                    processFiles( files );
+
+                    // Update title and menus
+                    mainWindow.updateTitleAndMenus( );
+                }
+            }
+        } );
     }
 
     //------------------------------------------------------------------
@@ -1980,7 +1973,10 @@ class App
                 {
                     fileOp = FileOperation.OPEN;
                     if ( !isDocumentsFull( ) )
-                        openDocument( file );
+                    {
+                        if ( !openDocument( file ) )
+                            throw new CancelledException( );
+                    }
                 }
 
 
@@ -2880,6 +2876,36 @@ class App
 
     //------------------------------------------------------------------
 
+    private void onToggleShowFullPathnames( )
+    {
+        AppConfig.getInstance( ).setShowFullPathnames( !AppConfig.getInstance( ).isShowFullPathnames( ) );
+    }
+
+    //------------------------------------------------------------------
+
+    private void onManageFileAssociations( )
+        throws AppException
+    {
+        FileAssociationDialog.Result result = FileAssociationDialog.showDialog( mainWindow );
+        if ( result != null )
+        {
+            FileAssociations fileAssoc = new FileAssociations( );
+            for ( FileKind fileKind : FileKind.values( ) )
+                fileKind.addFileAssocParams( fileAssoc );
+            TextOutputTaskDialog.showDialog( mainWindow, FILE_ASSOCIATIONS_STR,
+                                             new Task.SetFileAssociations( fileAssoc,
+                                                                           result.javaLauncherPathname,
+                                                                           result.jarPathname,
+                                                                           result.iconPathname,
+                                                                           ASSOC_SCRIPT_DIR_PREFIX,
+                                                                           ASSOC_SCRIPT_FILENAME,
+                                                                           result.removeEntries,
+                                                                           result.scriptLifeCycle ) );
+        }
+    }
+
+    //------------------------------------------------------------------
+
     private void onEditPreferences( )
     {
         if ( PreferencesDialog.showDialog( mainWindow ) )
@@ -2889,13 +2915,6 @@ class App
             prng.getEntropyAccumulator( ).setTimerDivisor( config.getEntropyTimerDivisor( ) );
             prng.getEntropyAccumulator( ).setSources( config.getEntropySourceParams( ) );
         }
-    }
-
-    //------------------------------------------------------------------
-
-    private void onToggleShowFullPathnames( )
-    {
-        AppConfig.getInstance( ).setShowFullPathnames( !AppConfig.getInstance( ).isShowFullPathnames( ) );
     }
 
     //------------------------------------------------------------------

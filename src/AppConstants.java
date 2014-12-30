@@ -52,7 +52,10 @@ interface AppConstants
 
     // Filename suffixes
     String  BMP_FILE_SUFFIX     = ".bmp";
+    String  EXE_FILE_SUFFIX     = ".exe";
     String  GIF_FILE_SUFFIX     = ".gif";
+    String  ICON_FILE_SUFFIX    = ".ico";
+    String  JAR_FILE_SUFFIX     = ".jar";
     String  JPEG_FILE_SUFFIX1   = ".jpg";
     String  JPEG_FILE_SUFFIX2   = ".jpeg";
     String  KEY_FILE_SUFFIX     = ".keys";
@@ -61,7 +64,10 @@ interface AppConstants
 
     // File-filter descriptions
     String  BMP_FILES_STR   = "Bitmap files";
+    String  EXE_FILES_STR   = "Windows executable files";
+    String  ICON_FILES_STR  = "Windows icon files";
     String  GIF_FILES_STR   = "GIF files";
+    String  JAR_FILES_STR   = "JAR files";
     String  JPEG_FILES_STR  = "JPEG files";
     String  KEY_FILES_STR   = App.SHORT_NAME + " key database files";
     String  PNG_FILES_STR   = "PNG files";

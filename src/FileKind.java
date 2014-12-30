@@ -13,6 +13,8 @@ File kind enumeration.
 import uk.org.blankaspect.util.FilenameSuffixFilter;
 import uk.org.blankaspect.util.StringKeyed;
 
+import uk.org.blankaspect.windows.FileAssociations;
+
 //----------------------------------------------------------------------
 
 
@@ -31,14 +33,20 @@ enum FileKind
     (
         "encrypted",
         ".qana",
-        "Encrypted files"
+        "Encrypted files",
+        "BlankAspect." + App.SHORT_NAME + ".encryptedFile",
+        "Qana-encrypted file",
+        "&Decrypt with Qana"
     ),
 
     ARCHIVE
     (
         "archive",
         ".qarc",
-        "Archive database files"
+        "Archive database files",
+        "BlankAspect." + App.SHORT_NAME + ".archive",
+        "Qana archive",
+        "&Open with Qana"
     );
 
 ////////////////////////////////////////////////////////////////////////
@@ -47,11 +55,17 @@ enum FileKind
 
     private FileKind( String key,
                       String defaultFilenameSuffix,
-                      String description )
+                      String description,
+                      String fileAssocFileKindKey,
+                      String fileAssocFileKindText,
+                      String fileAssocFileOpenText )
     {
         this.key = key;
         this.defaultFilenameSuffix = defaultFilenameSuffix;
         this.description = description;
+        this.fileAssocFileKindKey = fileAssocFileKindKey;
+        this.fileAssocFileKindText = fileAssocFileKindText;
+        this.fileAssocFileOpenText = fileAssocFileOpenText;
     }
 
     //------------------------------------------------------------------
@@ -99,6 +113,14 @@ enum FileKind
 
     //------------------------------------------------------------------
 
+    public void addFileAssocParams( FileAssociations fileAssociations )
+    {
+        fileAssociations.addParams( fileAssocFileKindKey, fileAssocFileKindText, fileAssocFileOpenText,
+                                    getFilenameSuffix( ) );
+    }
+
+    //------------------------------------------------------------------
+
 ////////////////////////////////////////////////////////////////////////
 //  Instance variables
 ////////////////////////////////////////////////////////////////////////
@@ -106,6 +128,9 @@ enum FileKind
     private String  key;
     private String  defaultFilenameSuffix;
     private String  description;
+    private String  fileAssocFileKindKey;
+    private String  fileAssocFileKindText;
+    private String  fileAssocFileOpenText;
 
 }
 

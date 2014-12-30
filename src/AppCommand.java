@@ -19,7 +19,6 @@ import javax.swing.Action;
 import javax.swing.KeyStroke;
 
 import uk.org.blankaspect.util.Command;
-import uk.org.blankaspect.util.StringKeyed;
 
 //----------------------------------------------------------------------
 
@@ -199,16 +198,22 @@ enum AppCommand
         "Generate garbage" + AppConstants.ELLIPSIS_STR
     ),
 
-    EDIT_PREFERENCES
-    (
-        "editPreferences",
-        "Preferences" + AppConstants.ELLIPSIS_STR
-    ),
-
     TOGGLE_SHOW_FULL_PATHNAMES
     (
         "toggleShowFullPathnames",
         "Show full pathnames"
+    ),
+
+    MANAGE_FILE_ASSOCIATIONS
+    (
+        "manageFileAssociations",
+        "Manage file associations" + AppConstants.ELLIPSIS_STR
+    ),
+
+    EDIT_PREFERENCES
+    (
+        "editPreferences",
+        "Preferences" + AppConstants.ELLIPSIS_STR
     );
 
     //------------------------------------------------------------------

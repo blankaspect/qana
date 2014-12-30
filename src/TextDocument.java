@@ -899,6 +899,7 @@ class TextDocument
         }
 
         // Strip leading and trailing spaces from each line
+        int lineIndex = 0;
         int inIndex = 0;
         int outIndex = 0;
         int startIndex = 0;
@@ -907,18 +908,27 @@ class TextDocument
         {
             if ( textBuffer.charAt( index ) == '\n' )
             {
-                for ( inIndex = startIndex; inIndex < index; ++inIndex )
+                inIndex = startIndex;
+                if ( lineIndex > 0 )
                 {
-                    if ( textBuffer.charAt( inIndex ) != ' ' )
-                        break;
+                    while ( inIndex < index )
+                    {
+                        if ( textBuffer.charAt( inIndex ) != ' ' )
+                            break;
+                        ++inIndex;
+                    }
                 }
-                int endIndex;
-                for ( endIndex = index - 1; endIndex >= inIndex; --endIndex )
+                int endIndex = index;
+                while ( --endIndex >= inIndex )
                 {
                     if ( textBuffer.charAt( endIndex ) != ' ' )
                         break;
                 }
                 ++endIndex;
+                if ( inIndex < endIndex )
+                    ++lineIndex;
+                else
+                    lineIndex = 0;
                 while ( inIndex < endIndex )
                     textBuffer.setCharAt( outIndex++, textBuffer.charAt( inIndex++ ) );
                 textBuffer.setCharAt( outIndex++, '\n' );

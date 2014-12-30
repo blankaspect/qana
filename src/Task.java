@@ -20,6 +20,8 @@ import uk.org.blankaspect.crypto.StandardCsprng;
 import uk.org.blankaspect.exception.AppException;
 import uk.org.blankaspect.exception.TaskCancelledException;
 
+import uk.org.blankaspect.windows.FileAssociations;
+
 //----------------------------------------------------------------------
 
 
@@ -300,10 +302,6 @@ abstract class Task
             try
             {
                 document.read( file );
-            }
-            catch ( TaskCancelledException e )
-            {
-                // ignore
             }
             catch ( AppException e )
             {
@@ -1369,6 +1367,85 @@ abstract class Task
     ////////////////////////////////////////////////////////////////////
 
         private List<String>    pathnames;
+
+    }
+
+    //==================================================================
+
+
+    // SET FILE ASSOCIATIONS TASK CLASS
+
+
+    public static class SetFileAssociations
+        extends Task
+    {
+
+    ////////////////////////////////////////////////////////////////////
+    //  Constructors
+    ////////////////////////////////////////////////////////////////////
+
+        public SetFileAssociations( FileAssociations                 fileAssociations,
+                                    String                           javaLauncherPathname,
+                                    String                           jarPathname,
+                                    String                           iconPathname,
+                                    String                           tempDirectoryPrefix,
+                                    String                           scriptFilename,
+                                    boolean                          removeEntries,
+                                    FileAssociations.ScriptLifeCycle scriptLifeCycle )
+        {
+            this.fileAssociations = fileAssociations;
+            this.javaLauncherPathname = javaLauncherPathname;
+            this.jarPathname = jarPathname;
+            this.iconPathname = iconPathname;
+            this.tempDirectoryPrefix = tempDirectoryPrefix;
+            this.scriptFilename = scriptFilename;
+            this.removeEntries = removeEntries;
+            this.scriptLifeCycle = scriptLifeCycle;
+        }
+
+        //--------------------------------------------------------------
+
+    ////////////////////////////////////////////////////////////////////
+    //  Instance methods : Runnable interface
+    ////////////////////////////////////////////////////////////////////
+
+        public void run( )
+        {
+            // Perform task
+            try
+            {
+                fileAssociations.executeScript( App.SHORT_NAME, javaLauncherPathname, jarPathname,
+                                                iconPathname, tempDirectoryPrefix, scriptFilename,
+                                                removeEntries, scriptLifeCycle,
+                                                ((TextOutputTaskDialog)getProgressView( )).getWriter( ) );
+            }
+            catch ( TaskCancelledException e )
+            {
+                // ignore
+            }
+            catch ( AppException e )
+            {
+                setException( e, false );
+            }
+
+            // Remove thread
+            removeThread( );
+        }
+
+        //--------------------------------------------------------------
+
+    ////////////////////////////////////////////////////////////////////
+    //  Instance variables
+    ////////////////////////////////////////////////////////////////////
+
+        private FileAssociations                    fileAssociations;
+        private String                              javaLauncherPathname;
+        private String                              jarPathname;
+        private String                              iconPathname;
+        private String                              tempDirectoryPrefix;
+        private String                              scriptFilename;
+        private boolean                             removeEntries;
+        private FileAssociations.ScriptLifeCycle    scriptLifeCycle;
 
     }
 
