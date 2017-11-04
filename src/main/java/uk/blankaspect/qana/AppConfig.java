@@ -333,7 +333,7 @@ class AppConfig
 		private CPShowUnixPathnames()
 		{
 			super(concatenateKeys(Key.GENERAL, Key.SHOW_UNIX_PATHNAMES));
-			value = Boolean.FALSE;
+			value = false;
 		}
 
 		//--------------------------------------------------------------
@@ -397,7 +397,7 @@ class AppConfig
 		private CPSelectTextOnFocusGained()
 		{
 			super(concatenateKeys(Key.GENERAL, Key.SELECT_TEXT_ON_FOCUS_GAINED));
-			value = Boolean.TRUE;
+			value = true;
 		}
 
 		//--------------------------------------------------------------
@@ -447,7 +447,7 @@ class AppConfig
 		private CPShowFullPathnames()
 		{
 			super(concatenateKeys(Key.GENERAL, Key.SHOW_FULL_PATHNAMES));
-			value = Boolean.FALSE;
+			value = false;
 		}
 
 		//--------------------------------------------------------------
@@ -715,7 +715,7 @@ class AppConfig
 		private CPClearClipboardOnExit()
 		{
 			super(concatenateKeys(Key.GENERAL, Key.CLEAR_CLIPBOARD_ON_EXIT));
-			value = Boolean.TRUE;
+			value = true;
 		}
 
 		//--------------------------------------------------------------
@@ -1154,7 +1154,7 @@ class AppConfig
 		private CPSaveFileSelectionPathnames()
 		{
 			super(concatenateKeys(Key.FILE, Key.SAVE_FILE_SELECTION_PATHNAMES));
-			value = Boolean.FALSE;
+			value = false;
 		}
 
 		//--------------------------------------------------------------
@@ -2199,7 +2199,7 @@ class AppConfig
 		private CPAutoUseGlobalKey()
 		{
 			super(concatenateKeys(Key.CRYPTO, Key.AUTO_USE_GLOBAL_KEY));
-			value = Boolean.FALSE;
+			value = false;
 		}
 
 		//--------------------------------------------------------------
@@ -2249,7 +2249,7 @@ class AppConfig
 		private CPWarnTemporaryKey()
 		{
 			super(concatenateKeys(Key.CRYPTO, Key.WARN_TEMPORARY_KEY));
-			value = Boolean.TRUE;
+			value = true;
 		}
 
 		//--------------------------------------------------------------
@@ -2299,7 +2299,7 @@ class AppConfig
 		private CPWrapCiphertextInXml()
 		{
 			super(concatenateKeys(Key.CRYPTO, Key.WRAP_CIPHERTEXT_IN_XML));
-			value = Boolean.TRUE;
+			value = true;
 		}
 
 		//--------------------------------------------------------------
@@ -2431,7 +2431,7 @@ class AppConfig
 		private CPWarnNotSeeded()
 		{
 			super(concatenateKeys(Key.ENTROPY, Key.WARN_NOT_SEEDED));
-			value = Boolean.TRUE;
+			value = true;
 		}
 
 		//--------------------------------------------------------------
@@ -2959,14 +2959,14 @@ class AppConfig
 
 	public static void showWarningMessage(AppException exception)
 	{
-		App.INSTANCE.showWarningMessage(App.SHORT_NAME + " | " + CONFIG_ERROR_STR, exception);
+		App.INSTANCE.showWarningMessage(App.SHORT_NAME + " : " + CONFIG_ERROR_STR, exception);
 	}
 
 	//------------------------------------------------------------------
 
 	public static void showErrorMessage(AppException exception)
 	{
-		App.INSTANCE.showErrorMessage(App.SHORT_NAME + " | " + CONFIG_ERROR_STR, exception);
+		App.INSTANCE.showErrorMessage(App.SHORT_NAME + " : " + CONFIG_ERROR_STR, exception);
 	}
 
 	//------------------------------------------------------------------
