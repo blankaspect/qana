@@ -82,8 +82,8 @@ class JoinDialog
 	private static final	String	INPUT_DIRECTORY_STR			= "Input directory";
 	private static final	String	OUTPUT_FILE_STR				= "Output file";
 	private static final	String	JOIN_STR					= "Join";
-	private static final	String	INPUT_DIRECTORY_TITLE_STR	= JOIN_STR + " | Input directory";
-	private static final	String	OUTPUT_FILE_TITLE_STR		= JOIN_STR + " | Output file";
+	private static final	String	INPUT_DIRECTORY_TITLE_STR	= JOIN_STR + " : Input directory";
+	private static final	String	OUTPUT_FILE_TITLE_STR		= JOIN_STR + " : Output file";
 	private static final	String	SELECT_STR					= "Select";
 	private static final	String	SELECT_FILE_STR				= "Select file";
 	private static final	String	SELECT_DIRECTORY_STR		= "Select directory";

@@ -88,8 +88,8 @@ class SplitDialog
 	private static final	String	FILE_PART_LENGTH_STR		= "File-part length";
 	private static final	String	TO_STR						= "to";
 	private static final	String	SPLIT_STR					= "Split";
-	private static final	String	INPUT_FILE_TITLE_STR		= SPLIT_STR + " | Input file";
-	private static final	String	OUTPUT_DIRECTORY_TITLE_STR	= SPLIT_STR + " | Output directory";
+	private static final	String	INPUT_FILE_TITLE_STR		= SPLIT_STR + " : Input file";
+	private static final	String	OUTPUT_DIRECTORY_TITLE_STR	= SPLIT_STR + " : Output directory";
 	private static final	String	SELECT_STR					= "Select";
 	private static final	String	SELECT_FILE_STR				= "Select file";
 	private static final	String	SELECT_DIRECTORY_STR		= "Select directory";

@@ -1712,7 +1712,7 @@ class ArchiveDocument
 			catch (AppException e)
 			{
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
-				if (JOptionPane.showOptionDialog(getWindow(), e, App.SHORT_NAME + " | " + ADD_FILES_STR,
+				if (JOptionPane.showOptionDialog(getWindow(), e, App.SHORT_NAME + " : " + ADD_FILES_STR,
 												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
 												 null, optionStrs, optionStrs[0]) !=
 																					JOptionPane.OK_OPTION)
@@ -1791,7 +1791,7 @@ class ArchiveDocument
 			{
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
 				if (JOptionPane.showOptionDialog(getWindow(), e,
-												 App.SHORT_NAME + " | " + EXTRACT_FILES_STR,
+												 App.SHORT_NAME + " : " + EXTRACT_FILES_STR,
 												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
 												 null, optionStrs, optionStrs[0]) !=
 																					JOptionPane.OK_OPTION)
@@ -1855,7 +1855,7 @@ class ArchiveDocument
 				invalidIndices.add(index);
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
 				if (JOptionPane.showOptionDialog(getWindow(), e,
-												 App.SHORT_NAME + " | " + VALIDATE_FILES_STR,
+												 App.SHORT_NAME + " : " + VALIDATE_FILES_STR,
 												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
 												 null, optionStrs, optionStrs[0]) !=
 																					JOptionPane.OK_OPTION)

@@ -1171,7 +1171,7 @@ public class App
 	{
 		KeyList.Key key = AppConfig.INSTANCE.isAutoUseGlobalKey() ? globalKey : null;
 		if (key == null)
-			key = selectKey((targetStr == null) ? operationStr : operationStr + " | " + KEY_FOR_STR + targetStr);
+			key = selectKey((targetStr == null) ? operationStr : operationStr + " : " + KEY_FOR_STR + targetStr);
 		return key;
 	}
 
@@ -1858,7 +1858,7 @@ public class App
 			}
 		}
 		if (lookAndFeelName != null)
-			showWarningMessage(SHORT_NAME + " | " + CONFIG_ERROR_STR,
+			showWarningMessage(SHORT_NAME + " : " + CONFIG_ERROR_STR,
 							   LAF_ERROR1_STR + lookAndFeelName + LAF_ERROR2_STR);
 
 		// Select all text when a text field gains focus
@@ -1891,11 +1891,11 @@ public class App
 					TaskProgressDialog.showDialog(mainWindow, READ_SEED_FILE_STR,
 												  new Task.ReadSeedFile(prng, directory, lengthBuffer));
 				if ((lengthBuffer[0] < Fortuna.RESEED_ENTROPY_THRESHOLD) && config.isWarnNotSeeded())
-					showWarningMessage(SHORT_NAME + " | " + READ_SEED_FILE_STR, PRNG_NOT_SEEDED_STR);
+					showWarningMessage(SHORT_NAME + " : " + READ_SEED_FILE_STR, PRNG_NOT_SEEDED_STR);
 			}
 			catch (AppException e)
 			{
-				showErrorMessage(SHORT_NAME + " | " + READ_SEED_FILE_STR, e);
+				showErrorMessage(SHORT_NAME + " : " + READ_SEED_FILE_STR, e);
 			}
 
 			// Read persistent keys
@@ -1903,7 +1903,7 @@ public class App
 			if (keyFile != null)
 			{
 				if (!keyFile.exists())
-					showWarningMessage(SHORT_NAME + " | " + KEY_DATABASE_STR,
+					showWarningMessage(SHORT_NAME + " : " + KEY_DATABASE_STR,
 									   StringUtils.substitute(NO_KEY_DATABASE1_STR, Utils.getPathname(keyFile)));
 				else
 				{
@@ -1918,7 +1918,7 @@ public class App
 					}
 					catch (AppException e)
 					{
-						showErrorMessage(SHORT_NAME + " | " + KEY_DATABASE_STR, e);
+						showErrorMessage(SHORT_NAME + " : " + KEY_DATABASE_STR, e);
 					}
 				}
 			}
@@ -2687,7 +2687,7 @@ public class App
 				}
 				catch (AppException e)
 				{
-					showWarningMessage(SHORT_NAME + " | " + WRITE_SEED_FILE_STR, e);
+					showWarningMessage(SHORT_NAME + " : " + WRITE_SEED_FILE_STR, e);
 				}
 
 				// Write key list
@@ -2698,7 +2698,7 @@ public class App
 					{
 						String[] optionStrs = Utils.getOptionStrings(EXIT_STR);
 						if (JOptionPane.showOptionDialog(mainWindow, NO_KEY_DATABASE2_STR,
-														 SHORT_NAME + " | " + KEY_DATABASE_STR,
+														 SHORT_NAME + " : " + KEY_DATABASE_STR,
 														 JOptionPane.OK_CANCEL_OPTION,
 														 JOptionPane.WARNING_MESSAGE, null, optionStrs,
 														 optionStrs[1]) != JOptionPane.OK_OPTION)
@@ -2714,7 +2714,7 @@ public class App
 						catch (AppException e)
 						{
 							String[] optionStrs = Utils.getOptionStrings(EXIT_STR);
-							if (JOptionPane.showOptionDialog(mainWindow, e, SHORT_NAME + " | " + KEY_DATABASE_STR,
+							if (JOptionPane.showOptionDialog(mainWindow, e, SHORT_NAME + " : " + KEY_DATABASE_STR,
 															 JOptionPane.OK_CANCEL_OPTION,
 															 JOptionPane.WARNING_MESSAGE, null, optionStrs,
 															 optionStrs[1]) != JOptionPane.OK_OPTION)

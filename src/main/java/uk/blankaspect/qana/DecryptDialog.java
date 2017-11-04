@@ -84,8 +84,8 @@ class DecryptDialog
 	private static final	String	INPUT_FILE_STR				= "Input file";
 	private static final	String	OUTPUT_FILE_STR				= "Output file";
 	private static final	String	DECRYPT_STR					= "Decrypt";
-	private static final	String	INPUT_FILE_TITLE_STR		= DECRYPT_STR + " | Input file";
-	private static final	String	OUTPUT_FILE_TITLE_STR		= DECRYPT_STR + " | Output file";
+	private static final	String	INPUT_FILE_TITLE_STR		= DECRYPT_STR + " : Input file";
+	private static final	String	OUTPUT_FILE_TITLE_STR		= DECRYPT_STR + " : Output file";
 	private static final	String	SET_OUT_FROM_IN_TOOLTIP_STR	= "Set output file from input file";
 	private static final	String	SELECT_STR					= "Select";
 	private static final	String	SELECT_FILE_STR				= "Select file";

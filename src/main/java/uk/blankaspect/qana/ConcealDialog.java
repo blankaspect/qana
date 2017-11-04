@@ -99,9 +99,9 @@ class ConcealDialog
 	private static final	String	SET_TIMESTAMP_STR			= "Set timestamp";
 	private static final	String	ADD_RANDOM_BITS_STR			= "Add random bits";
 	private static final	String	CONCEAL_STR					= "Conceal";
-	private static final	String	PAYLOAD_FILE_TITLE_STR		= CONCEAL_STR + " | Payload file";
-	private static final	String	CARRIER_FILE_TITLE_STR		= CONCEAL_STR + " | Carrier file";
-	private static final	String	OUTPUT_FILE_TITLE_STR		= CONCEAL_STR + " | Output file";
+	private static final	String	PAYLOAD_FILE_TITLE_STR		= CONCEAL_STR + " : Payload file";
+	private static final	String	CARRIER_FILE_TITLE_STR		= CONCEAL_STR + " : Carrier file";
+	private static final	String	OUTPUT_FILE_TITLE_STR		= CONCEAL_STR + " : Output file";
 	private static final	String	SET_TIMESTAMP_TOOLTIP_STR	= "Set the timestamp of the output file " +
 																	"to that of the carrier file";
 	private static final	String	ADD_RANDOM_BITS_TOOLTIP_STR	= "Add random bits to the output image " +

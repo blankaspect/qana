@@ -84,8 +84,8 @@ class RecoverDialog
 	private static final	String	INPUT_FILE_STR			= "Input file";
 	private static final	String	OUTPUT_FILE_STR			= "Output file";
 	private static final	String	RECOVER_STR				= "Recover";
-	private static final	String	INPUT_FILE_TITLE_STR	= RECOVER_STR + " | Input file";
-	private static final	String	OUTPUT_FILE_TITLE_STR	= RECOVER_STR + " | Output file";
+	private static final	String	INPUT_FILE_TITLE_STR	= RECOVER_STR + " : Input file";
+	private static final	String	OUTPUT_FILE_TITLE_STR	= RECOVER_STR + " : Output file";
 	private static final	String	SELECT_STR				= "Select";
 	private static final	String	SELECT_FILE_STR			= "Select file";
 

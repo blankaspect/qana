@@ -555,7 +555,7 @@ class TextWrapDialog
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		private static final	String	TITLE_STR	= WRAP_TEXT_STR + " | Help";
+		private static final	String	TITLE_STR	= WRAP_TEXT_STR + " : Help";
 
 	////////////////////////////////////////////////////////////////////
 	//  Member classes : inner classes

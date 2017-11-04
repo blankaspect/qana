@@ -99,7 +99,7 @@ class PassphraseDialog
 	{
 
 		// Call superclass constructor
-		super(owner, (titleStr == null) ? TITLE_STR : TITLE_STR + " | " + titleStr,
+		super(owner, (titleStr == null) ? TITLE_STR : TITLE_STR + " : " + titleStr,
 			  Dialog.ModalityType.APPLICATION_MODAL);
 
 		// Set icons
