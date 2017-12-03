@@ -81,6 +81,8 @@ import uk.blankaspect.common.gui.GuiUtils;
 import uk.blankaspect.common.gui.TextRendering;
 import uk.blankaspect.common.gui.TitledBorder;
 
+import uk.blankaspect.common.indexedsub.IndexedSub;
+
 import uk.blankaspect.common.misc.KeyAction;
 import uk.blankaspect.common.misc.MaxValueMap;
 import uk.blankaspect.common.misc.StringUtils;
@@ -1258,7 +1260,7 @@ class KeyEditorDialog
 			verifyKey(key);
 
 			// Add key and update list
-			String messageStr = StringUtils.substitute(RENAME_MESSAGE_STR, name);
+			String messageStr = IndexedSub.sub(RENAME_MESSAGE_STR, name);
 			String[] optionStrs = Utils.getOptionStrings(RENAME_STR);
 			if (JOptionPane.showOptionDialog(this, KEY2_STR + key.getQuotedName() + "\n" + messageStr,
 											 RENAME_TITLE_STR, JOptionPane.OK_CANCEL_OPTION,

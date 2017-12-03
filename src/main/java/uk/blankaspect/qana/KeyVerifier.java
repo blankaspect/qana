@@ -24,7 +24,7 @@ import uk.blankaspect.common.exception.AppException;
 
 import uk.blankaspect.common.gui.RunnableMessageDialog;
 
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.indexedsub.IndexedSub;
 
 //----------------------------------------------------------------------
 
@@ -116,7 +116,7 @@ class KeyVerifier
 	@Override
 	public String getMessage()
 	{
-		return StringUtils.substitute(MESSAGE_STR, key.getName());
+		return IndexedSub.sub(MESSAGE_STR, key.getName());
 	}
 
 	//------------------------------------------------------------------

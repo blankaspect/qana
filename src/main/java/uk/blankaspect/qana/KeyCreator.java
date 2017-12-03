@@ -31,7 +31,7 @@ import uk.blankaspect.common.exception.AppException;
 
 import uk.blankaspect.common.gui.RunnableMessageDialog;
 
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.indexedsub.IndexedSub;
 
 //----------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ class KeyCreator
 	@Override
 	public String getMessage()
 	{
-		return ((name == null) ? TEMPORARY_MESSAGE_STR : StringUtils.substitute(PERSISTENT_MESSAGE_STR, name));
+		return ((name == null) ? TEMPORARY_MESSAGE_STR : IndexedSub.sub(PERSISTENT_MESSAGE_STR, name));
 	}
 
 	//------------------------------------------------------------------

@@ -63,6 +63,8 @@ import uk.blankaspect.common.gui.IProgressView;
 import uk.blankaspect.common.gui.NonEditableTextAreaDialog;
 import uk.blankaspect.common.gui.QuestionDialog;
 
+import uk.blankaspect.common.indexedsub.IndexedSub;
+
 import uk.blankaspect.common.misc.ByteBlockInputStream;
 import uk.blankaspect.common.misc.CalendarTime;
 import uk.blankaspect.common.misc.IStringKeyed;
@@ -1867,8 +1869,7 @@ class ArchiveDocument
 		}
 
 		// Display result of validation
-		String numProcessedStr = StringUtils.substitute(NUM_PROCESSED_STR,
-														Integer.toString(indices.length));
+		String numProcessedStr = IndexedSub.sub(NUM_PROCESSED_STR, Integer.toString(indices.length));
 		if ((numValidated == indices.length) && invalidIndices.isEmpty())
 			App.INSTANCE.showInfoMessage(VALIDATE_FILES_STR, numProcessedStr + ALL_FILES_VALID_STR);
 		if (!invalidIndices.isEmpty())
@@ -1877,8 +1878,7 @@ class ArchiveDocument
 			selectionModel.clearSelection();
 			for (int index : invalidIndices)
 				selectionModel.addSelectionInterval(index, index);
-			String failedStr = StringUtils.substitute(NUM_FAILED_VALIDATION_STR,
-													  Integer.toString(invalidIndices.size()));
+			String failedStr = IndexedSub.sub(NUM_FAILED_VALIDATION_STR, Integer.toString(invalidIndices.size()));
 			App.INSTANCE.showWarningMessage(VALIDATE_FILES_STR, numProcessedStr + failedStr);
 		}
 	}
@@ -2703,8 +2703,7 @@ class ArchiveDocument
 		int[] indices = getTable().getSelectedRows();
 		if (indices.length > 0)
 		{
-			String messageStr = StringUtils.substitute(CONFIRM_DELETE_STR,
-													   Integer.toString(indices.length));
+			String messageStr = IndexedSub.sub(CONFIRM_DELETE_STR, Integer.toString(indices.length));
 			String[] optionStrs = Utils.getOptionStrings(AppConstants.DELETE_STR);
 			if (JOptionPane.showOptionDialog(getWindow(), messageStr, DELETE_FILES_STR,
 											 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
