@@ -61,18 +61,19 @@ import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 import uk.blankaspect.common.gui.GuiUtils;
 import uk.blankaspect.common.gui.TextRendering;
 
+import uk.blankaspect.common.indexedsub.IndexedSub;
+
 import uk.blankaspect.common.misc.BinaryFile;
 import uk.blankaspect.common.misc.CalendarTime;
+import uk.blankaspect.common.misc.ClassUtils;
 import uk.blankaspect.common.misc.DataTxChannel;
 import uk.blankaspect.common.misc.IByteDataInputStream;
 import uk.blankaspect.common.misc.IFileImporter;
 import uk.blankaspect.common.misc.ImportQueue;
-import uk.blankaspect.common.misc.NoYes;
 import uk.blankaspect.common.misc.NumberUtils;
 import uk.blankaspect.common.misc.PortNumber;
 import uk.blankaspect.common.misc.PropertyString;
 import uk.blankaspect.common.misc.ResourceProperties;
-import uk.blankaspect.common.misc.StringUtils;
 
 import uk.blankaspect.common.textfield.TextFieldUtils;
 
@@ -976,40 +977,50 @@ public class App
 
 	//------------------------------------------------------------------
 
+	/**
+	 * Returns a string representation of the version of this application.  If this class was loaded from a JAR, the
+	 * string is created from the values of properties that are defined in a resource named 'build.properties';
+	 * otherwise, the string is created from the date and time when this method is first called.
+	 *
+	 * @return a string representation of the version of this application.
+	 */
+
 	public String getVersionString()
 	{
-		StringBuilder buffer = new StringBuilder(32);
-		String str = buildProperties.get(VERSION_PROPERTY_KEY);
-		if (str != null)
-			buffer.append(str);
-
-		str = buildProperties.get(RELEASE_PROPERTY_KEY);
-		if (str == null)
+		if (versionStr == null)
 		{
-			long time = System.currentTimeMillis();
-			if (buffer.length() > 0)
-				buffer.append(' ');
-			buffer.append('b');
-			buffer.append(CalendarTime.dateToString(time));
-			buffer.append('-');
-			buffer.append(CalendarTime.hoursMinsToString(time));
-		}
-		else
-		{
-			NoYes release = NoYes.forKey(str);
-			if ((release == null) || !release.toBoolean())
+			StringBuilder buffer = new StringBuilder(32);
+			if (ClassUtils.isFromJar(getClass()))
 			{
-				str = buildProperties.get(BUILD_PROPERTY_KEY);
+				// Append version number
+				String str = buildProperties.get(VERSION_PROPERTY_KEY);
 				if (str != null)
-				{
-					if (buffer.length() > 0)
-						buffer.append(' ');
 					buffer.append(str);
+
+				// If this is not a release, append build
+				boolean release = Boolean.parseBoolean(buildProperties.get(RELEASE_PROPERTY_KEY));
+				if (!release)
+				{
+					str = buildProperties.get(BUILD_PROPERTY_KEY);
+					if (str != null)
+					{
+						if (buffer.length() > 0)
+							buffer.append(' ');
+						buffer.append(str);
+					}
 				}
 			}
+			else
+			{
+				long time = System.currentTimeMillis();
+				buffer.append('b');
+				buffer.append(CalendarTime.dateToString(time));
+				buffer.append('-');
+				buffer.append(CalendarTime.hoursMinsToString(time));
+			}
+			versionStr = buffer.toString();
 		}
-
-		return buffer.toString();
+		return versionStr;
 	}
 
 	//------------------------------------------------------------------
@@ -1904,7 +1915,7 @@ public class App
 			{
 				if (!keyFile.exists())
 					showWarningMessage(SHORT_NAME + " : " + KEY_DATABASE_STR,
-									   StringUtils.substitute(NO_KEY_DATABASE1_STR, Utils.getPathname(keyFile)));
+									   IndexedSub.sub(NO_KEY_DATABASE1_STR, Utils.getPathname(keyFile)));
 				else
 				{
 					try
@@ -2549,9 +2560,8 @@ public class App
 				key.checkAllowedCipher(Utils.getCipher(key));
 
 				// Create output directory
-				File outDirectory = (result.outDirectory == null)
-														? result.inFile.getAbsoluteFile().getParentFile()
-														: result.outDirectory;
+				File outDirectory = (result.outDirectory == null) ? result.inFile.getAbsoluteFile().getParentFile()
+																  : result.outDirectory;
 				if (!outDirectory.exists() && !outDirectory.mkdirs())
 					throw new FileException(ErrorId.FAILED_TO_CREATE_OUTPUT_DIRECTORY, outDirectory);
 
@@ -2561,9 +2571,9 @@ public class App
 				{
 					int numFiles = fileParts.size();
 					int index = (numFiles == 1) ? 0 : 1;
-					String messageStr = StringUtils.substitute(FILE_PARTS_STR, Integer.toString(numFiles),
-															   FILE_PARTS_STRS[0][index], FILE_PARTS_STRS[1][index],
-															   FILE_PARTS_STRS[2][index]);
+					String messageStr = IndexedSub.sub(FILE_PARTS_STR, Integer.toString(numFiles),
+													   FILE_PARTS_STRS[0][index], FILE_PARTS_STRS[1][index],
+													   FILE_PARTS_STRS[2][index]);
 					String[] optionStrs = Utils.getOptionStrings(AppConstants.DELETE_STR, KEEP_STR);
 					int result1 = JOptionPane.showOptionDialog(mainWindow, messageStr, SPLIT_FILE_STR,
 															   JOptionPane.YES_NO_CANCEL_OPTION,
@@ -2575,8 +2585,7 @@ public class App
 						{
 							if (!filePart.getAbsoluteFile().delete())
 							{
-								AppException e = new FileException(ErrorId.FAILED_TO_DELETE_FILE_PART,
-																   filePart);
+								AppException e = new FileException(ErrorId.FAILED_TO_DELETE_FILE_PART, filePart);
 								optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
 								if (JOptionPane.showOptionDialog(mainWindow, e, SPLIT_FILE_STR,
 																 JOptionPane.OK_CANCEL_OPTION,
@@ -2949,6 +2958,7 @@ public class App
 ////////////////////////////////////////////////////////////////////////
 
 	private	ResourceProperties	buildProperties;
+	private	String				versionStr;
 	private	MainWindow			mainWindow;
 	private	Timer				intervalTimer;
 	private	KeyList				persistentKeyList;
