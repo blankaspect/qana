@@ -20,10 +20,11 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 
-import uk.blankaspect.common.gui.Colours;
-
 import uk.blankaspect.common.misc.IStringKeyed;
-import uk.blankaspect.common.misc.StringUtils;
+
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.colour.Colours;
 
 //----------------------------------------------------------------------
 
@@ -117,7 +118,7 @@ enum KeyKind
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String	key;

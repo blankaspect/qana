@@ -33,11 +33,12 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.blankaspect.common.misc.DoubleRange;
-import uk.blankaspect.common.misc.IntegerRange;
 import uk.blankaspect.common.misc.IStringKeyed;
 
 import uk.blankaspect.common.random.Prng01;
+
+import uk.blankaspect.common.range.DoubleRange;
+import uk.blankaspect.common.range.IntegerRange;
 
 //----------------------------------------------------------------------
 
@@ -160,7 +161,7 @@ strictfp class CarrierImage
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	key;
@@ -217,7 +218,7 @@ strictfp class CarrierImage
 				  (controlCoordRange.lowerBound > controlCoordRange.upperBound))))
 				throw new IllegalArgumentException();
 
-			// Initialise instance fields
+			// Initialise instance variables
 			this.hue = hue;
 
 			// Add first vertex, P, at (0, 0)
@@ -562,7 +563,7 @@ strictfp class CarrierImage
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	BufferedImage	image;

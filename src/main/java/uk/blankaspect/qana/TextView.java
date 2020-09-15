@@ -37,12 +37,13 @@ import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import uk.blankaspect.common.gui.FCheckBoxMenuItem;
-import uk.blankaspect.common.gui.FMenuItem;
-import uk.blankaspect.common.gui.GuiUtils;
+import uk.blankaspect.common.swing.menu.FCheckBoxMenuItem;
+import uk.blankaspect.common.swing.menu.FMenuItem;
 
-import uk.blankaspect.common.misc.DataImporter;
-import uk.blankaspect.common.misc.TextExporter;
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.transfer.DataImporter;
+import uk.blankaspect.common.swing.transfer.TextExporter;
 
 //----------------------------------------------------------------------
 
@@ -161,7 +162,7 @@ class TextView
 			//----------------------------------------------------------
 
 		////////////////////////////////////////////////////////////////
-		//  Instance fields
+		//  Instance variables
 		////////////////////////////////////////////////////////////////
 
 			private	TransferHandler	oldTransferHandler;
@@ -422,7 +423,7 @@ class TextView
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	TextArea	textArea;

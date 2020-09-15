@@ -55,18 +55,25 @@ import javax.swing.KeyStroke;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FComboBox;
-import uk.blankaspect.common.gui.FixedWidthRadioButton;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.PathnamePanel;
-
 import uk.blankaspect.common.misc.FilenameSuffixFilter;
-import uk.blankaspect.common.misc.KeyAction;
 import uk.blankaspect.common.misc.MaxValueMap;
 
-import uk.blankaspect.common.textfield.IntegerField;
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.common.swing.button.FixedWidthRadioButton;
+
+import uk.blankaspect.common.swing.combobox.FComboBox;
+
+import uk.blankaspect.common.swing.container.PathnamePanel;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.textfield.IntegerField;
 
 //----------------------------------------------------------------------
 
@@ -200,13 +207,13 @@ class GarbageGeneratorDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	ButtonGroup	buttonGroup;
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String		text;
@@ -268,7 +275,7 @@ class GarbageGeneratorDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -304,7 +311,7 @@ class GarbageGeneratorDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		File	file;
@@ -415,7 +422,7 @@ class GarbageGeneratorDialog
 		}
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int	lowerBound;
@@ -528,7 +535,7 @@ class GarbageGeneratorDialog
 		@Override
 		protected int getColumnWidth()
 		{
-			return (GuiUtils.getCharWidth('0', getFontMetrics(getFont())) + 1);
+			return (FontUtils.getCharWidth('0', getFontMetrics(getFont())) + 1);
 		}
 
 		//--------------------------------------------------------------
@@ -551,7 +558,7 @@ class GarbageGeneratorDialog
 		// Set icons
 		setIconImages(owner.getIconImages());
 
-		// Initialise instance fields
+		// Initialise instance variables
 		outFileChooser = new JFileChooser();
 		outFileChooser.setDialogTitle(OUTPUT_FILE_STR);
 		outFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -1088,7 +1095,7 @@ class GarbageGeneratorDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point		location;
@@ -1113,7 +1120,7 @@ class GarbageGeneratorDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean					accepted;

@@ -60,10 +60,11 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.CancelledException;
 
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.GuiUtils;
+import uk.blankaspect.common.swing.action.KeyAction;
 
-import uk.blankaspect.common.misc.KeyAction;
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
@@ -348,9 +349,8 @@ class KeySelectionDialog
 					throw new CancelledException();
 
 				// Get key properties
-				KeyPropertiesDialog.Result result =
-										KeyPropertiesDialog.showDialog(this, NEW_KEY_STR, kdfParamMap,
-																	   allowedCiphers, preferredCipher);
+				KeyPropertiesDialog.Result result = KeyPropertiesDialog.showDialog(this, NEW_KEY_STR, kdfParamMap,
+																				   allowedCiphers, preferredCipher);
 				if (result == null)
 					throw new CancelledException();
 
@@ -360,8 +360,7 @@ class KeySelectionDialog
 				preferredCipher = result.preferredCipher;
 
 				// Create temporary key
-				key = new KeyCreator(null, passphrase, kdfParamMap, allowedCiphers, preferredCipher).
-																							create(this);
+				key = new KeyCreator(null, passphrase, kdfParamMap, allowedCiphers, preferredCipher).create(this);
 				App.INSTANCE.addTemporaryKey(key);
 				break;
 			}
@@ -371,8 +370,7 @@ class KeySelectionDialog
 				if (key.getKey() == null)
 				{
 					// Get passphrase
-					String passphrase =
-								PassphraseDialog.showDialog(this, KEY_STR + "\"" + key.getName() + "\"");
+					String passphrase = PassphraseDialog.showDialog(this, KEY_STR + "'" + key.getName() + "'");
 					if (passphrase == null)
 						throw new CancelledException();
 
@@ -398,7 +396,7 @@ class KeySelectionDialog
 			setKey();
 			onClose();
 		}
-		catch (CancelledException e )
+		catch (CancelledException e)
 		{
 			// ignore
 		}
@@ -420,7 +418,7 @@ class KeySelectionDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point									location;
@@ -430,7 +428,7 @@ class KeySelectionDialog
 	private static	FortunaCipher							preferredCipher	= FortunaCipher.AES256;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	KeySelectionList	selectionList;

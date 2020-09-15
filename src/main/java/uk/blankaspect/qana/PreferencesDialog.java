@@ -66,37 +66,49 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
-import uk.blankaspect.common.gui.BitSelectionPanel;
-import uk.blankaspect.common.gui.BooleanComboBox;
-import uk.blankaspect.common.gui.ColourSampleIcon;
-import uk.blankaspect.common.gui.DimensionsSpinnerPanel;
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FCheckBox;
-import uk.blankaspect.common.gui.FComboBox;
-import uk.blankaspect.common.gui.FIntegerSpinner;
-import uk.blankaspect.common.gui.FixedWidthCheckBox;
-import uk.blankaspect.common.gui.FixedWidthLabel;
-import uk.blankaspect.common.gui.FixedWidthPanel;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.FontEx;
-import uk.blankaspect.common.gui.FontStyle;
-import uk.blankaspect.common.gui.FTabbedPane;
-import uk.blankaspect.common.gui.FTextField;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.IntegerSpinner;
-import uk.blankaspect.common.gui.PathnamePanel;
-import uk.blankaspect.common.gui.TextRendering;
-import uk.blankaspect.common.gui.TitledBorder;
-
 import uk.blankaspect.common.misc.FilenameSuffixFilter;
-import uk.blankaspect.common.misc.KeyAction;
 import uk.blankaspect.common.misc.MaxValueMap;
 
 import uk.blankaspect.common.regex.RegexUtils;
 
-import uk.blankaspect.common.textfield.ConstrainedTextField;
-import uk.blankaspect.common.textfield.IntegerField;
-import uk.blankaspect.common.textfield.IntegerValueField;
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.border.TitledBorder;
+
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.checkbox.FCheckBox;
+import uk.blankaspect.common.swing.checkbox.FixedWidthCheckBox;
+
+import uk.blankaspect.common.swing.combobox.BooleanComboBox;
+import uk.blankaspect.common.swing.combobox.FComboBox;
+
+import uk.blankaspect.common.swing.container.BitSelectionPanel;
+import uk.blankaspect.common.swing.container.DimensionsSpinnerPanel;
+import uk.blankaspect.common.swing.container.FixedWidthPanel;
+import uk.blankaspect.common.swing.container.PathnamePanel;
+
+import uk.blankaspect.common.swing.font.FontEx;
+import uk.blankaspect.common.swing.font.FontStyle;
+
+import uk.blankaspect.common.swing.icon.ColourSampleIcon;
+
+import uk.blankaspect.common.swing.label.FixedWidthLabel;
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.spinner.FIntegerSpinner;
+import uk.blankaspect.common.swing.spinner.IntegerSpinner;
+
+import uk.blankaspect.common.swing.tabbedpane.FTabbedPane;
+
+import uk.blankaspect.common.swing.text.TextRendering;
+
+import uk.blankaspect.common.swing.textfield.ConstrainedTextField;
+import uk.blankaspect.common.swing.textfield.FTextField;
+import uk.blankaspect.common.swing.textfield.IntegerField;
+import uk.blankaspect.common.swing.textfield.IntegerValueField;
 
 //----------------------------------------------------------------------
 
@@ -548,7 +560,7 @@ class PreferencesDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	text;
@@ -611,7 +623,7 @@ class PreferencesDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -1165,7 +1177,7 @@ class PreferencesDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	FComboBox<String>		nameComboBox;
@@ -2289,7 +2301,7 @@ class PreferencesDialog
 													   config.getTextViewSize().height,
 													   TextView.MIN_NUM_ROWS, TextView.MAX_NUM_ROWS,
 													   TEXT_VIEW_ROWS_FIELD_LENGTH,
-													   new String[]{ COLUMNS_STR, ROWS_STR });
+													   new String[] { COLUMNS_STR, ROWS_STR });
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -3730,7 +3742,7 @@ class PreferencesDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point	location;
@@ -3738,7 +3750,7 @@ class PreferencesDialog
 	private static	KdfUse	kdfUse		= KdfUse.VERIFICATION;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	// Main panel

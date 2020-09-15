@@ -58,15 +58,23 @@ import javax.swing.KeyStroke;
 import uk.blankaspect.common.crypto.EntropyAccumulator;
 import uk.blankaspect.common.crypto.Fortuna;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FTabbedPane;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
-import uk.blankaspect.common.gui.TitledBorder;
+import uk.blankaspect.common.number.NumberUtils;
 
-import uk.blankaspect.common.misc.KeyAction;
-import uk.blankaspect.common.misc.NumberUtils;
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.border.TitledBorder;
+
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.tabbedpane.FTabbedPane;
+
+import uk.blankaspect.common.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -166,7 +174,7 @@ class EntropyMetricsDialog
 			// Set font
 			AppFont.MAIN.apply(this);
 
-			// Initialise instance fields
+			// Initialise instance variables
 			bitIndices = getBitIndices(bitMask);
 			FontMetrics fontMetrics = getFontMetrics(getFont());
 			barWidth = fontMetrics.stringWidth(PROTOTYPE_STR);
@@ -329,7 +337,7 @@ class EntropyMetricsDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	List<Integer>	bitIndices;
@@ -395,7 +403,7 @@ class EntropyMetricsDialog
 			// Set font
 			AppFont.MAIN.apply(this);
 
-			// Initialise instance fields
+			// Initialise instance variables
 			bitIndices = getBitIndices(bitMask);
 			String str = BIT_STR + Integer.toString(bitIndices.get(bitIndices.size() - 1));
 			labelWidth = getFontMetrics(getFont()).stringWidth(str);
@@ -476,7 +484,7 @@ class EntropyMetricsDialog
 			for (int i = 0; i < bitIndices.size(); i++)
 			{
 				// Draw label
-				int y = plotY + GuiUtils.getBaselineOffset(PLOT_HEIGHT - 1, gr.getFontMetrics());
+				int y = plotY + FontUtils.getBaselineOffset(PLOT_HEIGHT - 1, gr.getFontMetrics());
 				gr.setColor(TEXT_COLOUR);
 				gr.drawString(BIT_STR + bitIndices.get(i), LEFT_MARGIN, y);
 
@@ -580,7 +588,7 @@ class EntropyMetricsDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	List<Integer>	bitIndices;
@@ -652,7 +660,7 @@ class EntropyMetricsDialog
 				font = font.deriveFont((float)maxStrWidth / (float)strWidth);
 			setFont(font);
 
-			// Initialise instance fields
+			// Initialise instance variables
 			height = TOP_MARGIN + PLOT_HEIGHT + INDEX_MARKER_HEIGHT + fontMetrics.getAscent() +
 																fontMetrics.getDescent() + BOTTOM_MARGIN;
 
@@ -812,7 +820,7 @@ class EntropyMetricsDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int			height;
@@ -885,7 +893,7 @@ class EntropyMetricsDialog
 		// Set icons
 		setIconImages(owner.getIconImages());
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.prng = prng;
 		this.entropyAccumulator = entropyAccumulator;
 
@@ -1150,8 +1158,7 @@ class EntropyMetricsDialog
 
 	private void updateSources()
 	{
-		Map<EntropyAccumulator.SourceKind, EntropyAccumulator.Metrics> allMetrics =
-																		entropyAccumulator.getMetrics();
+		Map<EntropyAccumulator.SourceKind, EntropyAccumulator.Metrics> allMetrics = entropyAccumulator.getMetrics();
 		if (allMetrics != null)
 		{
 			for (EntropyAccumulator.SourceKind sourceKind : allMetrics.keySet())
@@ -1201,14 +1208,14 @@ class EntropyMetricsDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point	location;
 	private static	int		sourceIndex;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	Fortuna													prng;

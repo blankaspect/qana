@@ -21,10 +21,10 @@ package uk.blankaspect.qana;
 import java.awt.Component;
 import java.awt.Font;
 
-import uk.blankaspect.common.gui.FontEx;
-import uk.blankaspect.common.gui.GuiUtils;
-
 import uk.blankaspect.common.misc.IStringKeyed;
+
+import uk.blankaspect.common.swing.font.FontEx;
+import uk.blankaspect.common.swing.font.FontUtils;
 
 //----------------------------------------------------------------------
 
@@ -172,11 +172,11 @@ public enum AppFont
 
 	static
 	{
-		GuiUtils.setAppFontClass(AppFont.class);
+		FontUtils.setAppFontClass(AppFont.class);
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String	key;

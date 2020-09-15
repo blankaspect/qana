@@ -28,13 +28,15 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 
+import uk.blankaspect.common.config.PropertiesPathname;
+
 import uk.blankaspect.common.crypto.FortunaCipher;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.misc.PropertiesPathname;
-import uk.blankaspect.common.misc.StringUtils;
-import uk.blankaspect.common.misc.SystemUtils;
+import uk.blankaspect.common.filesystem.PathnameUtils;
+
+import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
 
@@ -49,9 +51,7 @@ class Utils
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	USER_HOME_PREFIX			= "~";
-	private static final	String	FAILED_TO_GET_PATHNAME_STR	= "Failed to get the canonical pathname " +
-																	"for the file or directory.";
+	private static final	String	FAILED_TO_GET_PATHNAME_STR	= "Failed to get the canonical pathname for ";
 
 	private static final	String	FILE_STR	= "file";
 
@@ -103,7 +103,7 @@ class Utils
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -161,38 +161,17 @@ class Utils
 		{
 			try
 			{
-				try
-				{
-					pathname = file.getCanonicalPath();
-				}
-				catch (Exception e)
-				{
-					System.err.println(file.getPath());
-					System.err.println(FAILED_TO_GET_PATHNAME_STR);
-					System.err.println("(" + e + ")");
-					pathname = file.getAbsolutePath();
-				}
+				pathname = file.getCanonicalPath();
 			}
-			catch (SecurityException e)
+			catch (Exception e)
 			{
-				System.err.println(e);
-				pathname = file.getPath();
+				System.err.println(FAILED_TO_GET_PATHNAME_STR + file.getPath());
+				System.err.println("(" + e + ")");
+				pathname = file.getAbsolutePath();
 			}
 
 			if (unixStyle)
-			{
-				try
-				{
-					String userHome = SystemUtils.getUserHomePathname();
-					if ((userHome != null) && pathname.startsWith(userHome))
-						pathname = USER_HOME_PREFIX + pathname.substring(userHome.length());
-				}
-				catch (SecurityException e)
-				{
-					// ignore
-				}
-				pathname = pathname.replace(File.separatorChar, '/');
-			}
+				pathname = PathnameUtils.toUnixStyle(pathname, true);
 		}
 		return pathname;
 	}
@@ -251,8 +230,7 @@ class Utils
 	{
 		try
 		{
-			return Toolkit.getDefaultToolkit().getSystemClipboard().
-														isDataFlavorAvailable(DataFlavor.stringFlavor);
+			return Toolkit.getDefaultToolkit().getSystemClipboard().isDataFlavorAvailable(DataFlavor.stringFlavor);
 		}
 		catch (IllegalStateException e)
 		{
@@ -337,8 +315,7 @@ class Utils
 			file = new File(directory, filename);
 		else
 		{
-			String[] filenameParts = StringUtils.splitAtFirst(filename, '.',
-															  StringUtils.SplitMode.SUFFIX);
+			String[] filenameParts = StringUtils.splitAtFirst(filename, '.', StringUtils.SplitMode.SUFFIX);
 			int index = 1;
 			while (true)
 			{

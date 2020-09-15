@@ -25,6 +25,11 @@ import java.awt.image.BufferedImage;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.IOException;
+
+import java.time.LocalDateTime;
+
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +48,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 
+import uk.blankaspect.common.cls.ClassUtils;
+
+import uk.blankaspect.common.config.PortNumber;
+
 import uk.blankaspect.common.crypto.FileConcealer;
 import uk.blankaspect.common.crypto.Fortuna;
 import uk.blankaspect.common.crypto.FortunaAes256;
@@ -58,26 +67,33 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
+import uk.blankaspect.common.exception2.LocationException;
+
+import uk.blankaspect.common.filesystem.PathnameUtils;
 
 import uk.blankaspect.common.indexedsub.IndexedSub;
 
+import uk.blankaspect.common.logging.ErrorLogger;
+
 import uk.blankaspect.common.misc.BinaryFile;
-import uk.blankaspect.common.misc.CalendarTime;
-import uk.blankaspect.common.misc.ClassUtils;
 import uk.blankaspect.common.misc.DataTxChannel;
 import uk.blankaspect.common.misc.IByteDataInputStream;
 import uk.blankaspect.common.misc.IFileImporter;
 import uk.blankaspect.common.misc.ImportQueue;
-import uk.blankaspect.common.misc.NumberUtils;
-import uk.blankaspect.common.misc.PortNumber;
-import uk.blankaspect.common.misc.PropertyString;
-import uk.blankaspect.common.misc.ResourceProperties;
 
-import uk.blankaspect.common.textfield.TextFieldUtils;
+import uk.blankaspect.common.number.NumberUtils;
 
-import uk.blankaspect.common.windows.FileAssociations;
+import uk.blankaspect.common.platform.windows.FileAssociations;
+
+import uk.blankaspect.common.resource.ResourceProperties;
+
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.text.TextRendering;
+
+import uk.blankaspect.common.swing.textfield.TextFieldUtils;
 
 //----------------------------------------------------------------------
 
@@ -111,11 +127,14 @@ public class App
 	private static final	String	VERSION_PROPERTY_KEY	= "version";
 	private static final	String	BUILD_PROPERTY_KEY		= "build";
 	private static final	String	RELEASE_PROPERTY_KEY	= "release";
-	private static final	String	OS_NAME_KEY				= "os.name";
 
-	private static final	String	RX_ID	= App.class.getCanonicalName();
+	private static final	String	VERSION_DATE_TIME_PATTERN	= "uuuuMMdd-HHmmss";
 
 	private static final	String	BUILD_PROPERTIES_FILENAME	= "build.properties";
+
+	private static final	String	OS_NAME_KEY	= "os.name";
+
+	private static final	String	RX_ID	= App.class.getCanonicalName();
 
 	private static final	String	ASSOC_SCRIPT_DIR_PREFIX	= NAME_KEY + "_";
 	private static final	String	ASSOC_SCRIPT_FILENAME	= NAME_KEY + "Associations";
@@ -317,13 +336,13 @@ public class App
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	Map<FileOperation, Integer>	operationCounts	= new EnumMap<>(FileOperation.class);
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	titleStr;
@@ -410,7 +429,7 @@ public class App
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -443,7 +462,7 @@ public class App
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	Document	document;
@@ -695,7 +714,7 @@ public class App
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int						length;
@@ -1012,11 +1031,8 @@ public class App
 			}
 			else
 			{
-				long time = System.currentTimeMillis();
 				buffer.append('b');
-				buffer.append(CalendarTime.dateToString(time));
-				buffer.append('-');
-				buffer.append(CalendarTime.hoursMinsToString(time));
+				buffer.append(DateTimeFormatter.ofPattern(VERSION_DATE_TIME_PATTERN).format(LocalDateTime.now()));
 			}
 			versionStr = buffer.toString();
 		}
@@ -1781,7 +1797,23 @@ public class App
 
 	private void init(String[] args)
 	{
-		// Initialise instance fields
+		// Log stack trace of uncaught exception
+		if (ClassUtils.isFromJar(getClass()))
+		{
+			Thread.setDefaultUncaughtExceptionHandler((thread, exception) ->
+			{
+				try
+				{
+					ErrorLogger.INSTANCE.write(exception);
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			});
+		}
+
+		// Initialise instance variables
 		persistentKeyList = new KeyList();
 		temporaryKeyList = new KeyList();
 		documentsViews = new ArrayList<>();
@@ -1789,11 +1821,18 @@ public class App
 		pendingFiles = new ArrayList<>();
 
 		// Read build properties
-		buildProperties = new ResourceProperties(BUILD_PROPERTIES_FILENAME, getClass());
+		try
+		{
+			buildProperties = new ResourceProperties(BUILD_PROPERTIES_FILENAME);
+		}
+		catch (LocationException e)
+		{
+			e.printStackTrace();
+		}
 
 		// Create list of files from command-line arguments
 		List<File> files = Arrays.stream(args)
-									.map(arg -> new File(PropertyString.parsePathname(arg)))
+									.map(arg -> new File(PathnameUtils.parsePathname(arg)))
 									.collect(Collectors.toList());
 
 		// Read TX port number from file
@@ -1824,7 +1863,7 @@ public class App
 				SwingUtilities.invokeLater(() ->
 				{
 					// Add pathnames to list of pending files
-					List<String> pathnames = Arrays.asList(data.split("\\n"));
+					List<String> pathnames = StringUtils.split(data, '\n');
 					if (!pathnames.isEmpty())
 						pendingFiles.addAll(pathnames.stream()
 														.filter(pathname -> !pathname.isEmpty())
@@ -2954,7 +2993,7 @@ public class App
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	ResourceProperties	buildProperties;

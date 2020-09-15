@@ -19,10 +19,10 @@ package uk.blankaspect.qana;
 
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
@@ -35,12 +35,6 @@ import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
 class StringTable
 {
-
-////////////////////////////////////////////////////////////////////////
-//  Constants
-////////////////////////////////////////////////////////////////////////
-
-	private static final	String	ENCODING_NAME	= "UTF-8";
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -68,14 +62,7 @@ class StringTable
 			int startOffset = offset;
 			while (data[offset] != 0)
 				++offset;
-			try
-			{
-				strings.add(new String(data, startOffset, offset - startOffset, ENCODING_NAME));
-			}
-			catch (UnsupportedEncodingException e)
-			{
-				throw new UnexpectedRuntimeException(e);
-			}
+			strings.add(new String(data, startOffset, offset - startOffset, StandardCharsets.UTF_8));
 			++offset;
 		}
 	}
@@ -138,7 +125,7 @@ class StringTable
 
 	public void sort()
 	{
-		Collections.sort(strings);
+		strings.sort(null);
 	}
 
 	//------------------------------------------------------------------
@@ -150,7 +137,7 @@ class StringTable
 			ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 			for (String str : strings)
 			{
-				outStream.write(str.getBytes(ENCODING_NAME));
+				outStream.write(str.getBytes(StandardCharsets.UTF_8));
 				outStream.write(0);
 			}
 			return outStream.toByteArray();
@@ -164,7 +151,7 @@ class StringTable
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	List<String>	strings;

@@ -28,11 +28,13 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-import uk.blankaspect.common.gui.FileMultipleSelectionDialog;
-import uk.blankaspect.common.gui.GuiUtils;
+import uk.blankaspect.common.filesystem.PathnameUtils;
 
-import uk.blankaspect.common.misc.PropertyString;
 import uk.blankaspect.common.misc.SystemUtils;
+
+import uk.blankaspect.common.swing.dialog.FileMultipleSelectionDialog;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
@@ -97,7 +99,7 @@ class EraseDialog
 			{
 				String userHome = SystemUtils.getUserHomePathname();
 				if ((userHome != null) && pathname.startsWith(userHome))
-					pathname = PropertyString.USER_HOME_PREFIX + pathname.substring(userHome.length());
+					pathname = PathnameUtils.USER_HOME_PREFIX + pathname.substring(userHome.length());
 			}
 			catch (SecurityException e)
 			{
@@ -121,7 +123,7 @@ class EraseDialog
 			int numDirectories = 0;
 			for (String pathname : pathnames)
 			{
-				if (new File(PropertyString.parsePathname(pathname)).isDirectory())
+				if (new File(PathnameUtils.parsePathname(pathname)).isDirectory())
 					++numDirectories;
 				else
 					++numFiles;

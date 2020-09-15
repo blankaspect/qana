@@ -55,15 +55,18 @@ import javax.swing.event.MenuListener;
 
 import uk.blankaspect.common.crypto.FortunaCipher;
 
-import uk.blankaspect.common.gui.FCheckBoxMenuItem;
-import uk.blankaspect.common.gui.FMenu;
-import uk.blankaspect.common.gui.FMenuItem;
-import uk.blankaspect.common.gui.FRadioButtonMenuItem;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TabbedPanel;
-
-import uk.blankaspect.common.misc.CalendarTime;
 import uk.blankaspect.common.misc.IFileImporter;
+
+import uk.blankaspect.common.swing.menu.FCheckBoxMenuItem;
+import uk.blankaspect.common.swing.menu.FMenu;
+import uk.blankaspect.common.swing.menu.FMenuItem;
+import uk.blankaspect.common.swing.menu.FRadioButtonMenuItem;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.tabbedpane.TabbedPane;
+
+import uk.blankaspect.common.time.CalendarTime;
 
 //----------------------------------------------------------------------
 
@@ -292,7 +295,7 @@ class MainWindow
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	JMenu	menu;
@@ -419,14 +422,14 @@ class MainWindow
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	Map<String, Map<FortunaCipher, FRadioButtonMenuItem>>	menuItemMap	=
 																						new HashMap<>();
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	FortunaCipher	cipher;
@@ -680,7 +683,7 @@ class MainWindow
 
 		//----  Tabbed panel
 
-		tabbedPanel = new TabbedPanel();
+		tabbedPanel = new TabbedPane();
 		tabbedPanel.setIgnoreCase(true);
 		tabbedPanel.addChangeListener(this);
 		tabbedPanel.addMouseListener(this);
@@ -1106,10 +1109,10 @@ class MainWindow
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-	private	TabbedPanel	tabbedPanel;
+	private	TabbedPane	tabbedPanel;
 	private	StatusPanel	statusPanel;
 	private	JPopupMenu	contextMenu;
 

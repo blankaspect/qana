@@ -29,9 +29,9 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.gui.RunnableMessageDialog;
-
 import uk.blankaspect.common.indexedsub.IndexedSub;
+
+import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
 
 //----------------------------------------------------------------------
 
@@ -40,14 +40,13 @@ import uk.blankaspect.common.indexedsub.IndexedSub;
 
 
 class KeyCreator
-	implements RunnableMessageDialog.IRunnable
 {
 
 ////////////////////////////////////////////////////////////////////////
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	PERSISTENT_MESSAGE_STR	= "Creating key \"%1\"" + AppConstants.ELLIPSIS_STR;
+	private static final	String	PERSISTENT_MESSAGE_STR	= "Creating key '%1'" + AppConstants.ELLIPSIS_STR;
 	private static final	String	TEMPORARY_MESSAGE_STR	= "Creating a temporary key " + AppConstants.ELLIPSIS_STR;
 
 ////////////////////////////////////////////////////////////////////////
@@ -92,7 +91,7 @@ class KeyCreator
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -121,34 +120,6 @@ class KeyCreator
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance methods : RunnableMessageDialog.IRunnable interface
-////////////////////////////////////////////////////////////////////////
-
-	@Override
-	public String getMessage()
-	{
-		return ((name == null) ? TEMPORARY_MESSAGE_STR : IndexedSub.sub(PERSISTENT_MESSAGE_STR, name));
-	}
-
-	//------------------------------------------------------------------
-
-	@Override
-	public void run()
-	{
-		try
-		{
-			key = KeyList.createKey(name, passphrase, kdfParamMap.get(KdfUse.VERIFICATION),
-									kdfParamMap.get(KdfUse.GENERATION), allowedCiphers, preferredCipher);
-		}
-		catch (OutOfMemoryError e)
-		{
-			outOfMemory = true;
-		}
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
 //  Instance methods
 ////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +127,19 @@ class KeyCreator
 		throws AppException
 	{
 		outOfMemory = false;
-		RunnableMessageDialog.showDialog(component, this);
+		String message = (name == null) ? TEMPORARY_MESSAGE_STR : IndexedSub.sub(PERSISTENT_MESSAGE_STR, name);
+		RunnableMessageDialog.showDialog(component, message, () ->
+		{
+			try
+			{
+				key = KeyList.createKey(name, passphrase, kdfParamMap.get(KdfUse.VERIFICATION),
+										kdfParamMap.get(KdfUse.GENERATION), allowedCiphers, preferredCipher);
+			}
+			catch (OutOfMemoryError e)
+			{
+				outOfMemory = true;
+			}
+		});
 		if (outOfMemory)
 			throw new AppException(ErrorId.NOT_ENOUGH_MEMORY);
 		return key;
@@ -165,7 +148,7 @@ class KeyCreator
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String									name;

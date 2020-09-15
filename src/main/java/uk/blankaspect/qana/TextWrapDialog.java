@@ -54,20 +54,31 @@ import javax.swing.KeyStroke;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.EditableComboBox;
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FCheckBox;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.FontStyle;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TaggedText;
-import uk.blankaspect.common.gui.UnsignedIntegerComboBox;
+import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.misc.IntegerPair;
-import uk.blankaspect.common.misc.KeyAction;
+import uk.blankaspect.common.swing.action.KeyAction;
 
-import uk.blankaspect.common.textfield.ConstrainedTextField;
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.checkbox.FCheckBox;
+
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.combobox.EditableComboBox;
+import uk.blankaspect.common.swing.combobox.UnsignedIntegerComboBox;
+
+import uk.blankaspect.common.swing.font.FontStyle;
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.text.TaggedText;
+
+import uk.blankaspect.common.swing.textfield.ConstrainedTextField;
+
+import uk.blankaspect.common.tuple.IntegerPair;
 
 //----------------------------------------------------------------------
 
@@ -237,7 +248,7 @@ class TextWrapDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -273,7 +284,7 @@ class TextWrapDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		int	lineLength;
@@ -443,7 +454,7 @@ class TextWrapDialog
 		@Override
 		protected int getColumnWidth()
 		{
-			return (GuiUtils.getCharWidth('0', getFontMetrics(getFont())) + 1);
+			return (FontUtils.getCharWidth('0', getFontMetrics(getFont())) + 1);
 		}
 
 		//--------------------------------------------------------------
@@ -458,38 +469,40 @@ class TextWrapDialog
 
 		private IntegerPair getValue(int baseValue)
 		{
-			IntegerPair value = new IntegerPair();
+			int value1 = 0;
+			int value2 = 0;
+
 			if (!isEmpty())
 			{
 				// Split string
-				String[] strs = getText().split(",", -1);
-				if (strs.length > 2)
+				List<String> strs = StringUtils.split(getText(), ',');
+				if (strs.size() > 2)
 					throw new NumberFormatException();
 
 				// Parse first component
-				String str = strs[0];
+				String str = strs.get(0);
 				char ch = str.charAt(0);
 				if ((ch == '-') || (ch == '+'))
 					throw new NumberFormatException();
-				value.value1 = (ch == BASE_VALUE_PREFIX_CHAR)
-													? parseRelativeValue(str.substring(1), baseValue)
-													: Integer.parseInt(str);
+				value1 = (ch == BASE_VALUE_PREFIX_CHAR) ? parseRelativeValue(str.substring(1), baseValue)
+														: Integer.parseInt(str);
 
 				// Parse second component
-				if (strs.length == 1)
-					value.value2 = value.value1;
+				if (strs.size() == 1)
+					value2 = value1;
 				else
 				{
-					str = strs[1];
+					str = strs.get(1);
 					ch = str.charAt(0);
-					value.value2 = (ch == BASE_VALUE_PREFIX_CHAR)
-													? parseRelativeValue(str.substring(1), baseValue)
-													: ((ch == '+') || (ch == '-'))
-																? parseRelativeValue(str, value.value1)
-																: Integer.parseInt(str);
+					value2 = (ch == BASE_VALUE_PREFIX_CHAR)
+												? parseRelativeValue(str.substring(1), baseValue)
+												: ((ch == '+') || (ch == '-'))
+														? parseRelativeValue(str, value1)
+														: Integer.parseInt(str);
 				}
 			}
-			return value;
+
+			return new IntegerPair(value1, value2);
 		}
 
 		//--------------------------------------------------------------
@@ -642,7 +655,7 @@ class TextWrapDialog
 			//----------------------------------------------------------
 
 		////////////////////////////////////////////////////////////////
-		//  Instance fields
+		//  Instance variables
 		////////////////////////////////////////////////////////////////
 
 			private	TaggedText	text;
@@ -813,7 +826,7 @@ class TextWrapDialog
 		// Set icons
 		setIconImages(owner.getIconImages());
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.currentIndent = currentIndent;
 
 
@@ -1091,7 +1104,7 @@ class TextWrapDialog
 		{
 			IntegerPair indent = indentComboBox.isEnabled() ? indentComboBox.getValue(currentIndent)
 															: new IntegerPair();
-			result = new Result(lineLengthComboBox.getValue(), indent.value1, indent.value2);
+			result = new Result(lineLengthComboBox.getValue(), indent.getFirst(), indent.getSecond());
 		}
 		return result;
 	}
@@ -1135,16 +1148,16 @@ class TextWrapDialog
 				try
 				{
 					IntegerPair indent = indentComboBox.getValue(currentIndent);
-					if ((indent.value1 < MIN_INDENT) || (indent.value1 > MAX_INDENT))
+					if ((indent.getFirst() < MIN_INDENT) || (indent.getFirst() > MAX_INDENT))
 						throw new AppException(ErrorId.FIRST_INDENT_OUT_OF_BOUNDS);
-					if ((indent.value2 < MIN_INDENT) || (indent.value2 > MAX_INDENT))
+					if ((indent.getSecond() < MIN_INDENT) || (indent.getSecond() > MAX_INDENT))
 						throw new AppException(ErrorId.SECOND_INDENT_OUT_OF_BOUNDS);
 
 					if (lineLength > 0)
 					{
-						if (indent.value1 >= lineLength)
+						if (indent.getFirst() >= lineLength)
 							throw new AppException(ErrorId.LINE_LENGTH_AND_FIRST_INDENT_OUT_OF_ORDER);
-						if (indent.value2 >= lineLength)
+						if (indent.getSecond() >= lineLength)
 							throw new AppException(ErrorId.LINE_LENGTH_AND_SECOND_INDENT_OUT_OF_ORDER);
 					}
 				}
@@ -1226,7 +1239,7 @@ class TextWrapDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point			location;
@@ -1251,7 +1264,7 @@ class TextWrapDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean				accepted;

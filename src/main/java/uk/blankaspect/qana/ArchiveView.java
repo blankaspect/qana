@@ -62,18 +62,25 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.FMenuItem;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
-
-import uk.blankaspect.common.misc.DataImporter;
 import uk.blankaspect.common.misc.IFileImporter;
-import uk.blankaspect.common.misc.IntegerRange;
 import uk.blankaspect.common.misc.IStringKeyed;
-import uk.blankaspect.common.misc.KeyAction;
-import uk.blankaspect.common.misc.StringUtils;
-import uk.blankaspect.common.misc.TextUtils;
+
+import uk.blankaspect.common.range.IntegerRange;
+
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.menu.FMenuItem;
+
+import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.common.swing.text.TextUtils;
+
+import uk.blankaspect.common.swing.transfer.DataImporter;
 
 //----------------------------------------------------------------------
 
@@ -155,7 +162,7 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	ImageIcon	icon;
@@ -229,6 +236,7 @@ class ArchiveView
 	//  Instance methods : IStringKeyed interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getKey()
 		{
 			return key;
@@ -274,7 +282,7 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	key;
@@ -370,6 +378,7 @@ class ArchiveView
 	//  Instance methods : ActionListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void actionPerformed(ActionEvent event)
 		{
 			String command = event.getActionCommand();
@@ -384,6 +393,7 @@ class ArchiveView
 	//  Instance methods : FocusListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void focusGained(FocusEvent event)
 		{
 			getTableHeader().repaint();
@@ -392,6 +402,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void focusLost(FocusEvent event)
 		{
 			getTableHeader().repaint();
@@ -404,6 +415,7 @@ class ArchiveView
 	//  Instance methods : MouseListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void mouseClicked(MouseEvent event)
 		{
 			if (SwingUtilities.isLeftMouseButton(event) && (event.getComponent() == getTableHeader()))
@@ -425,6 +437,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseEntered(MouseEvent event)
 		{
 			// do nothing
@@ -432,6 +445,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseExited(MouseEvent event)
 		{
 			// do nothing
@@ -439,6 +453,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mousePressed(MouseEvent event)
 		{
 			showContextMenu(event);
@@ -446,6 +461,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseReleased(MouseEvent event)
 		{
 			showContextMenu(event);
@@ -567,7 +583,7 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	JPopupMenu	contextMenu;
@@ -636,6 +652,7 @@ class ArchiveView
 	//  Instance methods : TableCellRenderer interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public Component getTableCellRendererComponent(JTable  table,
 													   Object  value,
 													   boolean isSelected,
@@ -703,7 +720,7 @@ class ArchiveView
 
 			// Draw text
 			gr.setColor(Colours.Table.FOREGROUND.getColour());
-			gr.drawString(str, x, GuiUtils.getBaselineOffset(height, fontMetrics));
+			gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
 
 			// Fill horizontal margin
 			--height;
@@ -732,14 +749,14 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	HeaderRenderer	leadingRenderer;
 		private static	HeaderRenderer	trailingRenderer;
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	Column	id;
@@ -803,6 +820,7 @@ class ArchiveView
 	//  Instance methods : TableCellRenderer interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public Component getTableCellRendererComponent(JTable  table,
 													   Object  value,
 													   boolean isSelected,
@@ -860,7 +878,7 @@ class ArchiveView
 
 				// Draw text
 				gr.setColor(getForeground());
-				gr.drawString(str, x, GuiUtils.getBaselineOffset(height, fontMetrics));
+				gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
 			}
 
 			// Fill horizontal margin
@@ -885,14 +903,14 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	CellRenderer	leadingRenderer;
 		private static	CellRenderer	trailingRenderer;
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int		alignment;
@@ -939,6 +957,7 @@ class ArchiveView
 	//  Instance methods : ChangeListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void stateChanged(ChangeEvent event)
 		{
 			if (!getVerticalScrollBar().getValueIsAdjusting())
@@ -963,6 +982,7 @@ class ArchiveView
 	//  Instance methods : MouseListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void mouseClicked(MouseEvent event)
 		{
 			// do nothing
@@ -970,6 +990,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseEntered(MouseEvent event)
 		{
 			// do nothing
@@ -977,6 +998,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseExited(MouseEvent event)
 		{
 			// do nothing
@@ -984,6 +1006,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mousePressed(MouseEvent event)
 		{
 			table.showContextMenu(event);
@@ -991,6 +1014,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseReleased(MouseEvent event)
 		{
 			table.showContextMenu(event);
@@ -999,7 +1023,7 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	Table	table;
@@ -1021,12 +1045,12 @@ class ArchiveView
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		private static final	int	VERTICAL_MARGIN		= 3;
+		private static final	int	VERTICAL_MARGIN		= 2;
 		private static final	int	HORIZONTAL_MARGIN	= 5;
 		private static final	int	ICON_TEXT_GAP		= 5;
 
 		private static final	Color	TEXT_COLOUR			= Color.BLACK;
-		private static final	Color	BACKGROUND_COLOUR	= new Color(248, 240, 216);
+		private static final	Color	BACKGROUND_COLOUR	= new Color(248, 244, 224);
 
 		private static final	String	PASTE_STR	= "Paste";
 
@@ -1065,6 +1089,7 @@ class ArchiveView
 		//  Instance methods : ActionListener interface
 		////////////////////////////////////////////////////////////////
 
+			@Override
 			public void actionPerformed(ActionEvent event)
 			{
 				ArchiveDirectoryPanel.this.actionPerformed(event);
@@ -1086,15 +1111,14 @@ class ArchiveView
 			AppFont.MAIN.apply(this);
 			FontMetrics fontMetrics = getFontMetrics(getFont());
 
-			// Initialise instance fields
+			// Initialise instance variables
 			if (directory != null)
 				pathname = Utils.getPathname(directory);
-			preferredWidth = 2 * HORIZONTAL_MARGIN + AppIcon.FOLDER.getIconWidth();
+			preferredWidth = 2 * HORIZONTAL_MARGIN + AppIcon.DIRECTORY.getIconWidth();
 			if (pathname != null)
 				preferredWidth += ICON_TEXT_GAP + fontMetrics.stringWidth(pathname);
-			preferredHeight = 2 * VERTICAL_MARGIN +
-										Math.max(AppIcon.FOLDER.getIconHeight(),
-												 fontMetrics.getAscent() + fontMetrics.getDescent());
+			preferredHeight = 2 * VERTICAL_MARGIN + Math.max(AppIcon.DIRECTORY.getIconHeight(),
+															 fontMetrics.getAscent() + fontMetrics.getDescent());
 			pasteAction = new CommandAction(Command.PASTE, PASTE_STR);
 
 			// Set attributes
@@ -1154,6 +1178,7 @@ class ArchiveView
 	//  Instance methods : MouseListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void mouseClicked(MouseEvent event)
 		{
 			if (SwingUtilities.isLeftMouseButton(event))
@@ -1166,6 +1191,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseEntered(MouseEvent event)
 		{
 			// do nothing
@@ -1173,6 +1199,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseExited(MouseEvent event)
 		{
 			// do nothing
@@ -1180,6 +1207,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mousePressed(MouseEvent event)
 		{
 			showContextMenu(event);
@@ -1187,6 +1215,7 @@ class ArchiveView
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void mouseReleased(MouseEvent event)
 		{
 			showContextMenu(event);
@@ -1221,8 +1250,8 @@ class ArchiveView
 			gr.fillRect(0, 0, width, height);
 
 			// Draw icon
-			gr.drawImage(AppIcon.FOLDER.getImage(), HORIZONTAL_MARGIN,
-						 (height - AppIcon.FOLDER.getIconHeight()) / 2, null);
+			gr.drawImage(AppIcon.DIRECTORY.getImage(), HORIZONTAL_MARGIN,
+						 (height - AppIcon.DIRECTORY.getIconHeight()) / 2, null);
 
 			// Draw text
 			if (pathname != null)
@@ -1232,11 +1261,10 @@ class ArchiveView
 
 				// Draw text
 				FontMetrics fontMetrics = gr.getFontMetrics();
-				int x = HORIZONTAL_MARGIN + AppIcon.FOLDER.getIconWidth() + ICON_TEXT_GAP;
-				String str = TextUtils.getLimitedWidthPathname(pathname, fontMetrics,
-															   width - x - HORIZONTAL_MARGIN);
+				int x = HORIZONTAL_MARGIN + AppIcon.DIRECTORY.getIconWidth() + ICON_TEXT_GAP;
+				String str = TextUtils.getLimitedWidthPathname(pathname, fontMetrics, width - x - HORIZONTAL_MARGIN);
 				gr.setColor(TEXT_COLOUR);
-				gr.drawString(str, x, GuiUtils.getBaselineOffset(height, fontMetrics));
+				gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
 			}
 		}
 
@@ -1308,7 +1336,7 @@ class ArchiveView
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int				preferredWidth;
@@ -1394,7 +1422,7 @@ class ArchiveView
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	ArchiveDirectoryPanel	archiveDirectoryPanel;

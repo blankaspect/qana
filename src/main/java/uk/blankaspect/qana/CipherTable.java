@@ -46,11 +46,15 @@ import javax.swing.SwingUtilities;
 
 import uk.blankaspect.common.crypto.FortunaCipher;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
+import uk.blankaspect.common.swing.action.KeyAction;
 
-import uk.blankaspect.common.misc.KeyAction;
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -256,7 +260,7 @@ class CipherTable
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	text;
@@ -315,7 +319,7 @@ class CipherTable
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	Column			column;
@@ -335,7 +339,7 @@ class CipherTable
 		// Set font
 		AppFont.MAIN.apply(this);
 
-		// Initialise instance fields
+		// Initialise instance variables
 		this.allowedCiphers = EnumSet.copyOf(allowedCiphers);
 		this.preferredCipher = preferredCipher;
 		cellState = CellState.NOT_OVER;
@@ -567,7 +571,7 @@ class CipherTable
 		// Draw header text
 		FontMetrics fontMetrics = gr.getFontMetrics();
 		x = GRID_LINE_WIDTH + CELL_HORIZONTAL_MARGIN;
-		y = GRID_LINE_WIDTH + GuiUtils.getBaselineOffset(rowHeight - GRID_LINE_WIDTH, fontMetrics);
+		y = GRID_LINE_WIDTH + FontUtils.getBaselineOffset(rowHeight - GRID_LINE_WIDTH, fontMetrics);
 		gr.setColor(TEXT_COLOUR);
 		for (Column column : columnWidths.keySet())
 		{
@@ -579,7 +583,7 @@ class CipherTable
 		int columnX = 0;
 		int columnWidth = columnWidths.get(Column.CIPHER);
 		x = columnX + GRID_LINE_WIDTH + CELL_HORIZONTAL_MARGIN;
-		y = GRID_LINE_WIDTH + GuiUtils.getBaselineOffset(rowHeight - GRID_LINE_WIDTH, fontMetrics);
+		y = GRID_LINE_WIDTH + FontUtils.getBaselineOffset(rowHeight - GRID_LINE_WIDTH, fontMetrics);
 		for (FortunaCipher cipher : FortunaCipher.values())
 		{
 			y += rowHeight;
@@ -852,7 +856,7 @@ class CipherTable
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	Set<FortunaCipher>		allowedCiphers;

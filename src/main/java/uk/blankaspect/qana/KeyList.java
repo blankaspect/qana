@@ -30,6 +30,7 @@ import uk.blankaspect.common.crypto.FileEncrypter;
 import uk.blankaspect.common.crypto.Fortuna;
 import uk.blankaspect.common.crypto.FortunaCipher;
 import uk.blankaspect.common.crypto.Scrypt;
+import uk.blankaspect.common.crypto.ScryptSalsa20;
 import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
@@ -39,7 +40,8 @@ import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 import uk.blankaspect.common.misc.BinaryFile;
 import uk.blankaspect.common.misc.ByteDataList;
 import uk.blankaspect.common.misc.FileWritingMode;
-import uk.blankaspect.common.misc.NumberUtils;
+
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -54,25 +56,25 @@ class KeyList
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		int	SALT_SIZE			= StreamEncrypter.SALT_SIZE;
-	public static final		int	DERIVED_KEY_SIZE	= StreamEncrypter.DERIVED_KEY_SIZE;
+	public static final		int		SALT_SIZE			= StreamEncrypter.SALT_SIZE;
+	public static final		int		DERIVED_KEY_SIZE	= StreamEncrypter.DERIVED_KEY_SIZE;
 
 	public static final		StreamEncrypter.KdfParams	DEFAULT_KDF_PARAMS	=
-								new StreamEncrypter.KdfParams(Scrypt.Salsa20NumRounds._8, 16, 8, 1, 0);
+												new StreamEncrypter.KdfParams(Scrypt.CoreHashNumRounds._8, 16, 8, 1, 0);
 
-	private static final	int	FILE_ID	= 0x41AC38D6;
+	private static final	int		FILE_ID	= 0x41AC38D6;
 
-	private static final	int	VERSION					= 0;
-	private static final	int	MIN_SUPPORTED_VERSION	= 0;
-	private static final	int	MAX_SUPPORTED_VERSION	= 0;
+	private static final	int		VERSION					= 0;
+	private static final	int		MIN_SUPPORTED_VERSION	= 0;
+	private static final	int		MAX_SUPPORTED_VERSION	= 0;
 
-	private static final	int	ID_FIELD_SIZE					= 4;
-	private static final	int	VERSION_FIELD_SIZE				= 2;
-	private static final	int	STRING_TABLE_OFFSET_FIELD_SIZE	= 4;
-	private static final	int	NUM_KEYS_FIELD_SIZE				= 2;
+	private static final	int		ID_FIELD_SIZE					= 4;
+	private static final	int		VERSION_FIELD_SIZE				= 2;
+	private static final	int		STRING_TABLE_OFFSET_FIELD_SIZE	= 4;
+	private static final	int		NUM_KEYS_FIELD_SIZE				= 2;
 
-	private static final	int	HEADER_SIZE	= ID_FIELD_SIZE + VERSION_FIELD_SIZE +
-													STRING_TABLE_OFFSET_FIELD_SIZE + NUM_KEYS_FIELD_SIZE;
+	private static final	int		HEADER_SIZE	= ID_FIELD_SIZE + VERSION_FIELD_SIZE + STRING_TABLE_OFFSET_FIELD_SIZE
+													+ NUM_KEYS_FIELD_SIZE;
 
 	private static final	String	READING_STR	= "Reading";
 	private static final	String	WRITING_STR	= "Writing";
@@ -106,10 +108,16 @@ class KeyList
 		("The key file is malformed."),
 
 		DUPLICATE_KEY_NAME
-		("The key file contains more than one key with the name \"%1\"."),
+		("The key file contains more than one key with the name '%1'."),
 
 		CIPHER_NOT_ALLOWED
 		("Key: %1\nThe key does not allow the %2 cipher to be used for encryption.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -133,12 +141,6 @@ class KeyList
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
 	}
 
 	//==================================================================
@@ -160,22 +162,41 @@ class KeyList
 	////////////////////////////////////////////////////////////////////
 
 		public static final		char	TEMPORARY_PREFIX_CHAR	= '$';
-		public static final		String	TEMPORARY_PREFIX		=
-																Character.toString(TEMPORARY_PREFIX_CHAR);
+		public static final		String	TEMPORARY_PREFIX		= Character.toString(TEMPORARY_PREFIX_CHAR);
 
-		private static final	int	NAME_OFFSET_FIELD_SIZE		= 4;
-		private static final	int	KDF_PARAMS_VER_FIELD_SIZE	= 4;
-		private static final	int	KDF_PARAMS_GEN_FIELD_SIZE	= 4;
-		private static final	int	ALLOWED_CIPHERS_FIELD_SIZE	= 2;
-		private static final	int	PREFERRED_CIPHER_FIELD_SIZE	= 2;
-		private static final	int	RESERVED_FIELD_SIZE			= 16;
-		private static final	int	SALT_FIELD_SIZE				= SALT_SIZE;
-		private static final	int	HASH_VALUE_FIELD_SIZE		= DERIVED_KEY_SIZE;
+		private static final	int		NAME_OFFSET_FIELD_SIZE		= 4;
+		private static final	int		KDF_PARAMS_VER_FIELD_SIZE	= 4;
+		private static final	int		KDF_PARAMS_GEN_FIELD_SIZE	= 4;
+		private static final	int		ALLOWED_CIPHERS_FIELD_SIZE	= 2;
+		private static final	int		PREFERRED_CIPHER_FIELD_SIZE	= 2;
+		private static final	int		RESERVED_FIELD_SIZE			= 16;
+		private static final	int		SALT_FIELD_SIZE				= SALT_SIZE;
+		private static final	int		HASH_VALUE_FIELD_SIZE		= DERIVED_KEY_SIZE;
 
-		private static final	int	SIZE	= NAME_OFFSET_FIELD_SIZE + KDF_PARAMS_VER_FIELD_SIZE +
-													KDF_PARAMS_GEN_FIELD_SIZE + ALLOWED_CIPHERS_FIELD_SIZE +
-													PREFERRED_CIPHER_FIELD_SIZE + RESERVED_FIELD_SIZE +
-													SALT_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
+		private static final	int		SIZE	= NAME_OFFSET_FIELD_SIZE + KDF_PARAMS_VER_FIELD_SIZE
+													+ KDF_PARAMS_GEN_FIELD_SIZE + ALLOWED_CIPHERS_FIELD_SIZE
+													+ PREFERRED_CIPHER_FIELD_SIZE + RESERVED_FIELD_SIZE
+													+ SALT_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
+
+	////////////////////////////////////////////////////////////////////
+	//  Class variables
+	////////////////////////////////////////////////////////////////////
+
+		private static	int	temporaryIndex;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	name;
+		private	int		index;
+		private	int		kdfParamsVer;
+		private	int		kdfParamsGen;
+		private	int		allowedCiphers;
+		private	int		preferredCipher;
+		private	byte[]	key;
+		private	byte[]	salt;
+		private	byte[]	hashValue;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -285,8 +306,13 @@ class KeyList
 		@Override
 		public int compareTo(Key other)
 		{
-			return ((name == null) ? (other.name == null) ? Integer.compare(index, other.index) : -1
-								   : (other.name == null) ? 1 : name.compareTo(other.name));
+			return (name == null)
+						? (other.name == null)
+								? Integer.compare(index, other.index)
+								: -1
+						: (other.name == null)
+								? 1
+								: name.compareTo(other.name);
 		}
 
 		//--------------------------------------------------------------
@@ -298,7 +324,7 @@ class KeyList
 		@Override
 		public boolean equals(Object obj)
 		{
-			return ((obj instanceof Key) && (compareTo((Key)obj) == 0));
+			return (obj instanceof Key) && (compareTo((Key)obj) == 0);
 		}
 
 		//--------------------------------------------------------------
@@ -306,7 +332,7 @@ class KeyList
 		@Override
 		public int hashCode()
 		{
-			return ((name == null) ? -index : name.hashCode());
+			return (name == null) ? -index : name.hashCode();
 		}
 
 		//--------------------------------------------------------------
@@ -317,22 +343,25 @@ class KeyList
 
 		public KeyKind getKind()
 		{
-			return ((name == null) ? (index == 0) ? KeyKind.NEW : KeyKind.TEMPORARY
-								   : KeyKind.PERSISTENT);
+			return (name == null)
+						? (index == 0)
+								? KeyKind.NEW
+								: KeyKind.TEMPORARY
+						: KeyKind.PERSISTENT;
 		}
 
 		//--------------------------------------------------------------
 
 		public String getName()
 		{
-			return ((name == null) ? TEMPORARY_PREFIX + index : name);
+			return (name == null) ? TEMPORARY_PREFIX + index : name;
 		}
 
 		//--------------------------------------------------------------
 
 		public String getQuotedName()
 		{
-			return ((name == null) ? TEMPORARY_PREFIX + index : "\"" + name + "\"");
+			return (name == null) ? TEMPORARY_PREFIX + index : "'" + name + "'";
 		}
 
 		//--------------------------------------------------------------
@@ -367,10 +396,11 @@ class KeyList
 
 		public FortunaCipher getPreferredCipher()
 		{
-			return (((preferredCipher >= 0) && (preferredCipher < FortunaCipher.values().length) &&
-					  ((allowedCiphers & 1 << preferredCipher) != 0))
-																? FortunaCipher.values()[preferredCipher]
-																: null);
+			return ((preferredCipher >= 0)
+					&& (preferredCipher < FortunaCipher.values().length)
+					&& ((allowedCiphers & 1 << preferredCipher) != 0))
+															? FortunaCipher.values()[preferredCipher]
+															: null;
 		}
 
 		//--------------------------------------------------------------
@@ -406,7 +436,7 @@ class KeyList
 
 			// Update hash value
 			if (key == null)
-				throw new IllegalStateException();
+				throw new IllegalStateException("No key");
 			hashValue = deriveKey(key, salt, getKdfParamsVer());
 		}
 
@@ -528,29 +558,16 @@ class KeyList
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Class fields
-	////////////////////////////////////////////////////////////////////
-
-		private static	int	temporaryIndex;
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance fields
-	////////////////////////////////////////////////////////////////////
-
-		private	String	name;
-		private	int		index;
-		private	int		kdfParamsVer;
-		private	int		kdfParamsGen;
-		private	int		allowedCiphers;
-		private	int		preferredCipher;
-		private	byte[]	key;
-		private	byte[]	salt;
-		private	byte[]	hashValue;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	List<Key>	keys;
+	private	boolean		changed;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -593,8 +610,8 @@ class KeyList
 									byte[]                    salt,
 									StreamEncrypter.KdfParams kdfParams)
 	{
-		Scrypt.setSalsa20CoreNumRounds(kdfParams.numRounds);
-		return Scrypt.deriveKey(key, salt, kdfParams, kdfParams.getNumThreads(), DERIVED_KEY_SIZE);
+		return new ScryptSalsa20(kdfParams.numRounds)
+										.deriveKey(key, salt, kdfParams, kdfParams.getNumThreads(), DERIVED_KEY_SIZE);
 	}
 
 	//------------------------------------------------------------------
@@ -749,7 +766,7 @@ class KeyList
 		}
 
 		// Sort keys
-		Collections.sort(keys);
+		keys.sort(null);
 	}
 
 	//------------------------------------------------------------------
@@ -783,13 +800,6 @@ class KeyList
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance fields
-////////////////////////////////////////////////////////////////////////
-
-	private	List<Key>	keys;
-	private	boolean		changed;
 
 }
 

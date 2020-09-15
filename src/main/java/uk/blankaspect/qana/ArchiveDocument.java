@@ -35,7 +35,6 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -49,7 +48,7 @@ import javax.swing.table.AbstractTableModel;
 import uk.blankaspect.common.crypto.FortunaAes256;
 import uk.blankaspect.common.crypto.FortunaCipher;
 import uk.blankaspect.common.crypto.HmacSha256;
-import uk.blankaspect.common.crypto.Scrypt;
+import uk.blankaspect.common.crypto.ScryptSalsa20;
 import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
@@ -57,20 +56,26 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.TempFileException;
 
-import uk.blankaspect.common.gui.FileSelectionPanel;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.IProgressView;
-import uk.blankaspect.common.gui.NonEditableTextAreaDialog;
-import uk.blankaspect.common.gui.QuestionDialog;
-
 import uk.blankaspect.common.indexedsub.IndexedSub;
 
 import uk.blankaspect.common.misc.ByteBlockInputStream;
-import uk.blankaspect.common.misc.CalendarTime;
 import uk.blankaspect.common.misc.IStringKeyed;
 import uk.blankaspect.common.misc.NullOutputStream;
-import uk.blankaspect.common.misc.NumberUtils;
-import uk.blankaspect.common.misc.StringUtils;
+
+import uk.blankaspect.common.number.NumberUtils;
+
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.container.FileSelectionPanel;
+
+import uk.blankaspect.common.swing.dialog.NonEditableTextAreaDialog;
+import uk.blankaspect.common.swing.dialog.QuestionDialog;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.time.CalendarTime;
+
+import uk.blankaspect.common.ui.progress.IProgressView;
 
 //----------------------------------------------------------------------
 
@@ -258,7 +263,7 @@ class ArchiveDocument
 
 		private Command(String key)
 		{
-			command = new uk.blankaspect.common.misc.Command(this);
+			command = new uk.blankaspect.common.swing.action.Command(this);
 			putValue(Action.ACTION_COMMAND_KEY, key);
 		}
 
@@ -367,10 +372,10 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
-		private	uk.blankaspect.common.misc.Command	command;
+		private	uk.blankaspect.common.swing.action.Command	command;
 
 	}
 
@@ -447,7 +452,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	key;
@@ -541,7 +546,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -575,7 +580,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		ArchiveView.Column				key;
@@ -606,7 +611,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		File	file;
@@ -832,7 +837,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	path;
@@ -911,7 +916,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	SortingOrder	sortingOrder;
@@ -925,7 +930,7 @@ class ArchiveDocument
 
 
 	private static class HashGenerator
-		extends Scrypt
+		extends ScryptSalsa20
 	{
 
 	////////////////////////////////////////////////////////////////////
@@ -948,11 +953,10 @@ class ArchiveDocument
 	//  Class methods
 	////////////////////////////////////////////////////////////////////
 
-		private static byte[] generate(StreamEncrypter encrypter,
-									   byte[]          salt)
+		private byte[] generate(StreamEncrypter encrypter,
+								byte[]          salt)
 		{
-			return pbkdf2HmacSha256(encrypter.getHashValue(), salt, NUM_ITERATIONS,
-									HASH_VALUE_FIELD_SIZE);
+			return pbkdf2HmacSha256(encrypter.getHashValue(), salt, NUM_ITERATIONS, HASH_VALUE_FIELD_SIZE);
 		}
 
 		//--------------------------------------------------------------
@@ -1101,7 +1105,7 @@ class ArchiveDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	List<ArchiveView.Column>	columns;
@@ -1149,8 +1153,8 @@ class ArchiveDocument
 		StringBuilder buffer = new StringBuilder();
 		for (byte b : hashValue)
 		{
-			buffer.append(NumberUtils.HEX_DIGITS_LOWER.charAt((b >> 4) & 0x0F));
-			buffer.append(NumberUtils.HEX_DIGITS_LOWER.charAt(b & 0x0F));
+			buffer.append(NumberUtils.DIGITS_LOWER[(b >> 4) & 0x0F]);
+			buffer.append(NumberUtils.DIGITS_LOWER[b & 0x0F]);
 		}
 		return buffer.toString();
 	}
@@ -2022,15 +2026,14 @@ class ArchiveDocument
 
 	private StreamEncrypter.Header getOuterHeader()
 	{
-		return new StreamEncrypter.Header(ENCRYPTION_ID, VERSION, MIN_SUPPORTED_VERSION,
-										  MAX_SUPPORTED_VERSION);
+		return new StreamEncrypter.Header(ENCRYPTION_ID, VERSION, MIN_SUPPORTED_VERSION, MAX_SUPPORTED_VERSION);
 	}
 
 	//------------------------------------------------------------------
 
 	private void sort()
 	{
-		Collections.sort(elements, ElementComparator.INSTANCE);
+		elements.sort(ElementComparator.INSTANCE);
 	}
 
 	//------------------------------------------------------------------
@@ -2054,9 +2057,8 @@ class ArchiveDocument
 		boolean replace = false;
 		if (conflictOption == null)
 		{
-			String optionKey = QuestionDialog.showDialog(getWindow(), titleStr, messageStrs,
-														 CONFLICT_OPTIONS, 2, QuestionDialog.CANCEL_KEY,
-														 null).selectedKey;
+			String optionKey = QuestionDialog.showDialog(getWindow(), titleStr, messageStrs, CONFLICT_OPTIONS, 2,
+														 QuestionDialog.CANCEL_KEY, null).selectedKey;
 			if (optionKey.equals(QuestionDialog.CANCEL_KEY))
 				throw new TaskCancelledException();
 			ConflictOption option = ConflictOption.get(optionKey);
@@ -2247,7 +2249,7 @@ class ArchiveDocument
 			{
 				System.arraycopy(App.INSTANCE.getRandomBytes(salt.length), 0, salt, 0,
 								 salt.length);
-				hashValue = HashGenerator.generate(encrypter, salt);
+				hashValue = new HashGenerator().generate(encrypter, salt);
 				for (Element element : elements)
 				{
 					if (Arrays.equals(hashValue, element.hashValue))
@@ -2443,7 +2445,7 @@ class ArchiveDocument
 			}
 
 			// Generate hash value from hash value of file content and salt
-			byte[] hashValue = HashGenerator.generate(decrypter, salt);
+			byte[] hashValue = new HashGenerator().generate(decrypter, salt);
 
 			// Test hash value
 			if (inFile.getName().equals(hashValueToString(hashValue)))
@@ -2588,7 +2590,7 @@ class ArchiveDocument
 			}
 
 			// Generate hash value from hash value of file content and salt
-			byte[] hashValue = HashGenerator.generate(decrypter, salt);
+			byte[] hashValue = new HashGenerator().generate(decrypter, salt);
 
 			// Test hash value
 			return inFile.getName().equals(hashValueToString(hashValue));
@@ -2767,7 +2769,7 @@ class ArchiveDocument
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	File			file;

@@ -33,7 +33,7 @@ import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
-import uk.blankaspect.common.misc.PropertyString;
+import uk.blankaspect.common.filesystem.PathnameUtils;
 
 import uk.blankaspect.common.random.Prng01;
 
@@ -140,7 +140,7 @@ class FileEraser
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -245,7 +245,7 @@ class FileEraser
 		long totalLength = 0;
 		for (int i = 0; i < files.length; i++)
 		{
-			File file = new File(PropertyString.parsePathname(pathnames.get(i)));
+			File file = new File(PathnameUtils.parsePathname(pathnames.get(i)));
 			try
 			{
 				files[i] = file.getCanonicalFile();
@@ -535,7 +535,7 @@ class FileEraser
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	byte[]	buffer;

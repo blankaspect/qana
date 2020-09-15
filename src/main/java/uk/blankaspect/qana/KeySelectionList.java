@@ -35,8 +35,9 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.GuiUtils;
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.font.FontUtils;
 
 //----------------------------------------------------------------------
 
@@ -287,7 +288,7 @@ class KeySelectionList
 
 		private int getColumnWidth()
 		{
-			return GuiUtils.getCharWidth('0', getFontMetrics(getFont()));
+			return FontUtils.getCharWidth('0', getFontMetrics(getFont()));
 		}
 
 		//--------------------------------------------------------------
@@ -427,7 +428,7 @@ class KeySelectionList
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean	changed;

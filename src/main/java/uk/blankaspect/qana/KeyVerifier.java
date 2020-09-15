@@ -22,9 +22,9 @@ import java.awt.Component;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.gui.RunnableMessageDialog;
-
 import uk.blankaspect.common.indexedsub.IndexedSub;
+
+import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
 
 //----------------------------------------------------------------------
 
@@ -33,14 +33,13 @@ import uk.blankaspect.common.indexedsub.IndexedSub;
 
 
 class KeyVerifier
-	implements RunnableMessageDialog.IRunnable
 {
 
 ////////////////////////////////////////////////////////////////////////
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	MESSAGE_STR	= "Verifying key \"%1\" " + AppConstants.ELLIPSIS_STR;
+	private static final	String	MESSAGE_STR	= "Verifying key '%1' " + AppConstants.ELLIPSIS_STR;
 
 ////////////////////////////////////////////////////////////////////////
 //  Enumerated types
@@ -87,7 +86,7 @@ class KeyVerifier
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -110,33 +109,6 @@ class KeyVerifier
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance methods : RunnableMessageDialog.IRunnable interface
-////////////////////////////////////////////////////////////////////////
-
-	@Override
-	public String getMessage()
-	{
-		return IndexedSub.sub(MESSAGE_STR, key.getName());
-	}
-
-	//------------------------------------------------------------------
-
-	@Override
-	public void run()
-	{
-		try
-		{
-			verified = key.verify(passphrase);
-		}
-		catch (OutOfMemoryError e)
-		{
-			outOfMemory = true;
-		}
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
 //  Instance methods
 ////////////////////////////////////////////////////////////////////////
 
@@ -144,7 +116,17 @@ class KeyVerifier
 		throws AppException
 	{
 		outOfMemory = false;
-		RunnableMessageDialog.showDialog(component, this);
+		RunnableMessageDialog.showDialog(component, IndexedSub.sub(MESSAGE_STR, key.getName()), () ->
+		{
+			try
+			{
+				verified = key.verify(passphrase);
+			}
+			catch (OutOfMemoryError e)
+			{
+				outOfMemory = true;
+			}
+		});
 		if (outOfMemory)
 			throw new AppException(ErrorId.NOT_ENOUGH_MEMORY);
 		if (!verified)
@@ -154,7 +136,7 @@ class KeyVerifier
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	KeyList.Key	key;

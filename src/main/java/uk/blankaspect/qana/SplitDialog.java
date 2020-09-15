@@ -53,15 +53,19 @@ import javax.swing.event.DocumentListener;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
-import uk.blankaspect.common.gui.ByteUnitIntegerSpinnerPanel;
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.LinkedPairButton;
-import uk.blankaspect.common.gui.PathnamePanel;
-
 import uk.blankaspect.common.misc.IFileImporter;
-import uk.blankaspect.common.misc.KeyAction;
+
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.common.swing.button.LinkedPairButton;
+
+import uk.blankaspect.common.swing.container.ByteUnitIntegerSpinnerPanel;
+import uk.blankaspect.common.swing.container.PathnamePanel;
+
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
@@ -159,7 +163,7 @@ class SplitDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -197,7 +201,7 @@ class SplitDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		File	inFile;
@@ -817,7 +821,7 @@ class SplitDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point								location;
@@ -854,7 +858,7 @@ class SplitDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean						accepted;

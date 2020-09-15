@@ -53,15 +53,21 @@ import javax.swing.KeyStroke;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
-import uk.blankaspect.common.gui.Colours;
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
+import uk.blankaspect.common.number.NumberUtils;
 
-import uk.blankaspect.common.misc.KeyAction;
-import uk.blankaspect.common.misc.NumberUtils;
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.colour.Colours;
+
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -100,7 +106,7 @@ class FileSelectionDialog
 
 
 	private static class FileSelectionPanel
-		extends uk.blankaspect.common.gui.FileSelectionPanel
+		extends uk.blankaspect.common.swing.container.FileSelectionPanel
 	{
 
 	////////////////////////////////////////////////////////////////////
@@ -166,7 +172,7 @@ class FileSelectionDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	PathnameKind	pathnameKind	= PathnameKind.NORMAL;
@@ -199,7 +205,7 @@ class FileSelectionDialog
 
 		private LengthField(int maxLength)
 		{
-			// Initialise instance fields
+			// Initialise instance variables
 			this.maxLength = maxLength;
 			AppFont.MAIN.apply(this);
 			int numDigits = NumberUtils.getNumDecDigitsInt(maxLength);
@@ -266,7 +272,7 @@ class FileSelectionDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int		maxLength;
@@ -545,13 +551,13 @@ class FileSelectionDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point	location;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean				accepted;

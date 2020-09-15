@@ -43,20 +43,27 @@ import javax.swing.JPanel;
 
 import uk.blankaspect.common.crypto.Fortuna;
 import uk.blankaspect.common.crypto.Scrypt;
+import uk.blankaspect.common.crypto.ScryptSalsa20;
 import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FComboBox;
-import uk.blankaspect.common.gui.FIntegerSpinner;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.FRadioButton;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.RunnableMessageDialog;
-import uk.blankaspect.common.gui.TextRendering;
+import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.misc.StringUtils;
+import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.common.swing.button.FRadioButton;
+
+import uk.blankaspect.common.swing.combobox.FComboBox;
+
+import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
+
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.spinner.FIntegerSpinner;
+
+import uk.blankaspect.common.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -73,19 +80,20 @@ class KdfParameterPanel
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int		COST_FIELD_LENGTH					= 2;
-	private static final	int		NUM_BLOCKS_FIELD_LENGTH				= 3;
-	private static final	int		NUM_PARALLEL_BLOCKS_FIELD_LENGTH	= 2;
-	private static final	int		MAX_NUM_THREADS_FIELD_LENGTH		= 2;
+	private static final	int		COST_FIELD_LENGTH				= 2;
+	private static final	int		NUM_BLOCKS_FIELD_LENGTH			= 3;
+	private static final	int		NUM_SUPERBLOCKS_FIELD_LENGTH	= 2;
+	private static final	int		MAX_NUM_THREADS_FIELD_LENGTH	= 2;
 
 	private static final	Color	PANEL_BORDER_COLOUR	= new Color(160, 184, 160);
 
 	private static final	String	NUM_ROUNDS_STR			= "Number of rounds";
 	private static final	String	COST_STR				= "CPU/memory cost";
 	private static final	String	NUM_BLOCKS_STR			= "Number of blocks";
-	private static final	String	NUM_PARALLEL_BLOCKS_STR	= "Number of parallel superblocks";
+	private static final	String	NUM_SUPERBLOCKS_STR		= "Number of parallel superblocks";
 	private static final	String	MAX_NUM_THREADS_STR		= "Maximum number of threads";
 	private static final	String	GENERATE_KEY_STR		= "Generate a test key";
+	private static final	String	GENERATING_KEY_STR		= "Generating a test key " + AppConstants.ELLIPSIS_STR;
 	private static final	String	KEY_GENERATION_TIME_STR	= "Key generation time";
 	private static final	String	MS_STR					= "ms";
 
@@ -138,7 +146,7 @@ class KdfParameterPanel
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -195,7 +203,7 @@ class KdfParameterPanel
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	ButtonGroup	buttonGroup;
@@ -302,7 +310,7 @@ class KdfParameterPanel
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	text;
@@ -316,14 +324,13 @@ class KdfParameterPanel
 
 
 	private static class KeyGenerator
-		implements RunnableMessageDialog.IRunnable
+		implements Runnable
 	{
 
 	////////////////////////////////////////////////////////////////////
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		private static final	String	MESSAGE_STR		= "Generating a test key " + AppConstants.ELLIPSIS_STR;
 		private static final	String	PASSPHRASE_STR	= "passphrase";
 
 	////////////////////////////////////////////////////////////////////
@@ -338,16 +345,8 @@ class KdfParameterPanel
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance methods : RunnableMessageDialog.IRunnable interface
+	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public String getMessage()
-		{
-			return MESSAGE_STR;
-		}
-
-		//--------------------------------------------------------------
 
 		@Override
 		public void run()
@@ -355,9 +354,8 @@ class KdfParameterPanel
 			try
 			{
 				long startTime = System.currentTimeMillis();
-				Scrypt.setSalsa20CoreNumRounds(kdfParams.numRounds);
-				Scrypt.deriveKey(key, salt, kdfParams, kdfParams.getNumThreads(),
-								 KeyList.DERIVED_KEY_SIZE);
+				new ScryptSalsa20(kdfParams.numRounds)
+								.deriveKey(key, salt, kdfParams, kdfParams.getNumThreads(), KeyList.DERIVED_KEY_SIZE);
 				time = System.currentTimeMillis() - startTime;
 			}
 			catch (OutOfMemoryError e)
@@ -369,14 +367,14 @@ class KdfParameterPanel
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Class fields
+	//  Class variables
 	////////////////////////////////////////////////////////////////////
 
 		private static	byte[]	key		= Fortuna.keyStringToBytes(PASSPHRASE_STR);
 		private static	byte[]	salt	= App.INSTANCE.getRandomBytes(KeyList.SALT_SIZE);
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	StreamEncrypter.KdfParams	kdfParams;
@@ -392,9 +390,9 @@ class KdfParameterPanel
 ////////////////////////////////////////////////////////////////////////
 
 	public KdfParameterPanel(KdfUse                                 kdfUse,
-							  Map<KdfUse, StreamEncrypter.KdfParams> paramMap)
+							 Map<KdfUse, StreamEncrypter.KdfParams> paramMap)
 	{
-		// Initialise instance fields
+		// Initialise instance variables
 		this.kdfUse = kdfUse;
 		this.paramMap = new EnumMap<>(paramMap);
 		StreamEncrypter.KdfParams params = paramMap.get(kdfUse);
@@ -456,7 +454,7 @@ class KdfParameterPanel
 		paramPanel.add(numRoundsLabel);
 
 		// Combo box: number of rounds
-		numRoundsComboBox = new FComboBox<>(Scrypt.Salsa20NumRounds.values());
+		numRoundsComboBox = new FComboBox<>(Scrypt.CoreHashNumRounds.values());
 		numRoundsComboBox.setSelectedValue(params.numRounds);
 
 		gbc.gridx = 1;
@@ -487,7 +485,7 @@ class KdfParameterPanel
 		paramPanel.add(costLabel);
 
 		// Spinner: cost
-		costSpinner = new FIntegerSpinner(params.cost, StreamEncrypter.KdfParams.MIN_COST,
+		costSpinner = new FIntegerSpinner(params.getCost(), StreamEncrypter.KdfParams.MIN_COST,
 										  StreamEncrypter.KdfParams.MAX_COST, COST_FIELD_LENGTH);
 
 		gbc.gridx = 1;
@@ -518,7 +516,7 @@ class KdfParameterPanel
 		paramPanel.add(numBlocksLabel);
 
 		// Spinner: number of blocks
-		numBlocksSpinner = new FIntegerSpinner(params.numBlocks, StreamEncrypter.KdfParams.MIN_NUM_BLOCKS,
+		numBlocksSpinner = new FIntegerSpinner(params.getNumBlocks(), StreamEncrypter.KdfParams.MIN_NUM_BLOCKS,
 											   StreamEncrypter.KdfParams.MAX_NUM_BLOCKS,
 											   NUM_BLOCKS_FIELD_LENGTH);
 
@@ -534,8 +532,8 @@ class KdfParameterPanel
 		gridBag.setConstraints(numBlocksSpinner, gbc);
 		paramPanel.add(numBlocksSpinner);
 
-		// Label: number of parallel superblocks
-		JLabel numParallelElementsLabel = new FLabel(NUM_PARALLEL_BLOCKS_STR);
+		// Label: number of superblocks
+		JLabel numSuperblocksLabel = new FLabel(NUM_SUPERBLOCKS_STR);
 
 		gbc.gridx = 0;
 		gbc.gridy = gridY;
@@ -546,14 +544,14 @@ class KdfParameterPanel
 		gbc.anchor = GridBagConstraints.LINE_END;
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.insets = AppConstants.COMPONENT_INSETS;
-		gridBag.setConstraints(numParallelElementsLabel, gbc);
-		paramPanel.add(numParallelElementsLabel);
+		gridBag.setConstraints(numSuperblocksLabel, gbc);
+		paramPanel.add(numSuperblocksLabel);
 
-		// Spinner: number of parallel superblocks
-		numParallelBlocksSpinner = new FIntegerSpinner(params.numParallelBlocks,
-													   StreamEncrypter.KdfParams.MIN_NUM_PARALLEL_BLOCKS,
-													   StreamEncrypter.KdfParams.MAX_NUM_PARALLEL_BLOCKS,
-													   NUM_PARALLEL_BLOCKS_FIELD_LENGTH);
+		// Spinner: number of superblocks
+		numSuperblocksSpinner = new FIntegerSpinner(params.getNumSuperblocks(),
+													StreamEncrypter.KdfParams.MIN_NUM_SUPERBLOCKS,
+													StreamEncrypter.KdfParams.MAX_NUM_SUPERBLOCKS,
+													NUM_SUPERBLOCKS_FIELD_LENGTH);
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -564,8 +562,8 @@ class KdfParameterPanel
 		gbc.anchor = GridBagConstraints.LINE_START;
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.insets = AppConstants.COMPONENT_INSETS;
-		gridBag.setConstraints(numParallelBlocksSpinner, gbc);
-		paramPanel.add(numParallelBlocksSpinner);
+		gridBag.setConstraints(numSuperblocksSpinner, gbc);
+		paramPanel.add(numSuperblocksSpinner);
 
 		// Label: maximum number of threads
 		JLabel numThreadsLabel = new FLabel(MAX_NUM_THREADS_STR);
@@ -740,6 +738,7 @@ class KdfParameterPanel
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
 		String command = event.getActionCommand();
@@ -776,7 +775,7 @@ class KdfParameterPanel
 	{
 		return new StreamEncrypter.KdfParams(numRoundsComboBox.getSelectedValue(),
 											 costSpinner.getIntValue(), numBlocksSpinner.getIntValue(),
-											 numParallelBlocksSpinner.getIntValue(),
+											 numSuperblocksSpinner.getIntValue(),
 											 maxNumThreadsSpinner.getIntValue());
 	}
 
@@ -797,9 +796,9 @@ class KdfParameterPanel
 
 		StreamEncrypter.KdfParams params = paramMap.get(kdfUse);
 		numRoundsComboBox.setSelectedValue(params.numRounds);
-		costSpinner.setIntValue(params.cost);
-		numBlocksSpinner.setIntValue(params.numBlocks);
-		numParallelBlocksSpinner.setIntValue(params.numParallelBlocks);
+		costSpinner.setIntValue(params.getCost());
+		numBlocksSpinner.setIntValue(params.getNumBlocks());
+		numSuperblocksSpinner.setIntValue(params.getNumSuperblocks());
 		maxNumThreadsSpinner.setIntValue(params.maxNumThreads);
 	}
 
@@ -810,7 +809,7 @@ class KdfParameterPanel
 		try
 		{
 			KeyGenerator keyGenerator = new KeyGenerator(getParams());
-			RunnableMessageDialog.showDialog(this, keyGenerator);
+			RunnableMessageDialog.showDialog(this, GENERATING_KEY_STR, keyGenerator);
 			if (keyGenerator.outOfMemory)
 				throw new AppException(ErrorId.NOT_ENOUGH_MEMORY);
 			generationTimeField.setText(Long.toString(keyGenerator.time));
@@ -824,16 +823,16 @@ class KdfParameterPanel
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	KdfUse									kdfUse;
 	private	Map<KdfUse, StreamEncrypter.KdfParams>	paramMap;
 	private	Map<KdfUse, FRadioButton>				kdfUseRadioButtons;
-	private	FComboBox<Scrypt.Salsa20NumRounds>		numRoundsComboBox;
+	private	FComboBox<Scrypt.CoreHashNumRounds>		numRoundsComboBox;
 	private	FIntegerSpinner							costSpinner;
 	private	FIntegerSpinner							numBlocksSpinner;
-	private	FIntegerSpinner							numParallelBlocksSpinner;
+	private	FIntegerSpinner							numSuperblocksSpinner;
 	private	FIntegerSpinner							maxNumThreadsSpinner;
 	private	TimeField								generationTimeField;
 

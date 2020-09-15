@@ -29,7 +29,8 @@ import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,22 +54,23 @@ import javax.swing.undo.UndoManager;
 
 import org.w3c.dom.Element;
 
+import uk.blankaspect.common.base64.Base64Encoder;
+
 import uk.blankaspect.common.crypto.FileConcealer;
 import uk.blankaspect.common.crypto.FortunaCipher;
 import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
-import uk.blankaspect.common.misc.Base64Encoder;
 import uk.blankaspect.common.misc.IProgressListener;
 import uk.blankaspect.common.misc.ModernCalendar;
-import uk.blankaspect.common.misc.StringUtils;
 
 import uk.blankaspect.common.regex.RegexUtils;
 
-import uk.blankaspect.common.xml.Attribute;
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.xml.AttributeList;
 import uk.blankaspect.common.xml.XmlConstants;
 import uk.blankaspect.common.xml.XmlParseException;
 import uk.blankaspect.common.xml.XmlUtils;
@@ -102,8 +104,7 @@ class TextDocument
 	public static final		int	DEFAULT_NUM_SPACES_BETWEEN_SENTENCES	= 2;
 
 	public static final		String	DEFAULT_END_OF_SENTENCE_PATTERN	=
-		"(?:(?:\\p{L}|\\p{N}|['\"\u00BB\u201C)\\]>%])[.!?])|" +
-														"(?:(?:\\p{L}|\\p{N})[.!?]['\"\u00BB\u201C)\\]>%])";
+			"(?:(?:\\p{L}|\\p{N}|['\"\u00BB\u201C)\\]>%])[.!?])|(?:(?:\\p{L}|\\p{N})[.!?]['\"\u00BB\u201C)\\]>%])";
 
 	private static final	int	ENCRYPTED_LINE_LENGTH	= 76;
 
@@ -274,7 +275,7 @@ class TextDocument
 
 		private Command(String key)
 		{
-			command = new uk.blankaspect.common.misc.Command(this);
+			command = new uk.blankaspect.common.swing.action.Command(this);
 			putValue(Action.ACTION_COMMAND_KEY, key);
 		}
 
@@ -390,10 +391,10 @@ class TextDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
-		private	uk.blankaspect.common.misc.Command	command;
+		private	uk.blankaspect.common.swing.action.Command	command;
 
 	}
 
@@ -477,7 +478,7 @@ class TextDocument
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -517,11 +518,10 @@ class TextDocument
 		try
 		{
 			XmlWriter writer = new XmlWriter(charArrayWriter);
-			writer.writeXmlDeclaration(XML_VERSION_STR, XmlConstants.ENCODING_NAME_UTF8,
-									   XmlWriter.Standalone.NONE);
+			writer.writeXmlDeclaration(XML_VERSION_STR, XmlConstants.ENCODING_NAME_UTF8, XmlWriter.Standalone.NONE);
 
-			List<Attribute> attributes = new ArrayList<>();
-			attributes.add(new Attribute(AttrName.VERSION, VERSION));
+			AttributeList attributes = new AttributeList();
+			attributes.add(AttrName.VERSION, VERSION);
 			writer.writeElementStart(ElementName.QANA_TEXT, attributes, 0, true, false);
 
 			writer.write(text);
@@ -1067,15 +1067,7 @@ class TextDocument
 		throws AppException
 	{
 		// Convert text to UTF-8
-		byte[] data = null;
-		try
-		{
-			data = getText().getBytes(XmlConstants.ENCODING_NAME_UTF8);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			throw new UnexpectedRuntimeException(e);
-		}
+		byte[] data = getText().getBytes(StandardCharsets.UTF_8);
 
 		// Encrypt data
 		InputStream inStream = new ByteArrayInputStream(data);
@@ -1106,20 +1098,20 @@ class TextDocument
 
 		// Decrypt data
 		InputStream inStream = new ByteArrayInputStream(data);
-		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream()
+		{
+			@Override
+			public String toString()
+			{
+				return new String(buf, 0, count, StandardCharsets.UTF_8);
+			}
+		};
 		if (progressListener != null)
 			decrypter.addProgressListener(progressListener);
 		setTimestamp(decrypter.decrypt(inStream, outStream, data.length, key.getKey()));
 
 		// Set decrypted text
-		try
-		{
-			setText(outStream.toString(XmlConstants.ENCODING_NAME_UTF8), true);
-		}
-		catch (UnsupportedEncodingException e)
-		{
-			throw new UnexpectedRuntimeException(e);
-		}
+		setText(outStream.toString(), true);
 
 		// Update status
 		getWindow().updateStatus();
@@ -1439,7 +1431,7 @@ class TextDocument
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	int			instanceIndex;

@@ -35,11 +35,12 @@ import javax.swing.SwingUtilities;
 
 import uk.blankaspect.common.crypto.FortunaCipher;
 
-import uk.blankaspect.common.gui.DialogIcon;
-import uk.blankaspect.common.gui.TextRendering;
+import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.misc.StringUtils;
-import uk.blankaspect.common.misc.TextUtils;
+import uk.blankaspect.common.swing.icon.DialogIcon;
+
+import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.common.swing.text.TextUtils;
 
 //----------------------------------------------------------------------
 
@@ -99,7 +100,7 @@ class StatusPanel
 			// Set font
 			AppFont.MAIN.apply(this);
 
-			// Initialise instance fields
+			// Initialise instance variables
 			FontMetrics fontMetrics = getFontMetrics(getFont());
 			preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH +
 																fontMetrics.stringWidth(PROTOTYPE_STR);
@@ -196,7 +197,7 @@ class StatusPanel
 
 		private void setText(String text)
 		{
-			if (!StringUtils.equal(text, this.text ))
+			if (!StringUtils.equal(text, this.text))
 			{
 				this.text = text;
 				int textWidth = getFontMetrics(getFont()).
@@ -210,7 +211,7 @@ class StatusPanel
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	int			preferredWidth;
@@ -400,7 +401,7 @@ class StatusPanel
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	StatusField	prngCanReseedField;

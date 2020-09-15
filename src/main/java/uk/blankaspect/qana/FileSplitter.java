@@ -39,7 +39,8 @@ import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.TempFileException;
 
 import uk.blankaspect.common.misc.BinaryFile;
-import uk.blankaspect.common.misc.NumberUtils;
+
+import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
 
@@ -164,7 +165,7 @@ class FileSplitter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -200,7 +201,7 @@ class FileSplitter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		String	name;
@@ -232,7 +233,7 @@ class FileSplitter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	name;
@@ -273,7 +274,7 @@ class FileSplitter
 				{
 					for (int i = 0; i < FILENAME_LENGTH; i++)
 					{
-						if (NumberUtils.HEX_DIGITS_LOWER.indexOf(name.charAt(i)) < 0)
+						if (!NumberUtils.isDigitCharLower(name.charAt(i), 16))
 							return false;
 					}
 					return true;
@@ -320,10 +321,10 @@ class FileSplitter
 
 		private static String createFilename(Fortuna prng)
 		{
-			boolean caseChanged = NumberUtils.setHexLower();
+			boolean caseChanged = NumberUtils.setLower();
 			String str = NumberUtils.bytesToHexString(prng.getRandomBytes(FILENAME_LENGTH / 2));
 			if (caseChanged)
-				NumberUtils.setHexUpper();
+				NumberUtils.setUpper();
 			return str;
 		}
 
@@ -354,7 +355,7 @@ class FileSplitter
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	firstFilename;
@@ -405,7 +406,7 @@ class FileSplitter
 	{
 		int id = NumberUtils.bytesToUIntLE(data, 0, StreamEncrypter.Header.ID_FIELD_SIZE);
 		id ^= new FortunaAes256(filename).getRandomInt();
-		return new int[]{ id & (1 << NUM_FILE_PARTS_SHIFT) - 1, id >>> NUM_FILE_PARTS_SHIFT };
+		return new int[] { id & (1 << NUM_FILE_PARTS_SHIFT) - 1, id >>> NUM_FILE_PARTS_SHIFT };
 	}
 
 	//------------------------------------------------------------------

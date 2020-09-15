@@ -21,7 +21,7 @@ package uk.blankaspect.qana;
 import uk.blankaspect.common.misc.FilenameSuffixFilter;
 import uk.blankaspect.common.misc.IStringKeyed;
 
-import uk.blankaspect.common.windows.FileAssociations;
+import uk.blankaspect.common.platform.windows.FileAssociations;
 
 //----------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ enum FileKind
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	String	key;

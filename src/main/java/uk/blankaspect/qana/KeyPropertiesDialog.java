@@ -46,11 +46,13 @@ import javax.swing.KeyStroke;
 import uk.blankaspect.common.crypto.FortunaCipher;
 import uk.blankaspect.common.crypto.StreamEncrypter;
 
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TitledBorder;
+import uk.blankaspect.common.swing.action.KeyAction;
 
-import uk.blankaspect.common.misc.KeyAction;
+import uk.blankaspect.common.swing.border.TitledBorder;
+
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
@@ -105,7 +107,7 @@ class KeyPropertiesDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		Map<KdfUse, StreamEncrypter.KdfParams>	kdfParameterMap;
@@ -335,14 +337,14 @@ class KeyPropertiesDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point	location;
 	private static	KdfUse	kdfUse		= KdfUse.VERIFICATION;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean				accepted;

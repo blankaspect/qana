@@ -73,22 +73,31 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.CancelledException;
 
-import uk.blankaspect.common.gui.FButton;
-import uk.blankaspect.common.gui.FixedWidthLabel;
-import uk.blankaspect.common.gui.FixedWidthPanel;
-import uk.blankaspect.common.gui.FLabel;
-import uk.blankaspect.common.gui.GuiUtils;
-import uk.blankaspect.common.gui.TextRendering;
-import uk.blankaspect.common.gui.TitledBorder;
-
 import uk.blankaspect.common.indexedsub.IndexedSub;
 
-import uk.blankaspect.common.misc.KeyAction;
 import uk.blankaspect.common.misc.MaxValueMap;
-import uk.blankaspect.common.misc.StringUtils;
-import uk.blankaspect.common.misc.TextUtils;
 
-import uk.blankaspect.common.textfield.ConstrainedTextField;
+import uk.blankaspect.common.string.StringUtils;
+
+import uk.blankaspect.common.swing.action.KeyAction;
+
+import uk.blankaspect.common.swing.border.TitledBorder;
+
+import uk.blankaspect.common.swing.button.FButton;
+
+import uk.blankaspect.common.swing.container.FixedWidthPanel;
+
+import uk.blankaspect.common.swing.font.FontUtils;
+
+import uk.blankaspect.common.swing.label.FixedWidthLabel;
+import uk.blankaspect.common.swing.label.FLabel;
+
+import uk.blankaspect.common.swing.misc.GuiUtils;
+
+import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.common.swing.text.TextUtils;
+
+import uk.blankaspect.common.swing.textfield.ConstrainedTextField;
 
 //----------------------------------------------------------------------
 
@@ -122,8 +131,7 @@ class KeyEditorDialog
 	private static final	String	CIPHERS_STR					= "Ciphers";
 	private static final	String	ALLOWED_STR					= "Allowed";
 	private static final	String	PREFERRED_STR				= "Preferred";
-	private static final	String	RENAME_MESSAGE_STR			= "Do you want to rename the key to " +
-																	"\"%1\"?";
+	private static final	String	RENAME_MESSAGE_STR			= "Do you want to rename the key to '%1'?";
 	private static final	String	DELETE_MESSAGE_STR			= "Do you want to delete the key?";
 	private static final	String	ADD_TOOLTIP_STR				= "Create a key with the specified name";
 	private static final	String	RENAME_TOOLTIP_STR			= "Rename the selected key";
@@ -159,7 +167,7 @@ class KeyEditorDialog
 	////////////////////////////////////////////////////////////////////
 
 		CONFLICTING_NAME
-		("A key named \"%1\" already exists.");
+		("A key named '%1' already exists.");
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -184,7 +192,7 @@ class KeyEditorDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	message;
@@ -265,8 +273,7 @@ class KeyEditorDialog
 
 				// Draw text
 				gr.setColor(TEXT_COLOUR);
-				gr.drawString(text, HORIZONTAL_MARGIN,
-							  VERTICAL_MARGIN + gr.getFontMetrics().getAscent());
+				gr.drawString(text, HORIZONTAL_MARGIN, VERTICAL_MARGIN + gr.getFontMetrics().getAscent());
 			}
 
 			// Draw border
@@ -292,7 +299,7 @@ class KeyEditorDialog
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance fields
+	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
 		private	String	text;
@@ -336,7 +343,7 @@ class KeyEditorDialog
 		@Override
 		protected int getColumnWidth()
 		{
-			return GuiUtils.getCharWidth('0', getFontMetrics(getFont()));
+			return FontUtils.getCharWidth('0', getFontMetrics(getFont()));
 		}
 
 		//--------------------------------------------------------------
@@ -486,14 +493,14 @@ class KeyEditorDialog
 		// Set icons
 		setIconImages(owner.getIconImages());
 
-		// Initialise instance fields
+		// Initialise instance variables
 		keyMap = new HashMap<>();
 
 
 		//----  Key selection list
 
 		// Selection list
-		Collections.sort(keys);
+		keys.sort(null);
 		selectionList = new KeySelectionList(KEY_LIST_NUM_ROWS, keys);
 		selectionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		selectionList.addListSelectionListener(this);
@@ -609,8 +616,7 @@ class KeyEditorDialog
 		cipherInnerPanel.add(allowedCiphersLabel);
 
 		// Field: allowed ciphers
-		allowedCiphersField =
-					new ParameterField(getAllowedCiphersString(EnumSet.allOf(FortunaCipher.class)));
+		allowedCiphersField = new ParameterField(getAllowedCiphersString(EnumSet.allOf(FortunaCipher.class)));
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -643,9 +649,7 @@ class KeyEditorDialog
 		List<String> strs = new ArrayList<>();
 		for (FortunaCipher cipher : FortunaCipher.values())
 			strs.add(cipher.toString());
-		preferredCipherField = new ParameterField(TextUtils.
-															getWidestString(getFontMetrics(getFont()),
-																			strs).str);
+		preferredCipherField = new ParameterField(TextUtils.getWidestString(getFontMetrics(getFont()), strs).str);
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -967,7 +971,7 @@ class KeyEditorDialog
 			else if (command.equals(Command.CLOSE))
 				onClose();
 		}
-		catch (CancelledException e )
+		catch (CancelledException e)
 		{
 			// ignore
 		}
@@ -1031,8 +1035,7 @@ class KeyEditorDialog
 			Point point = event.getPoint();
 			int index = selectionList.locationToIndex(point);
 			if ((index >= 0) && selectionList.getCellBounds(index, index).contains(point))
-				actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED,
-												Command.EDIT_PROPERTIES));
+				actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Command.EDIT_PROPERTIES));
 		}
 	}
 
@@ -1150,8 +1153,7 @@ class KeyEditorDialog
 			kdfParamFields.get(kdfUse).setText(isSelection ? str : null);
 		}
 
-		allowedCiphersField.setText(isSelection ? getAllowedCiphersString(key.getAllowedCiphers())
-												: null);
+		allowedCiphersField.setText(isSelection ? getAllowedCiphersString(key.getAllowedCiphers()) : null);
 		FortunaCipher cipher = isSelection ? key.getPreferredCipher() : null;
 		preferredCipherField.setText((cipher == null) ? null : cipher.toString());
 
@@ -1185,7 +1187,7 @@ class KeyEditorDialog
 		{
 			// Get passphrase
 			String passphrase =
-							PassphraseDialog.showDialog(this, KEY1_STR + "\"" + key.getName() + "\"");
+							PassphraseDialog.showDialog(this, KEY1_STR + "'" + key.getName() + "'");
 			if (passphrase == null)
 				throw new CancelledException();
 
@@ -1210,14 +1212,13 @@ class KeyEditorDialog
 				throw new AppException(ErrorId.CONFLICTING_NAME, name);
 
 			// Get passphrase
-			String keyStr = KEY1_STR + "\"" + name + "\"";
+			String keyStr = KEY1_STR + "'" + name + "'";
 			String passphrase = PassphraseDialog.showDialog(this, keyStr);
 			if (passphrase != null)
 			{
 				// Get key properties
-				KeyPropertiesDialog.Result result =
-										KeyPropertiesDialog.showDialog(this, keyStr, kdfParamMap,
-																	   allowedCiphers, preferredCipher);
+				KeyPropertiesDialog.Result result = KeyPropertiesDialog.showDialog(this, keyStr, kdfParamMap,
+																				   allowedCiphers, preferredCipher);
 				if (result != null)
 				{
 					// Set properties
@@ -1232,7 +1233,7 @@ class KeyEditorDialog
 					// Add key to list
 					List<KeyList.Key> keys = selectionList.getKeys();
 					keys.add(key);
-					Collections.sort(keys);
+					keys.sort(null);
 					selectionList.setKeys(keys);
 				}
 			}
@@ -1275,7 +1276,7 @@ class KeyEditorDialog
 
 				// Update list
 				keys.set(index, newKey);
-				Collections.sort(keys);
+				keys.sort(null);
 				selectionList.setKeys(keys);
 			}
 		}
@@ -1369,17 +1370,16 @@ class KeyEditorDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class fields
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
 	private static	Point									location;
 	private static	Map<KdfUse, StreamEncrypter.KdfParams>	kdfParamMap		= KdfUse.getKdfParameterMap();
-	private static	Set<FortunaCipher>						allowedCiphers	=
-																	EnumSet.allOf(FortunaCipher.class);
+	private static	Set<FortunaCipher>						allowedCiphers	= EnumSet.allOf(FortunaCipher.class);
 	private static	FortunaCipher							preferredCipher	= FortunaCipher.AES256;
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance fields
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
 	private	boolean							accepted;
