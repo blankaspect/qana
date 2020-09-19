@@ -259,7 +259,7 @@ class DecryptDialog
 		controlPanel.add(inFilePanel);
 
 		// Button: set output file from input file
-		JButton setOutFileFromInFileButton = new JButton(AppIcon.LONG_ARROW_DOWN);
+		JButton setOutFileFromInFileButton = new JButton(Icons.LONG_ARROW_DOWN);
 		setOutFileFromInFileButton.setMargin(ARROW_BUTTON_MARGINS);
 		setOutFileFromInFileButton.setToolTipText(SET_OUT_FROM_IN_TOOLTIP_STR);
 		setOutFileFromInFileButton.setActionCommand(Command.SET_OUTPUT_FILE_FROM_INPUT_FILE);

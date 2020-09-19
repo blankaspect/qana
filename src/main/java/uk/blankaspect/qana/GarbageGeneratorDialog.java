@@ -725,7 +725,7 @@ class GarbageGeneratorDialog
 		lengthPanel.add(lengthField);
 
 		// Label: arrow
-		JLabel arrowLabel = new JLabel(AppIcon.ANGLE_DOUBLE_LEFT);
+		JLabel arrowLabel = new JLabel(Icons.ANGLE_DOUBLE_LEFT);
 
 		gbc.gridx = gridX++;
 		gbc.gridy = 0;

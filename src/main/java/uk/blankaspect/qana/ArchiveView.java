@@ -136,8 +136,8 @@ class ArchiveView
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		ASCENDING   (AppIcon.ARROW_UP),
-		DESCENDING  (AppIcon.ARROW_DOWN);
+		ASCENDING   (Icons.ARROW_UP),
+		DESCENDING  (Icons.ARROW_DOWN);
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -1114,10 +1114,10 @@ class ArchiveView
 			// Initialise instance variables
 			if (directory != null)
 				pathname = Utils.getPathname(directory);
-			preferredWidth = 2 * HORIZONTAL_MARGIN + AppIcon.DIRECTORY.getIconWidth();
+			preferredWidth = 2 * HORIZONTAL_MARGIN + Icons.DIRECTORY.getIconWidth();
 			if (pathname != null)
 				preferredWidth += ICON_TEXT_GAP + fontMetrics.stringWidth(pathname);
-			preferredHeight = 2 * VERTICAL_MARGIN + Math.max(AppIcon.DIRECTORY.getIconHeight(),
+			preferredHeight = 2 * VERTICAL_MARGIN + Math.max(Icons.DIRECTORY.getIconHeight(),
 															 fontMetrics.getAscent() + fontMetrics.getDescent());
 			pasteAction = new CommandAction(Command.PASTE, PASTE_STR);
 
@@ -1250,8 +1250,8 @@ class ArchiveView
 			gr.fillRect(0, 0, width, height);
 
 			// Draw icon
-			gr.drawImage(AppIcon.DIRECTORY.getImage(), HORIZONTAL_MARGIN,
-						 (height - AppIcon.DIRECTORY.getIconHeight()) / 2, null);
+			gr.drawImage(Icons.DIRECTORY.getImage(), HORIZONTAL_MARGIN,
+						 (height - Icons.DIRECTORY.getIconHeight()) / 2, null);
 
 			// Draw text
 			if (pathname != null)
@@ -1261,7 +1261,7 @@ class ArchiveView
 
 				// Draw text
 				FontMetrics fontMetrics = gr.getFontMetrics();
-				int x = HORIZONTAL_MARGIN + AppIcon.DIRECTORY.getIconWidth() + ICON_TEXT_GAP;
+				int x = HORIZONTAL_MARGIN + Icons.DIRECTORY.getIconWidth() + ICON_TEXT_GAP;
 				String str = TextUtils.getLimitedWidthPathname(pathname, fontMetrics, width - x - HORIZONTAL_MARGIN);
 				gr.setColor(TEXT_COLOUR);
 				gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
