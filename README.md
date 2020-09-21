@@ -8,13 +8,13 @@ the resources are in `src/main/resources`\).
 Not all the classes of the `common` packages are required to build the Qana application.  The JAR file that is created
 by the `jar` task of the Gradle build script, `build.gradle.kts`, includes only the classes of the `common` packages
 that are required by the application.  The Gradle script expects to find the `common` project in the parent directory of
-the `Qana` project:
+the `qana` project:
 ```
 ..
 |
 +-- common
 |
-+-- Qana
++-- qana
     |
     +-- build.gradle.kts
 ```
