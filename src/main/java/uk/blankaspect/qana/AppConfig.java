@@ -2,7 +2,7 @@
 
 AppConfig.java
 
-Application configuration class.
+Class: application configuration.
 
 \*====================================================================*/
 
@@ -77,7 +77,7 @@ import uk.blankaspect.common.ui.progress.IProgressView;
 //----------------------------------------------------------------------
 
 
-// APPLICATION CONFIGURATION CLASS
+// CLASS: APPLICATION CONFIGURATION
 
 
 class AppConfig
@@ -87,23 +87,21 @@ class AppConfig
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		AppConfig	INSTANCE;
+	public static final		AppConfig	INSTANCE	= new AppConfig();
 
-	public static final		int	ENTROPY_SOURCE_MIN_NUM_BITS	= 0;
-	public static final		int	ENTROPY_SOURCE_MAX_NUM_BITS	= 4;
+	public static final		int		ENTROPY_SOURCE_MIN_NUM_BITS	= 0;
+	public static final		int		ENTROPY_SOURCE_MAX_NUM_BITS	= 8;
 
-	private static final	int	VERSION					= 0;
-	private static final	int	MIN_SUPPORTED_VERSION	= 0;
-	private static final	int	MAX_SUPPORTED_VERSION	= 0;
+	private static final	int		VERSION					= 0;
+	private static final	int		MIN_SUPPORTED_VERSION	= 0;
+	private static final	int		MAX_SUPPORTED_VERSION	= 0;
 
 	private static final	String	CONFIG_ERROR_STR	= "Configuration error";
 	private static final	String	CONFIG_DIR_KEY		= Property.APP_PREFIX + "configDir";
-	private static final	String	PROPERTIES_FILENAME	= App.NAME_KEY + "-properties" +
-																			AppConstants.XML_FILE_SUFFIX;
+	private static final	String	PROPERTIES_FILENAME	= App.NAME_KEY + "-properties" + AppConstants.XML_FILE_SUFFIX;
 	private static final	String	FILENAME_STEM		= App.NAME_KEY + "-config";
 	private static final	String	CONFIG_FILENAME		= FILENAME_STEM + AppConstants.XML_FILE_SUFFIX;
-	private static final	String	CONFIG_OLD_FILENAME	= FILENAME_STEM + "-old" +
-																			AppConstants.XML_FILE_SUFFIX;
+	private static final	String	CONFIG_OLD_FILENAME	= FILENAME_STEM + "-old" + AppConstants.XML_FILE_SUFFIX;
 
 	private static final	String	SAVE_CONFIGURATION_FILE_STR	= "Save configuration file";
 	private static final	String	WRITING_STR					= "Writing";
@@ -194,8 +192,7 @@ class AppConfig
 		("The version number of the configuration file is invalid."),
 
 		UNSUPPORTED_CONFIGURATION_FILE
-		("The version of the configuration file (%1) is not supported by this version of " +
-			App.SHORT_NAME + "."),
+		("The version of the configuration file (%1) is not supported by this version of " + App.SHORT_NAME + "."),
 
 		FAILED_TO_CREATE_DIRECTORY
 		("Failed to create the directory for the configuration file."),
@@ -534,7 +531,7 @@ class AppConfig
 		@Override
 		public String toString()
 		{
-			return ((value == null) ? "" : value.x + ", " + value.y);
+			return (value == null) ? "" : value.x + ", " + value.y;
 		}
 
 		//--------------------------------------------------------------
@@ -617,7 +614,7 @@ class AppConfig
 		@Override
 		public String toString()
 		{
-			return ((value == null) ? "" : value.width + ", " + value.height);
+			return (value == null) ? "" : value.width + ", " + value.height;
 		}
 
 		//--------------------------------------------------------------
@@ -1450,7 +1447,7 @@ class AppConfig
 		public String toString(ArchiveView.Column key)
 		{
 			int value = getValue(key);
-			return ((value == 0) ? "" : Integer.toString(value));
+			return (value == 0) ? "" : Integer.toString(value);
 		}
 
 		//--------------------------------------------------------------
@@ -1528,7 +1525,7 @@ class AppConfig
 		@Override
 		public String toString()
 		{
-			return (value.width + ", " + value.height);
+			return value.width + ", " + value.height;
 		}
 
 		//--------------------------------------------------------------
@@ -1805,7 +1802,7 @@ class AppConfig
 		@Override
 		public String toString()
 		{
-			return ((value == null) ? "" : value.toString());
+			return (value == null) ? "" : value.toString();
 		}
 
 		//--------------------------------------------------------------
@@ -2041,8 +2038,15 @@ class AppConfig
 
 		private CPKeyDatabasePathname()
 		{
+			this(Utils.getPathname(new File(Utils.getPropertiesPathname(), DEFAULT_FILENAME), true));
+		}
+
+		//--------------------------------------------------------------
+
+		private CPKeyDatabasePathname(String value)
+		{
 			super(concatenateKeys(Key.CRYPTO, Key.KEY_DATABASE));
-			value = Utils.getPathname(new File(Utils.getPropertiesPathname(), DEFAULT_FILENAME), true);
+			this.value = value;
 		}
 
 		//--------------------------------------------------------------
@@ -2064,7 +2068,7 @@ class AppConfig
 		@Override
 		public String toString()
 		{
-			return ((value == null) ? "" : value.toString());
+			return (value == null) ? "" : value.toString();
 		}
 
 		//--------------------------------------------------------------
@@ -2087,9 +2091,7 @@ class AppConfig
 	public File getKeyDatabaseFile()
 	{
 		String pathname = getKeyDatabasePathname();
-		return (StringUtils.isNullOrEmpty(pathname)
-												? null
-												: new File(PathnameUtils.parsePathname(pathname)));
+		return StringUtils.isNullOrEmpty(pathname) ? null : new File(PathnameUtils.parsePathname(pathname));
 	}
 
 	//------------------------------------------------------------------
@@ -2358,8 +2360,15 @@ class AppConfig
 
 		private CPSeedFileDirectoryPathname()
 		{
+			this(Utils.getPathname(new File(Utils.getPropertiesPathname()), true));
+		}
+
+		//--------------------------------------------------------------
+
+		private CPSeedFileDirectoryPathname(String value)
+		{
 			super(concatenateKeys(Key.ENTROPY, Key.SEED_FILE_DIRECTORY));
-			value = Utils.getPathname(new File(Utils.getPropertiesPathname()), true);
+			this.value = value;
 		}
 
 		//--------------------------------------------------------------
@@ -2381,7 +2390,7 @@ class AppConfig
 		@Override
 		public String toString()
 		{
-			return ((value == null) ? "" : value.toString());
+			return (value == null) ? "" : value.toString();
 		}
 
 		//--------------------------------------------------------------
@@ -2404,9 +2413,7 @@ class AppConfig
 	public File getSeedFileDirectory()
 	{
 		String pathname = getSeedFileDirectoryPathname();
-		return (StringUtils.isNullOrEmpty(pathname)
-												? null
-												: new File(PathnameUtils.parsePathname(pathname)));
+		return StringUtils.isNullOrEmpty(pathname) ? null : new File(PathnameUtils.parsePathname(pathname));
 	}
 
 	//------------------------------------------------------------------
@@ -2546,8 +2553,7 @@ class AppConfig
 	////////////////////////////////////////////////////////////////////
 
 		private static final	int	MIN_VALUE	= 0;
-		private static final	int	MAX_VALUE	=
-												(1 << EntropyAccumulator.SourceParams.BIT_MASK_LENGTH) - 1;
+		private static final	int	MAX_VALUE	= (1 << EntropyAccumulator.SourceParams.BIT_MASK_LENGTH) - 1;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -2555,8 +2561,7 @@ class AppConfig
 
 		private CPEntropySourceBitMask()
 		{
-			super(concatenateKeys(Key.ENTROPY, Key.SOURCE, Key.BIT_MASK),
-				  EntropyAccumulator.SourceKind.class);
+			super(concatenateKeys(Key.ENTROPY, Key.SOURCE, Key.BIT_MASK), EntropyAccumulator.SourceKind.class);
 			for (EntropyAccumulator.SourceKind sourceKind : EntropyAccumulator.SourceKind.values())
 				values.put(sourceKind, EntropyAccumulator.SourceParams.DEFAULT_BIT_MASK);
 		}
@@ -2584,8 +2589,8 @@ class AppConfig
 		@Override
 		public String toString(EntropyAccumulator.SourceKind sourceKind)
 		{
-			return NumberUtils.uIntToBinString(getValue(sourceKind),
-											   EntropyAccumulator.SourceParams.BIT_MASK_LENGTH, '0');
+			return NumberUtils.uIntToBinString(getValue(sourceKind), EntropyAccumulator.SourceParams.BIT_MASK_LENGTH,
+											   '0');
 		}
 
 		//--------------------------------------------------------------
@@ -2671,7 +2676,7 @@ class AppConfig
 		@Override
 		public String toString(EntropyAccumulator.SourceKind sourceKind)
 		{
-			return (sourceKind.hasInterval() ? Integer.toString(getValue(sourceKind)) : null);
+			return sourceKind.hasInterval() ? Integer.toString(getValue(sourceKind)) : null;
 		}
 
 		//--------------------------------------------------------------
@@ -2722,8 +2727,7 @@ class AppConfig
 		private CPSplitFilePartLengthLowerBound()
 		{
 			super(concatenateKeys(Key.SPLIT, Key.FILE_PART_LENGTH_LOWER_BOUND));
-			value = new ByteUnitIntegerSpinnerPanel.Value(ByteUnitIntegerSpinnerPanel.Unit.MEBIBYTE,
-														  16 << 20);
+			value = new ByteUnitIntegerSpinnerPanel.Value(ByteUnitIntegerSpinnerPanel.Unit.MEBIBYTE, 16 << 20);
 		}
 
 		//--------------------------------------------------------------
@@ -2782,8 +2786,7 @@ class AppConfig
 //--//  Instance variables : associated variables in enclosing class
 //--////////////////////////////////////////////////////////////////////
 
-	private	CPSplitFilePartLengthLowerBound	cpSplitFilePartLengthLowerBound	=
-																	new CPSplitFilePartLengthLowerBound();
+	private	CPSplitFilePartLengthLowerBound	cpSplitFilePartLengthLowerBound	= new CPSplitFilePartLengthLowerBound();
 
 	//==================================================================
 
@@ -2802,8 +2805,7 @@ class AppConfig
 		private CPSplitFilePartLengthUpperBound()
 		{
 			super(concatenateKeys(Key.SPLIT, Key.FILE_PART_LENGTH_UPPER_BOUND));
-			value = new ByteUnitIntegerSpinnerPanel.Value(ByteUnitIntegerSpinnerPanel.Unit.MEBIBYTE,
-														  64 << 20);
+			value = new ByteUnitIntegerSpinnerPanel.Value(ByteUnitIntegerSpinnerPanel.Unit.MEBIBYTE, 64 << 20);
 		}
 
 		//--------------------------------------------------------------
@@ -2862,8 +2864,7 @@ class AppConfig
 //--//  Instance variables : associated variables in enclosing class
 //--////////////////////////////////////////////////////////////////////
 
-	private	CPSplitFilePartLengthUpperBound	cpSplitFilePartLengthUpperBound	=
-																	new CPSplitFilePartLengthUpperBound();
+	private	CPSplitFilePartLengthUpperBound	cpSplitFilePartLengthUpperBound	= new CPSplitFilePartLengthUpperBound();
 
 	//==================================================================
 
@@ -2954,6 +2955,16 @@ class AppConfig
 	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	File			file;
+	private	boolean			fileRead;
+	private	File			selectedFile;
+	private	JFileChooser	fileChooser;
+	private	List<Property>	properties;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
@@ -2990,8 +3001,8 @@ class AppConfig
 		File jarDirectory = null;
 		try
 		{
-			jarDirectory = new File(AppConfig.class.getProtectionDomain().getCodeSource().getLocation().
-																				toURI()).getParentFile();
+			jarDirectory = new File(AppConfig.class.getProtectionDomain().getCodeSource().getLocation()
+																							.toURI()).getParentFile();
 		}
 		catch (Exception e)
 		{
@@ -3082,8 +3093,7 @@ class AppConfig
 		fileChooser.rescanCurrentDirectory();
 		if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION)
 		{
-			selectedFile = Utils.appendSuffix(fileChooser.getSelectedFile(),
-											  AppConstants.XML_FILE_SUFFIX);
+			selectedFile = Utils.appendSuffix(fileChooser.getSelectedFile(), AppConstants.XML_FILE_SUFFIX);
 			return selectedFile;
 		}
 		return null;
@@ -3099,6 +3109,9 @@ class AppConfig
 		try
 		{
 			file = getFile();
+
+			updateConfigDir();
+
 			if (file != null)
 			{
 				configFile = new ConfigFile();
@@ -3189,7 +3202,7 @@ class AppConfig
 	public Map<EntropyAccumulator.SourceKind, EntropyAccumulator.SourceParams> getEntropySourceParams()
 	{
 		Map<EntropyAccumulator.SourceKind, EntropyAccumulator.SourceParams> sourceParams =
-													new EnumMap<>(EntropyAccumulator.SourceKind.class);
+																new EnumMap<>(EntropyAccumulator.SourceKind.class);
 		for (EntropyAccumulator.SourceKind sourceKind : EntropyAccumulator.SourceKind.values())
 		{
 			int bitMask = getEntropySourceBitMask(sourceKind);
@@ -3274,24 +3287,19 @@ class AppConfig
 
 	//------------------------------------------------------------------
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
-
-	static
+	private void updateConfigDir()
 	{
-		INSTANCE = new AppConfig();
+		String pathname = (file == null) ? null : file.getParent();
+		pathname = (pathname == null) ? "." : PathnameUtils.toUnixStyle(pathname, true);
+		while (pathname.endsWith("/"))
+			pathname = pathname.substring(0, pathname.length() - 1);
+
+		cpKeyDatabasePathname = new CPKeyDatabasePathname((pathname.equals(".") ? "" : pathname + "/")
+																+ CPKeyDatabasePathname.DEFAULT_FILENAME);
+		cpSeedFileDirectoryPathname = new CPSeedFileDirectoryPathname(pathname);
 	}
 
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	File			file;
-	private	boolean			fileRead;
-	private	File			selectedFile;
-	private	JFileChooser	fileChooser;
-	private	List<Property>	properties;
+	//------------------------------------------------------------------
 
 }
 

@@ -2,7 +2,7 @@
 
 App.java
 
-Application class.
+Class: application.
 
 \*====================================================================*/
 
@@ -86,6 +86,7 @@ import uk.blankaspect.common.number.NumberUtils;
 import uk.blankaspect.common.platform.windows.FileAssociations;
 
 import uk.blankaspect.common.resource.ResourceProperties;
+import uk.blankaspect.common.resource.ResourceUtils;
 
 import uk.blankaspect.common.string.StringUtils;
 
@@ -98,7 +99,7 @@ import uk.blankaspect.common.swing.textfield.TextFieldUtils;
 //----------------------------------------------------------------------
 
 
-// APPLICATION CLASS
+// CLASS: APPLICATION
 
 
 public class App
@@ -114,15 +115,15 @@ public class App
 	public static final		String	LONG_NAME	= "Qana";
 	public static final		String	NAME_KEY	= "qana";
 
-	private static final	int	ENCRYPTION_ID	= 0x7E391D06;
+	private static final	int		ENCRYPTION_ID	= 0x7E391D06;
 
-	private static final	int	ENCRYPTION_VERSION					= 0;
-	private static final	int	ENCRYPTION_MIN_SUPPORTED_VERSION	= 0;
-	private static final	int	ENCRYPTION_MAX_SUPPORTED_VERSION	= 0;
+	private static final	int		ENCRYPTION_VERSION					= 0;
+	private static final	int		ENCRYPTION_MIN_SUPPORTED_VERSION	= 0;
+	private static final	int		ENCRYPTION_MAX_SUPPORTED_VERSION	= 0;
 
-	private static final	int	MAX_NUM_DOCUMENTS	= 64;
+	private static final	int		MAX_NUM_DOCUMENTS	= 64;
 
-	private static final	int	TIMER_INTERVAL	= 500;
+	private static final	int		TIMER_INTERVAL	= 500;
 
 	private static final	String	VERSION_PROPERTY_KEY	= "version";
 	private static final	String	BUILD_PROPERTY_KEY		= "build";
@@ -233,7 +234,7 @@ public class App
 ////////////////////////////////////////////////////////////////////////
 
 
-	// FILE OPERATION
+	// ENUMERATION: FILE OPERATION
 
 
 	private enum FileOperation
@@ -283,6 +284,19 @@ public class App
 		);
 
 		private static final	String	NUM_FILES_STR	= "Number of files ";
+
+	////////////////////////////////////////////////////////////////////
+	//  Class variables
+	////////////////////////////////////////////////////////////////////
+
+		private static	Map<FileOperation, Integer>	operationCounts	= new EnumMap<>(FileOperation.class);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	titleStr;
+		private	String	completedStr;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -335,25 +349,12 @@ public class App
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Class variables
-	////////////////////////////////////////////////////////////////////
-
-		private static	Map<FileOperation, Integer>	operationCounts	= new EnumMap<>(FileOperation.class);
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	titleStr;
-		private	String	completedStr;
-
 	}
 
 	//==================================================================
 
 
-	// ERROR IDENTIFIERS
+	// ENUMERATION: ERROR IDENTIFIERS
 
 
 	private enum ErrorId
@@ -407,6 +408,12 @@ public class App
 		("There was not enough memory to generate a carrier image of the required size.");
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -421,18 +428,13 @@ public class App
 	//  Instance methods : AppException.IId interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getMessage()
 		{
 			return message;
 		}
 
 		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
 
 	}
 
@@ -443,11 +445,18 @@ public class App
 ////////////////////////////////////////////////////////////////////////
 
 
-	// DOCUMENT-VIEW CLASS
+	// CLASS: DOCUMENT-VIEW
 
 
 	private static class DocumentView
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Document	document;
+		private	View		view;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -461,19 +470,12 @@ public class App
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	Document	document;
-		private	View		view;
-
 	}
 
 	//==================================================================
 
 
-	// CONCEALED PAYLOAD LENGTH ENCODER AND DECODER CLASS
+	// CLASS: CONCEALED PAYLOAD LENGTH ENCODER AND DECODER
 
 
 	private static class LengthCoder
@@ -500,6 +502,7 @@ public class App
 	//  Instance methods : StreamConcealer.ILengthDecoder interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public int getLengthFieldNumBits(int numPixels)
 		{
 			int maxLength = numPixels + (numPixels >>> 1);
@@ -508,6 +511,7 @@ public class App
 
 		//--------------------------------------------------------------
 
+		@Override
 		public int decodeLength(byte[] data,
 								int    numPixels)
 		{
@@ -540,6 +544,7 @@ public class App
 	//  Instance methods : StreamConcealer.LengthEncoder interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public byte[] encodeLength(int length,
 								   int numPixels)
 		{
@@ -610,7 +615,7 @@ public class App
 ////////////////////////////////////////////////////////////////////////
 
 
-	// RANDOM DATA INPUT STREAM CLASS
+	// CLASS: RANDOM-DATA INPUT STREAM
 
 
 	private class RandomDataInputStream
@@ -624,6 +629,15 @@ public class App
 
 		private static final	int	KDF_PARAM_DATA_SIZE	= 4;
 		private static final	int	BLOCK_LENGTH		= 4096;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int						length;
+		private	RandomDataStreamState	state;
+		private	Fortuna					prng;
+		private	byte[]					salt;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -645,6 +659,7 @@ public class App
 	//  Instance methods : ByteDataInputStream interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public long getLength()
 		{
 			return length;
@@ -652,6 +667,7 @@ public class App
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void reset()
 		{
 			// do nothing
@@ -659,6 +675,7 @@ public class App
 
 		//--------------------------------------------------------------
 
+		@Override
 		public int read(byte[] buffer,
 						int    offset,
 						int    length)
@@ -713,21 +730,12 @@ public class App
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int						length;
-		private	RandomDataStreamState	state;
-		private	Fortuna					prng;
-		private	byte[]					salt;
-
 	}
 
 	//==================================================================
 
 
-	// CONCEALER RANDOM SOURCE CLASS
+	// CLASS: RANDOM SOURCE FOR CONCEALER
 
 
 	private class RandomSource
@@ -764,7 +772,7 @@ public class App
 	//==================================================================
 
 
-	// CARRIER IMAGE GENERATOR CLASS
+	// CLASS: CARRIER-IMAGE GENERATOR
 
 
 	private class CarrierImageGenerator
@@ -832,6 +840,26 @@ public class App
 	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	ResourceProperties	buildProperties;
+	private	String				versionStr;
+	private	MainWindow			mainWindow;
+	private	Timer				intervalTimer;
+	private	KeyList				persistentKeyList;
+	private	KeyList				temporaryKeyList;
+	private	KeyList.Key			globalKey;
+	private	List<DocumentView>	documentsViews;
+	private	ImportQueue			importQueue;
+	private	StandardCsprng		prng;
+	private	int					newArchiveDocumentIndex;
+	private	int					newTextDocumentIndex;
+	private	boolean				exiting;
+	private	boolean				executingCommand;
+	private	List<File>			pendingFiles;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
@@ -894,14 +922,14 @@ public class App
 
 	public Document getDocument()
 	{
-		return ((hasDocuments() && (mainWindow != null)) ? getDocument(mainWindow.getTabIndex()) : null);
+		return (hasDocuments() && (mainWindow != null)) ? getDocument(mainWindow.getTabIndex()) : null;
 	}
 
 	//------------------------------------------------------------------
 
 	public Document getDocument(int index)
 	{
-		return (hasDocuments() ? documentsViews.get(index).document : null);
+		return hasDocuments() ? documentsViews.get(index).document : null;
 	}
 
 	//------------------------------------------------------------------
@@ -909,7 +937,7 @@ public class App
 	public ArchiveDocument getArchiveDocument()
 	{
 		Document document = getDocument();
-		return ((document instanceof ArchiveDocument) ? (ArchiveDocument)document : null);
+		return (document instanceof ArchiveDocument) ? (ArchiveDocument)document : null;
 	}
 
 	//------------------------------------------------------------------
@@ -917,7 +945,7 @@ public class App
 	public ArchiveDocument getArchiveDocument(int index)
 	{
 		Document document = getDocument(index);
-		return ((document instanceof ArchiveDocument) ? (ArchiveDocument)document : null);
+		return (document instanceof ArchiveDocument) ? (ArchiveDocument)document : null;
 	}
 
 	//------------------------------------------------------------------
@@ -925,7 +953,7 @@ public class App
 	public TextDocument getTextDocument()
 	{
 		Document document = getDocument();
-		return ((document instanceof TextDocument) ? (TextDocument)document : null);
+		return (document instanceof TextDocument) ? (TextDocument)document : null;
 	}
 
 	//------------------------------------------------------------------
@@ -933,21 +961,21 @@ public class App
 	public TextDocument getTextDocument(int index)
 	{
 		Document document = getDocument(index);
-		return ((document instanceof TextDocument) ? (TextDocument)document : null);
+		return (document instanceof TextDocument) ? (TextDocument)document : null;
 	}
 
 	//------------------------------------------------------------------
 
 	public View getView()
 	{
-		return ((hasDocuments() && (mainWindow != null)) ? getView(mainWindow.getTabIndex()) : null);
+		return (hasDocuments() && (mainWindow != null)) ? getView(mainWindow.getTabIndex()) : null;
 	}
 
 	//------------------------------------------------------------------
 
 	public View getView(int index)
 	{
-		return (hasDocuments() ? documentsViews.get(index).view : null);
+		return hasDocuments() ? documentsViews.get(index).view : null;
 	}
 
 	//------------------------------------------------------------------
@@ -967,7 +995,7 @@ public class App
 	public ArchiveView getArchiveView()
 	{
 		View view = getView();
-		return ((view instanceof ArchiveView) ? (ArchiveView)view : null);
+		return (view instanceof ArchiveView) ? (ArchiveView)view : null;
 	}
 
 	//------------------------------------------------------------------
@@ -975,7 +1003,7 @@ public class App
 	public ArchiveView getArchiveView(int index)
 	{
 		View view = getView(index);
-		return ((view instanceof ArchiveView) ? (ArchiveView)view : null);
+		return (view instanceof ArchiveView) ? (ArchiveView)view : null;
 	}
 
 	//------------------------------------------------------------------
@@ -983,7 +1011,7 @@ public class App
 	public TextView getTextView()
 	{
 		View view = getView();
-		return ((view instanceof TextView) ? (TextView)view : null);
+		return (view instanceof TextView) ? (TextView)view : null;
 	}
 
 	//------------------------------------------------------------------
@@ -991,7 +1019,7 @@ public class App
 	public TextView getTextView(int index)
 	{
 		View view = getView(index);
-		return ((view instanceof TextView) ? (TextView)view : null);
+		return (view instanceof TextView) ? (TextView)view : null;
 	}
 
 	//------------------------------------------------------------------
@@ -1823,7 +1851,7 @@ public class App
 		// Read build properties
 		try
 		{
-			buildProperties = new ResourceProperties(BUILD_PROPERTIES_FILENAME);
+			buildProperties = new ResourceProperties(ResourceUtils.absoluteName(getClass(), BUILD_PROPERTIES_FILENAME));
 		}
 		catch (LocationException e)
 		{
@@ -2747,9 +2775,8 @@ public class App
 						String[] optionStrs = Utils.getOptionStrings(EXIT_STR);
 						if (JOptionPane.showOptionDialog(mainWindow, NO_KEY_DATABASE2_STR,
 														 SHORT_NAME + " : " + KEY_DATABASE_STR,
-														 JOptionPane.OK_CANCEL_OPTION,
-														 JOptionPane.WARNING_MESSAGE, null, optionStrs,
-														 optionStrs[1]) != JOptionPane.OK_OPTION)
+														 JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+														 null, optionStrs, optionStrs[1]) != JOptionPane.OK_OPTION)
 							return;
 					}
 					else
@@ -2763,9 +2790,8 @@ public class App
 						{
 							String[] optionStrs = Utils.getOptionStrings(EXIT_STR);
 							if (JOptionPane.showOptionDialog(mainWindow, e, SHORT_NAME + " : " + KEY_DATABASE_STR,
-															 JOptionPane.OK_CANCEL_OPTION,
-															 JOptionPane.WARNING_MESSAGE, null, optionStrs,
-															 optionStrs[1]) != JOptionPane.OK_OPTION)
+															 JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+															 null, optionStrs, optionStrs[1]) != JOptionPane.OK_OPTION)
 								return;
 						}
 					}
@@ -2991,26 +3017,6 @@ public class App
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	ResourceProperties	buildProperties;
-	private	String				versionStr;
-	private	MainWindow			mainWindow;
-	private	Timer				intervalTimer;
-	private	KeyList				persistentKeyList;
-	private	KeyList				temporaryKeyList;
-	private	KeyList.Key			globalKey;
-	private	List<DocumentView>	documentsViews;
-	private	ImportQueue			importQueue;
-	private	StandardCsprng		prng;
-	private	int					newArchiveDocumentIndex;
-	private	int					newTextDocumentIndex;
-	private	boolean				exiting;
-	private	boolean				executingCommand;
-	private	List<File>			pendingFiles;
 
 }
 

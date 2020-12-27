@@ -2,7 +2,7 @@
 
 PreferencesDialog.java
 
-Preferences dialog box class.
+Class: preferences dialog.
 
 \*====================================================================*/
 
@@ -113,7 +113,7 @@ import uk.blankaspect.common.swing.textfield.IntegerValueField;
 //----------------------------------------------------------------------
 
 
-// PREFERENCES DIALOG BOX CLASS
+// CLASS: PREFERENCES DIALOG
 
 
 class PreferencesDialog
@@ -242,7 +242,7 @@ class PreferencesDialog
 ////////////////////////////////////////////////////////////////////////
 
 
-	// TABS
+	// ENUMERATION: TABS
 
 
 	private enum Tab
@@ -532,6 +532,12 @@ class PreferencesDialog
 		};
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	text;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -559,18 +565,12 @@ class PreferencesDialog
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	text;
-
 	}
 
 	//==================================================================
 
 
-	// ERROR IDENTIFIERS
+	// ENUMERATION: ERROR IDENTIFIERS
 
 
 	private enum ErrorId
@@ -601,6 +601,12 @@ class PreferencesDialog
 			TextDocument.MAX_WRAP_LINE_LENGTH + ".");
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -615,18 +621,13 @@ class PreferencesDialog
 	//  Instance methods : AppException.IId interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getMessage()
 		{
 			return message;
 		}
 
 		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
 
 	}
 
@@ -637,7 +638,7 @@ class PreferencesDialog
 ////////////////////////////////////////////////////////////////////////
 
 
-	// ARCHIVE VIEW PANEL CLASS
+	// CLASS: ARCHIVE VIEW PANEL
 
 
 	private static class ArchiveViewPanel
@@ -696,7 +697,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// ARCHIVE VIEW PANEL FIXED-WIDTH COMPONENT FACTORY CLASS
+	// CLASS: ARCHIVE VIEW PANEL FIXED-WIDTH COMPONENT FACTORY
 
 
 	private static class ArchiveViewPanelComponentFactory
@@ -769,7 +770,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// FILES PANEL CLASS
+	// CLASS: FILES PANEL
 
 
 	private static class FilesPanel
@@ -828,7 +829,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// FILES PANEL LABEL CLASS
+	// CLASS: FILES-PANEL LABEL
 
 
 	private static class FilesPanelLabel
@@ -887,7 +888,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// ENTROPY PANEL LABEL CLASS
+	// CLASS: ENTROPY-PANEL LABEL
 
 
 	private static class EntropyPanelLabel
@@ -946,7 +947,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// FILENAME SUFFIX FIELD CLASS
+	// CLASS: FILENAME-SUFFIX FIELD
 
 
 	private static class FilenameSuffixField
@@ -993,7 +994,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// LINE LENGTH FIELD CLASS
+	// CLASS: LINE-LENGTH FIELD
 
 
 	private static class LineLengthField
@@ -1036,7 +1037,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// COLOUR BUTTON CLASS
+	// CLASS: COLOUR BUTTON
 
 
 	private static class ColourButton
@@ -1069,7 +1070,7 @@ class PreferencesDialog
 	//==================================================================
 
 
-	// FONT PANEL CLASS
+	// CLASS: FONT PANEL
 
 
 	private static class FontPanel
@@ -1091,7 +1092,7 @@ class PreferencesDialog
 	////////////////////////////////////////////////////////////////////
 
 
-		// SIZE SPINNER CLASS
+		// CLASS: SIZE SPINNER
 
 
 		private static class SizeSpinner
@@ -1144,6 +1145,14 @@ class PreferencesDialog
 		//==============================================================
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	FComboBox<String>		nameComboBox;
+		private	FComboBox<FontStyle>	styleComboBox;
+		private	SizeSpinner				sizeSpinner;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
@@ -1176,17 +1185,82 @@ class PreferencesDialog
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	FComboBox<String>		nameComboBox;
-		private	FComboBox<FontStyle>	styleComboBox;
-		private	SizeSpinner				sizeSpinner;
-
 	}
 
 	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	Point	location;
+	private static	int		tabIndex;
+	private static	KdfUse	kdfUse		= KdfUse.VERIFICATION;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	// Main panel
+	private	boolean										accepted;
+	private	JTabbedPane									tabbedPanel;
+
+	// General panel
+	private	BooleanComboBox								showUnixPathnamesComboBox;
+	private	BooleanComboBox								selectTextOnFocusGainedComboBox;
+	private	BooleanComboBox								saveMainWindowLocationComboBox;
+	private	BooleanComboBox								saveMainWindowSizeComboBox;
+	private	FIntegerSpinner								maxEditListLengthSpinner;
+	private	BooleanComboBox								clearClipboardOnExitComboBox;
+	private	FComboBox<EncryptedFileImportKind>			encryptedFileDragAndDropActionComboBox;
+	private	FComboBox<CarrierImage.Kind>				carrierImageKindComboBox;
+
+	// Appearance panel
+	private	FComboBox<String>							lookAndFeelComboBox;
+	private	FComboBox<TextRendering.Antialiasing>		textAntialiasingComboBox;
+	private	JButton										statusTextColourButton;
+
+	// Archive view panel
+	private	FIntegerSpinner								archiveViewNumRowsSpinner;
+	private	Map<ArchiveView.Column, FCheckBox>			archiveViewColumnCheckBoxes;
+	private	Map<ArchiveView.Column, FIntegerSpinner>	archiveViewColumnWidthSpinners;
+
+	// Text view panel
+	private	DimensionsSpinnerPanel						textViewSizePanel;
+	private	JButton										textViewTextColourButton;
+	private	JButton										textViewBackgroundColourButton;
+	private	JButton										textViewSelectionTextColourButton;
+	private	JButton										textViewSelectionBackgroundColourButton;
+
+	// Text panel
+	private	LineLengthField								textWrapDefaultLineLengthField;
+	private	FTextField									textWrapEndOfSentencePatternField;
+	private	FIntegerSpinner								textWrapNumSpacesBetweenSentencesSpinner;
+
+	// Files panel
+	private	Map<FileKind, FilenameSuffixField>			filenameSuffixFields;
+	private	Map<ActionSource, BooleanComboBox>			selectEncryptDecryptOutputFileComboBoxes;
+	private	FIntegerSpinner								fileErasureNumPassesSpinner;
+	private	BooleanComboBox								saveFileSelectionPathnamesComboBox;
+
+	// Keys panel
+	private	FPathnameField								keyDatabaseField;
+	private	JFileChooser								keyDatabaseFileChooser;
+	private	BooleanComboBox								warnTemporaryKeyComboBox;
+	private	KdfParameterPanel							kdfParameterPanel;
+
+	// Entropy panel
+	private	FPathnameField								seedFileDirectoryField;
+	private	JFileChooser								seedFileDirectoryChooser;
+	private	BooleanComboBox								warnNotSeededComboBox;
+	private	FIntegerSpinner								entropyTimerDivisorSpinner;
+	private Map<EntropyAccumulator.SourceKind,
+				BitSelectionPanel>						entropyBitMaskPanels;
+	private Map<EntropyAccumulator.SourceKind,
+				FIntegerSpinner>						entropyIntervalSpinners;
+
+	// Fonts panel
+	private	FontPanel[]									fontPanels;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -1194,7 +1268,6 @@ class PreferencesDialog
 
 	private PreferencesDialog(Window owner)
 	{
-
 		// Call superclass constructor
 		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
 
@@ -1343,7 +1416,6 @@ class PreferencesDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -1363,6 +1435,7 @@ class PreferencesDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
 		try
@@ -1420,8 +1493,7 @@ class PreferencesDialog
 	private void updateArchiveViewComponents()
 	{
 		for (ArchiveView.Column key : archiveViewColumnCheckBoxes.keySet())
-			archiveViewColumnWidthSpinners.get(key).
-										setEnabled(archiveViewColumnCheckBoxes.get(key).isSelected());
+			archiveViewColumnWidthSpinners.get(key).setEnabled(archiveViewColumnCheckBoxes.get(key).isSelected());
 	}
 
 	//------------------------------------------------------------------
@@ -1460,9 +1532,9 @@ class PreferencesDialog
 				TableColumn column = view.getTable().getColumnModel().getColumn(i);
 				ArchiveView.Column key = (ArchiveView.Column)column.getIdentifier();
 				int width = column.getWidth();
-				archiveViewColumnWidthSpinners.get(key).
-									setIntValue(Math.min(Math.max(width, ArchiveView.MIN_COLUMN_WIDTH),
-														 ArchiveView.MAX_COLUMN_WIDTH));
+				archiveViewColumnWidthSpinners.get(key)
+												.setIntValue(Math.min(Math.max(width, ArchiveView.MIN_COLUMN_WIDTH),
+																	  ArchiveView.MAX_COLUMN_WIDTH));
 			}
 		}
 	}
@@ -1471,8 +1543,7 @@ class PreferencesDialog
 
 	private void onChooseStatusTextColour()
 	{
-		Color colour = JColorChooser.showDialog(this, STATUS_TEXT_COLOUR_STR,
-												statusTextColourButton.getForeground());
+		Color colour = JColorChooser.showDialog(this, STATUS_TEXT_COLOUR_STR, statusTextColourButton.getForeground());
 		if (colour != null)
 			statusTextColourButton.setForeground(colour);
 	}
@@ -1481,8 +1552,7 @@ class PreferencesDialog
 
 	private void onChooseTextViewTextColour()
 	{
-		Color colour = JColorChooser.showDialog(this, TEXT_COLOUR_STR,
-												textViewTextColourButton.getForeground());
+		Color colour = JColorChooser.showDialog(this, TEXT_COLOUR_STR, textViewTextColourButton.getForeground());
 		if (colour != null)
 			textViewTextColourButton.setForeground(colour);
 	}
@@ -1528,9 +1598,8 @@ class PreferencesDialog
 			keyDatabaseFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			keyDatabaseFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 			keyDatabaseFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
-			keyDatabaseFileChooser.
-								setFileFilter(new FilenameSuffixFilter(AppConstants.KEY_FILES_STR,
-																	   AppConstants.KEY_FILE_SUFFIX));
+			keyDatabaseFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.KEY_FILES_STR,
+																		  AppConstants.KEY_FILE_SUFFIX));
 		}
 		keyDatabaseFileChooser.setSelectedFile(keyDatabaseField.getCanonicalFile());
 		keyDatabaseFileChooser.rescanCurrentDirectory();
@@ -1569,16 +1638,14 @@ class PreferencesDialog
 			{
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.REPLACE_STR);
 				if (!file.exists() ||
-					 (JOptionPane.showOptionDialog(this, Utils.getPathname(file) +
-																			AppConstants.ALREADY_EXISTS_STR,
+					 (JOptionPane.showOptionDialog(this, Utils.getPathname(file) + AppConstants.ALREADY_EXISTS_STR,
 												   SAVE_CONFIG_FILE_STR, JOptionPane.OK_CANCEL_OPTION,
-												   JOptionPane.WARNING_MESSAGE, null, optionStrs,
-												   optionStrs[1]) == JOptionPane.OK_OPTION))
+												   JOptionPane.WARNING_MESSAGE, null, optionStrs, optionStrs[1])
+																							== JOptionPane.OK_OPTION))
 				{
 					setPreferences();
 					accepted = true;
-					TaskProgressDialog.showDialog(this, WRITE_CONFIG_FILE_STR,
-												  new Task.WriteConfig(file));
+					TaskProgressDialog.showDialog(this, WRITE_CONFIG_FILE_STR, new Task.WriteConfig(file));
 				}
 			}
 		}
@@ -1618,7 +1685,6 @@ class PreferencesDialog
 
 	private JPanel createPanelGeneral()
 	{
-
 		//----  Control panel
 
 		GridBagLayout gridBag = new GridBagLayout();
@@ -1831,8 +1897,7 @@ class PreferencesDialog
 
 		// Combo box: encrypted file drag-and-drop action
 		encryptedFileDragAndDropActionComboBox = new FComboBox<>(EncryptedFileImportKind.values());
-		encryptedFileDragAndDropActionComboBox.
-											setSelectedValue(config.getEncryptedFileDragAndDropAction());
+		encryptedFileDragAndDropActionComboBox.setSelectedValue(config.getEncryptedFileDragAndDropAction());
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -1896,14 +1961,12 @@ class PreferencesDialog
 		outerPanel.add(controlPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelAppearance()
 	{
-
 		//----  Control panel
 
 		GridBagLayout gridBag = new GridBagLayout();
@@ -2046,14 +2109,12 @@ class PreferencesDialog
 		outerPanel.add(controlPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelArchiveView()
 	{
-
 		// Reset fixed-width components
 		ArchiveViewPanelComponentFactory.reset();
 		ArchiveViewPanel.reset();
@@ -2259,14 +2320,12 @@ class PreferencesDialog
 		outerPanel.add(columnWidthsPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelTextView()
 	{
-
 		//----  Size panel
 
 		GridBagLayout gridBag = new GridBagLayout();
@@ -2517,14 +2576,12 @@ class PreferencesDialog
 		outerPanel.add(coloursPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelText()
 	{
-
 		//----  Wrap panel
 
 		GridBagLayout gridBag = new GridBagLayout();
@@ -2654,14 +2711,12 @@ class PreferencesDialog
 		outerPanel.add(wrapPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelFiles()
 	{
-
 		// Reset fixed-width labels and panels
 		FilesPanelLabel.reset();
 		FilesPanel.reset();
@@ -2925,14 +2980,12 @@ class PreferencesDialog
 		outerPanel.add(controlPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelKeys()
 	{
-
 		//----  Control panel
 
 		GridBagLayout gridBag = new GridBagLayout();
@@ -2961,7 +3014,7 @@ class PreferencesDialog
 		controlPanel.add(keyDatabaseLabel);
 
 		// Panel: key database
-		keyDatabaseField = new FPathnameField(config.getKeyDatabaseFile());
+		keyDatabaseField = new FPathnameField(config.getKeyDatabasePathname());
 		FPathnameField.addObserver(KEY, keyDatabaseField);
 		JPanel keyDatabasePanel = new PathnamePanel(keyDatabaseField, Command.CHOOSE_KEY_DATABASE, this);
 
@@ -3008,7 +3061,7 @@ class PreferencesDialog
 		controlPanel.add(warnTemporaryKeyComboBox);
 
 
-		//----  Key derivation function panel
+		//----  Key-derivation function panel
 
 		kdfParameterPanel = new KdfParameterPanel(kdfUse, KdfUse.getKdfParameterMap());
 		TitledBorder.setPaddedBorder(kdfParameterPanel, KEY_DERIVATION_FUNCTION_STR);
@@ -3046,14 +3099,12 @@ class PreferencesDialog
 		outerPanel.add(kdfParameterPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
 
 	private JPanel createPanelEntropy()
 	{
-
 		// Reset fixed-width labels
 		EntropyPanelLabel.reset();
 
@@ -3086,10 +3137,10 @@ class PreferencesDialog
 		controlPanel.add(seedFileDirectoryLabel);
 
 		// Panel: seed-file directory
-		seedFileDirectoryField = new FPathnameField(config.getSeedFileDirectory());
+		seedFileDirectoryField = new FPathnameField(config.getSeedFileDirectoryPathname());
 		FPathnameField.addObserver(KEY, seedFileDirectoryField);
-		JPanel seedFileDirectoryPanel = new PathnamePanel(seedFileDirectoryField,
-														  Command.CHOOSE_SEED_FILE_DIRECTORY, this);
+		JPanel seedFileDirectoryPanel = new PathnamePanel(seedFileDirectoryField, Command.CHOOSE_SEED_FILE_DIRECTORY,
+														  this);
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -3169,8 +3220,7 @@ class PreferencesDialog
 
 		//----  Source panels
 
-		Map<EntropyAccumulator.SourceKind, JPanel> sourcePanels =
-													new EnumMap<>(EntropyAccumulator.SourceKind.class);
+		Map<EntropyAccumulator.SourceKind, JPanel> sourcePanels = new EnumMap<>(EntropyAccumulator.SourceKind.class);
 		entropyBitMaskPanels = new EnumMap<>(EntropyAccumulator.SourceKind.class);
 		entropyIntervalSpinners = new EnumMap<>(EntropyAccumulator.SourceKind.class);
 		for (EntropyAccumulator.SourceKind sourceKind : EntropyAccumulator.SourceKind.values())
@@ -3198,10 +3248,9 @@ class PreferencesDialog
 			sourcePanel.add(bitMaskLabel);
 
 			// Panel: bit mask
-			BitSelectionPanel bitMaskPanel =
-									new BitSelectionPanel(EntropyAccumulator.SourceParams.BIT_MASK_LENGTH,
-														  AppConfig.ENTROPY_SOURCE_MAX_NUM_BITS,
-														  config.getEntropySourceBitMask(sourceKind));
+			BitSelectionPanel bitMaskPanel = new BitSelectionPanel(EntropyAccumulator.SourceParams.BIT_MASK_LENGTH,
+																   (1 << AppConfig.ENTROPY_SOURCE_MAX_NUM_BITS) - 1,
+																   config.getEntropySourceBitMask(sourceKind));
 			entropyBitMaskPanels.put(sourceKind, bitMaskPanel);
 
 			gbc.gridx = 1;
@@ -3249,11 +3298,10 @@ class PreferencesDialog
 				sourcePanel.add(intervalPanel);
 
 				// Spinner: interval
-				FIntegerSpinner intervalSpinner =
-										new FIntegerSpinner(config.getEntropySourceInterval(sourceKind),
-															EntropyAccumulator.SourceParams.MIN_INTERVAL,
-															EntropyAccumulator.SourceParams.MAX_INTERVAL,
-															ENTROPY_INTERVAL_FIELD_LENGTH);
+				FIntegerSpinner intervalSpinner = new FIntegerSpinner(config.getEntropySourceInterval(sourceKind),
+																	  EntropyAccumulator.SourceParams.MIN_INTERVAL,
+																	  EntropyAccumulator.SourceParams.MAX_INTERVAL,
+																	  ENTROPY_INTERVAL_FIELD_LENGTH);
 				entropyIntervalSpinners.put(sourceKind, intervalSpinner);
 
 				gbc.gridx = 0;
@@ -3455,7 +3503,6 @@ class PreferencesDialog
 		outerPanel.add(controlPanel);
 
 		return outerPanel;
-
 	}
 
 	//------------------------------------------------------------------
@@ -3509,8 +3556,8 @@ class PreferencesDialog
 				try
 				{
 					int lineLength = textWrapDefaultLineLengthField.getValue();
-					if ((lineLength < TextDocument.MIN_WRAP_LINE_LENGTH) ||
-						 (lineLength > TextDocument.MAX_WRAP_LINE_LENGTH))
+					if ((lineLength < TextDocument.MIN_WRAP_LINE_LENGTH)
+							|| (lineLength > TextDocument.MAX_WRAP_LINE_LENGTH))
 						throw new AppException(ErrorId.DEFAULT_LINE_LENGTH_OUT_OF_BOUNDS);
 				}
 				catch (NumberFormatException e)
@@ -3541,8 +3588,7 @@ class PreferencesDialog
 			int index = e.getIndex();
 			if (index >= 0)
 				textWrapEndOfSentencePatternField.setCaretPosition(index);
-			throw new AppException(ErrorId.MALFORMED_END_OF_SENTENCE_PATTERN,
-								   RegexUtils.getExceptionMessage(e));
+			throw new AppException(ErrorId.MALFORMED_END_OF_SENTENCE_PATTERN, RegexUtils.getExceptionMessage(e));
 		}
 	}
 
@@ -3621,15 +3667,12 @@ class PreferencesDialog
 		config.setShowUnixPathnames(showUnixPathnamesComboBox.getSelectedValue());
 		config.setSelectTextOnFocusGained(selectTextOnFocusGainedComboBox.getSelectedValue());
 		if (saveMainWindowLocationComboBox.getSelectedValue() != config.isMainWindowLocation())
-			config.setMainWindowLocation(saveMainWindowLocationComboBox.getSelectedValue() ? new Point()
-																						   : null);
+			config.setMainWindowLocation(saveMainWindowLocationComboBox.getSelectedValue() ? new Point() : null);
 		if (saveMainWindowSizeComboBox.getSelectedValue() != config.isMainWindowSize())
-			config.setMainWindowSize(saveMainWindowSizeComboBox.getSelectedValue() ? new Dimension()
-																				   : null);
+			config.setMainWindowSize(saveMainWindowSizeComboBox.getSelectedValue() ? new Dimension() : null);
 		config.setMaxEditListLength(maxEditListLengthSpinner.getIntValue());
 		config.setClearClipboardOnExit(clearClipboardOnExitComboBox.getSelectedValue());
-		config.setEncryptedFileDragAndDropAction(encryptedFileDragAndDropActionComboBox.
-																					getSelectedValue());
+		config.setEncryptedFileDragAndDropAction(encryptedFileDragAndDropActionComboBox.getSelectedValue());
 		config.setCarrierImageKind(carrierImageKindComboBox.getSelectedValue());
 	}
 
@@ -3651,10 +3694,9 @@ class PreferencesDialog
 		config.setArchiveViewNumRows(archiveViewNumRowsSpinner.getIntValue());
 		for (ArchiveView.Column key : archiveViewColumnWidthSpinners.keySet())
 		{
-			int columnWidth = (key == ArchiveView.Column.PATH) ||
-														archiveViewColumnCheckBoxes.get(key).isSelected()
-												? archiveViewColumnWidthSpinners.get(key).getIntValue()
-												: 0;
+			int columnWidth = (key == ArchiveView.Column.PATH) || archiveViewColumnCheckBoxes.get(key).isSelected()
+																? archiveViewColumnWidthSpinners.get(key).getIntValue()
+																: 0;
 			config.setArchiveViewColumnWidth(key, columnWidth);
 		}
 	}
@@ -3668,8 +3710,7 @@ class PreferencesDialog
 		config.setTextViewTextColour(textViewTextColourButton.getForeground());
 		config.setTextViewBackgroundColour(textViewBackgroundColourButton.getForeground());
 		config.setTextViewSelectionTextColour(textViewSelectionTextColourButton.getForeground());
-		config.setTextViewSelectionBackgroundColour(textViewSelectionBackgroundColourButton.
-																						getForeground());
+		config.setTextViewSelectionBackgroundColour(textViewSelectionBackgroundColourButton.getForeground());
 	}
 
 	//------------------------------------------------------------------
@@ -3679,8 +3720,7 @@ class PreferencesDialog
 		AppConfig config = AppConfig.INSTANCE;
 		config.setTextWrapDefaultLineLength(textWrapDefaultLineLengthField.getLineLength());
 		config.setTextWrapEndOfSentencePattern(textWrapEndOfSentencePatternField.getText());
-		config.setTextWrapNumSpacesBetweenSentences(textWrapNumSpacesBetweenSentencesSpinner.
-																						getIntValue());
+		config.setTextWrapNumSpacesBetweenSentences(textWrapNumSpacesBetweenSentencesSpinner.getIntValue());
 	}
 
 	//------------------------------------------------------------------
@@ -3691,9 +3731,8 @@ class PreferencesDialog
 		for (FileKind key : filenameSuffixFields.keySet())
 			config.setFilenameSuffix(key, filenameSuffixFields.get(key).getText());
 		for (ActionSource key : selectEncryptDecryptOutputFileComboBoxes.keySet())
-			config.setSelectEncryptDecryptOutputFile(key,
-													 selectEncryptDecryptOutputFileComboBoxes.get(key).
-																					getSelectedValue());
+			config.setSelectEncryptDecryptOutputFile(key, selectEncryptDecryptOutputFileComboBoxes.get(key)
+																								.getSelectedValue());
 		config.setFileErasureNumPasses(fileErasureNumPassesSpinner.getIntValue());
 		config.setSaveFileSelectionPathnames(saveFileSelectionPathnamesComboBox.getSelectedValue());
 	}
@@ -3715,17 +3754,13 @@ class PreferencesDialog
 	private void setPreferencesEntropy()
 	{
 		AppConfig config = AppConfig.INSTANCE;
-		config.setSeedFileDirectoryPathname(seedFileDirectoryField.isEmpty()
-																	? null
-																	: seedFileDirectoryField.getText());
+		config.setSeedFileDirectoryPathname(seedFileDirectoryField.isEmpty() ? null : seedFileDirectoryField.getText());
 		config.setWarnNotSeeded(warnNotSeededComboBox.getSelectedValue());
 		config.setEntropyTimerDivisor(entropyTimerDivisorSpinner.getIntValue());
 		for (EntropyAccumulator.SourceKind sourceKind : entropyBitMaskPanels.keySet())
-			config.setEntropySourceBitMask(sourceKind,
-										   entropyBitMaskPanels.get(sourceKind).getBitMask());
+			config.setEntropySourceBitMask(sourceKind, entropyBitMaskPanels.get(sourceKind).getSelectedMask());
 		for (EntropyAccumulator.SourceKind sourceKind : entropyIntervalSpinners.keySet())
-			config.setEntropySourceInterval(sourceKind,
-											entropyIntervalSpinners.get(sourceKind).getIntValue());
+			config.setEntropySourceInterval(sourceKind, entropyIntervalSpinners.get(sourceKind).getIntValue());
 	}
 
 	//------------------------------------------------------------------
@@ -3740,79 +3775,6 @@ class PreferencesDialog
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class variables
-////////////////////////////////////////////////////////////////////////
-
-	private static	Point	location;
-	private static	int		tabIndex;
-	private static	KdfUse	kdfUse		= KdfUse.VERIFICATION;
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	// Main panel
-	private	boolean										accepted;
-	private	JTabbedPane									tabbedPanel;
-
-	// General panel
-	private	BooleanComboBox								showUnixPathnamesComboBox;
-	private	BooleanComboBox								selectTextOnFocusGainedComboBox;
-	private	BooleanComboBox								saveMainWindowLocationComboBox;
-	private	BooleanComboBox								saveMainWindowSizeComboBox;
-	private	FIntegerSpinner								maxEditListLengthSpinner;
-	private	BooleanComboBox								clearClipboardOnExitComboBox;
-	private	FComboBox<EncryptedFileImportKind>			encryptedFileDragAndDropActionComboBox;
-	private	FComboBox<CarrierImage.Kind>				carrierImageKindComboBox;
-
-	// Appearance panel
-	private	FComboBox<String>							lookAndFeelComboBox;
-	private	FComboBox<TextRendering.Antialiasing>		textAntialiasingComboBox;
-	private	JButton										statusTextColourButton;
-
-	// Archive view panel
-	private	FIntegerSpinner								archiveViewNumRowsSpinner;
-	private	Map<ArchiveView.Column, FCheckBox>			archiveViewColumnCheckBoxes;
-	private	Map<ArchiveView.Column, FIntegerSpinner>	archiveViewColumnWidthSpinners;
-
-	// Text view panel
-	private	DimensionsSpinnerPanel						textViewSizePanel;
-	private	JButton										textViewTextColourButton;
-	private	JButton										textViewBackgroundColourButton;
-	private	JButton										textViewSelectionTextColourButton;
-	private	JButton										textViewSelectionBackgroundColourButton;
-
-	// Text panel
-	private	LineLengthField								textWrapDefaultLineLengthField;
-	private	FTextField									textWrapEndOfSentencePatternField;
-	private	FIntegerSpinner								textWrapNumSpacesBetweenSentencesSpinner;
-
-	// Files panel
-	private	Map<FileKind, FilenameSuffixField>			filenameSuffixFields;
-	private	Map<ActionSource, BooleanComboBox>			selectEncryptDecryptOutputFileComboBoxes;
-	private	FIntegerSpinner								fileErasureNumPassesSpinner;
-	private	BooleanComboBox								saveFileSelectionPathnamesComboBox;
-
-	// Keys panel
-	private	FPathnameField								keyDatabaseField;
-	private	JFileChooser								keyDatabaseFileChooser;
-	private	BooleanComboBox								warnTemporaryKeyComboBox;
-	private	KdfParameterPanel							kdfParameterPanel;
-
-	// Entropy panel
-	private	FPathnameField								seedFileDirectoryField;
-	private	JFileChooser								seedFileDirectoryChooser;
-	private	BooleanComboBox								warnNotSeededComboBox;
-	private	FIntegerSpinner								entropyTimerDivisorSpinner;
-	private Map<EntropyAccumulator.SourceKind,
-				BitSelectionPanel>                     entropyBitMaskPanels;
-	private Map<EntropyAccumulator.SourceKind,
-				FIntegerSpinner>                           entropyIntervalSpinners;
-
-	// Fonts panel
-	private	FontPanel[]									fontPanels;
 
 }
 

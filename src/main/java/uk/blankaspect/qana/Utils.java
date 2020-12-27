@@ -34,6 +34,8 @@ import uk.blankaspect.common.crypto.FortunaCipher;
 
 import uk.blankaspect.common.exception.AppException;
 
+import uk.blankaspect.common.exception2.ExceptionUtils;
+
 import uk.blankaspect.common.filesystem.PathnameUtils;
 
 import uk.blankaspect.common.string.StringUtils;
@@ -165,8 +167,8 @@ class Utils
 			}
 			catch (Exception e)
 			{
-				System.err.println(FAILED_TO_GET_PATHNAME_STR + file.getPath());
-				System.err.println("(" + e + ")");
+				ExceptionUtils.printStderrLocated(FAILED_TO_GET_PATHNAME_STR + file.getPath());
+				System.err.println("- " + e);
 				pathname = file.getAbsolutePath();
 			}
 
