@@ -1,0 +1,113 @@
+/**********************************************************************\
+
+Styles for Qana manual
+
+\**********************************************************************/
+
+@import url("blankaspect-manual.css");
+
+div.highlighted
+{
+  background-color: #F8F6E0;
+  border: 1px solid #E2E0C8;
+  padding: 0.4em 1.0em;
+}
+
+dl.fileAssoc
+{
+  margin: 0.5em 1.0em;
+}
+dl.fileAssoc dt
+{
+  font-weight: bold;
+  padding: 0.3em 0.5em 0 0;
+}
+dl.fileAssoc dd
+{
+  margin: 0 1.6em;
+  padding: 0 0.5em 0.3em 0;
+}
+
+dl.terminology
+{
+  background-color: #FCFAE8;
+  border: 1px solid #E8E6CC;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+  padding: 0.3em 1.2em;
+}
+dl.terminology dt
+{
+  color: #804018;
+  font-weight: bold;
+  padding: 0.3em 0.5em 0 0;
+}
+dl.terminology dd
+{
+  margin: 0 2.0em;
+  padding: 0 0.5em 0.3em 0;
+}
+
+p.quotation
+{
+  font-size: 90%;
+  margin-top: 0.6em;
+  margin-left: 2.0em;
+  margin-right: 2.0em;
+}
+
+table.dataStructure span.literal
+{
+  color: #C04000;
+  font-weight: bold;
+}
+
+table.dataStructure span.variable
+{
+  color: #006080;
+  font-weight: bold;
+  font-style: italic;
+}
+
+table.dataStructure td.subheader
+{
+  background-color: #ECF0F8;
+  color: #404040;
+  font-size: 83%;
+}
+
+table.dataStructure td.description
+{
+  width: 85%;
+}
+
+table.dataStructure td.key
+{
+  width: 15%;
+}
+
+table.basic td.definitionTerm
+{
+  color: #004040;
+  font-weight: bold;
+}
+
+table.basic td.command
+{
+  color: #8C4818;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+ul.paddedItems li
+{
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
+
+ul#p1Attributes li div img
+{
+  padding-top: 0.3em;
+}
+
+/*--------------------------------------------------------------------*/
