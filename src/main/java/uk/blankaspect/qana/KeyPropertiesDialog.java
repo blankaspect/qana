@@ -2,7 +2,7 @@
 
 KeyPropertiesDialog.java
 
-Key properties dialog box class.
+Key properties dialog class.
 
 \*====================================================================*/
 
@@ -46,18 +46,18 @@ import javax.swing.KeyStroke;
 import uk.blankaspect.common.crypto.FortunaCipher;
 import uk.blankaspect.common.crypto.StreamEncrypter;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.border.TitledBorder;
+import uk.blankaspect.ui.swing.border.TitledBorder;
 
-import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FButton;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
 
-// KEY PROPERTIES DIALOG BOX CLASS
+// KEY PROPERTIES DIALOG CLASS
 
 
 class KeyPropertiesDialog

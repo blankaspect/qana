@@ -660,8 +660,9 @@ abstract class Task
 			// Perform task
 			try
 			{
-				key.getFileEncrypter(cipher, App.getEncryptionHeader()).
-							encrypt(inFile, outFile, key.getKey(), App.INSTANCE.getRandomKey());
+				key.getFileEncrypter(cipher, App.getEncryptionHeader())
+						.encrypt(inFile, outFile, key.getKey(), App.INSTANCE.getRandomKey(),
+								 generator -> App.INSTANCE.generateKey(generator));
 			}
 			catch (TaskCancelledException e)
 			{
@@ -723,8 +724,8 @@ abstract class Task
 			// Perform task
 			try
 			{
-				key.getFileEncrypter(null, App.getEncryptionHeader()).
-																decrypt(inFile, outFile, key.getKey());
+				key.getFileEncrypter(null, App.getEncryptionHeader())
+						.decrypt(inFile, outFile, key.getKey(), generator -> App.INSTANCE.generateKey(generator));
 			}
 			catch (TaskCancelledException e)
 			{
@@ -783,7 +784,8 @@ abstract class Task
 			// Perform task
 			try
 			{
-				key.getFileEncrypter(null, App.getEncryptionHeader()).validate(file, key.getKey());
+				key.getFileEncrypter(null, App.getEncryptionHeader())
+						.validate(file, key.getKey(), generator -> App.INSTANCE.generateKey(generator));
 			}
 			catch (TaskCancelledException e)
 			{

@@ -2,7 +2,7 @@
 
 KeySelectionDialog.java
 
-Key selection dialog box class.
+Key selection dialog class.
 
 \*====================================================================*/
 
@@ -60,16 +60,16 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.CancelledException;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FButton;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
 
-// KEY SELECTION DIALOG BOX CLASS
+// KEY SELECTION DIALOG CLASS
 
 
 class KeySelectionDialog

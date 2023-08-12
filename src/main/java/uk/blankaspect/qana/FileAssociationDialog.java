@@ -2,7 +2,7 @@
 
 FileAssociationDialog.java
 
-File association dialog box class.
+File association dialog class.
 
 \*====================================================================*/
 
@@ -38,7 +38,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,24 +62,24 @@ import uk.blankaspect.common.platform.windows.FileAssociations;
 
 import uk.blankaspect.common.property.PropertyString;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FButton;
 
-import uk.blankaspect.common.swing.checkbox.FCheckBox;
+import uk.blankaspect.ui.swing.checkbox.FCheckBox;
 
-import uk.blankaspect.common.swing.combobox.FComboBox;
+import uk.blankaspect.ui.swing.combobox.FComboBox;
 
-import uk.blankaspect.common.swing.container.PathnamePanel;
+import uk.blankaspect.ui.swing.container.PathnamePanel;
 
-import uk.blankaspect.common.swing.label.FLabel;
+import uk.blankaspect.ui.swing.label.FLabel;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
 
-// FILE ASSOCIATION DIALOG BOX CLASS
+// FILE ASSOCIATION DIALOG CLASS
 
 
 class FileAssociationDialog
@@ -997,7 +996,7 @@ class FileAssociationDialog
 		{
 			try
 			{
-				Path path = Paths.get(pathname, JAVA_LAUNCHER_PATHNAME);
+				Path path = Path.of(pathname, JAVA_LAUNCHER_PATHNAME);
 				if (Files.exists(path))
 					defaultJavaLauncherPath = path.toAbsolutePath();
 			}
@@ -1010,7 +1009,7 @@ class FileAssociationDialog
 		// JAR path
 		try
 		{
-			Path path = Paths.get(FileAssociationDialog.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			Path path = Path.of(FileAssociationDialog.class.getProtectionDomain().getCodeSource().getLocation().toURI());
 			if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) && path.toString().endsWith(AppConstants.JAR_FILE_SUFFIX))
 				defaultJarPath = path.toAbsolutePath();
 		}

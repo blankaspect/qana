@@ -28,6 +28,8 @@ import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
+import java.util.Objects;
+
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -35,12 +37,10 @@ import javax.swing.SwingUtilities;
 
 import uk.blankaspect.common.crypto.FortunaCipher;
 
-import uk.blankaspect.common.string.StringUtils;
+import uk.blankaspect.ui.swing.icon.DialogIcon;
 
-import uk.blankaspect.common.swing.icon.DialogIcon;
-
-import uk.blankaspect.common.swing.text.TextRendering;
-import uk.blankaspect.common.swing.text.TextUtils;
+import uk.blankaspect.ui.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextUtils;
 
 //----------------------------------------------------------------------
 
@@ -89,7 +89,7 @@ class StatusPanel
 
 		private static final	Color	LINE_COLOUR	= Color.GRAY;
 
-		private static final	String	PROTOTYPE_STR	= StringUtils.createCharString(' ', 4);
+		private static final	String	PROTOTYPE_STR	= " ".repeat(4);
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -102,8 +102,7 @@ class StatusPanel
 
 			// Initialise instance variables
 			FontMetrics fontMetrics = getFontMetrics(getFont());
-			preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH +
-																fontMetrics.stringWidth(PROTOTYPE_STR);
+			preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + fontMetrics.stringWidth(PROTOTYPE_STR);
 			if (hasIcon)
 			{
 				for (ImageIcon icon : ICONS)
@@ -197,7 +196,7 @@ class StatusPanel
 
 		private void setText(String text)
 		{
-			if (!StringUtils.equal(text, this.text))
+			if (!Objects.equals(text, this.text))
 			{
 				this.text = text;
 				int textWidth = getFontMetrics(getFont()).

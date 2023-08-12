@@ -2,7 +2,7 @@
 
 EntropyMetricsDialog.java
 
-Entropy metrics dialog box class.
+Entropy metrics dialog class.
 
 \*====================================================================*/
 
@@ -60,26 +60,26 @@ import uk.blankaspect.common.crypto.Fortuna;
 
 import uk.blankaspect.common.number.NumberUtils;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.border.TitledBorder;
+import uk.blankaspect.ui.swing.border.TitledBorder;
 
-import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FButton;
 
-import uk.blankaspect.common.swing.colour.Colours;
+import uk.blankaspect.ui.swing.colour.Colours;
 
-import uk.blankaspect.common.swing.font.FontUtils;
+import uk.blankaspect.ui.swing.font.FontUtils;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.tabbedpane.FTabbedPane;
+import uk.blankaspect.ui.swing.tabbedpane.FTabbedPane;
 
-import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
 
-// ENTROPY METRICS DIALOG BOX CLASS
+// ENTROPY METRICS DIALOG CLASS
 
 
 class EntropyMetricsDialog

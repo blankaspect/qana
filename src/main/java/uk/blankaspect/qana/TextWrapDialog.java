@@ -2,7 +2,7 @@
 
 TextWrapDialog.java
 
-Text wrap dialog box class.
+Text wrap dialog class.
 
 \*====================================================================*/
 
@@ -40,6 +40,7 @@ import java.awt.event.WindowEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -56,34 +57,34 @@ import uk.blankaspect.common.exception.AppException;
 
 import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.swing.action.KeyAction;
-
-import uk.blankaspect.common.swing.button.FButton;
-
-import uk.blankaspect.common.swing.checkbox.FCheckBox;
-
-import uk.blankaspect.common.swing.colour.Colours;
-
-import uk.blankaspect.common.swing.combobox.EditableComboBox;
-import uk.blankaspect.common.swing.combobox.UnsignedIntegerComboBox;
-
-import uk.blankaspect.common.swing.font.FontStyle;
-import uk.blankaspect.common.swing.font.FontUtils;
-
-import uk.blankaspect.common.swing.label.FLabel;
-
-import uk.blankaspect.common.swing.misc.GuiUtils;
-
-import uk.blankaspect.common.swing.text.TaggedText;
-
-import uk.blankaspect.common.swing.textfield.ConstrainedTextField;
-
 import uk.blankaspect.common.tuple.IntegerPair;
+
+import uk.blankaspect.ui.swing.action.KeyAction;
+
+import uk.blankaspect.ui.swing.button.FButton;
+
+import uk.blankaspect.ui.swing.checkbox.FCheckBox;
+
+import uk.blankaspect.ui.swing.colour.Colours;
+
+import uk.blankaspect.ui.swing.combobox.EditableComboBox;
+import uk.blankaspect.ui.swing.combobox.UnsignedIntegerComboBox;
+
+import uk.blankaspect.ui.swing.font.FontStyle;
+import uk.blankaspect.ui.swing.font.FontUtils;
+
+import uk.blankaspect.ui.swing.label.FLabel;
+
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
+import uk.blankaspect.ui.swing.text.TaggedText;
+
+import uk.blankaspect.ui.swing.textfield.ConstrainedTextField;
 
 //----------------------------------------------------------------------
 
 
-// TEXT WRAP DIALOG BOX CLASS
+// TEXT WRAP DIALOG CLASS
 
 
 class TextWrapDialog
@@ -166,12 +167,12 @@ class TextWrapDialog
 	);
 	private static final	List<TaggedText.StyleDef>		STYLE_DEFS		= Arrays.asList
 	(
-		new TaggedText.StyleDef(0, FontStyle.BOLD, new Color(0, 64, 64)),
-		new TaggedText.StyleDef(1, new Color(32, 32, 32)),
-		new TaggedText.StyleDef(2, FontStyle.BOLD, new Color(192, 64, 0)),
+		new TaggedText.StyleDef(0, FontStyle.BOLD,        new Color(0, 64, 64)),
+		new TaggedText.StyleDef(1,                        new Color(32, 32, 32)),
+		new TaggedText.StyleDef(2, FontStyle.BOLD,        new Color(192, 64, 0)),
 		new TaggedText.StyleDef(3, FontStyle.BOLD_ITALIC, new Color(0, 96, 128)),
 		new TaggedText.StyleDef(4, FontStyle.BOLD_ITALIC, new Color(0, 96, 0)),
-		new TaggedText.StyleDef(5, FontStyle.ITALIC, new Color(64, 64, 80))
+		new TaggedText.StyleDef(5, FontStyle.ITALIC,      new Color(64, 64, 80))
 	);
 	private static final	List<TaggedText.HPaddingDef>	H_PADDING_DEFS	= Arrays.asList
 	(
@@ -317,7 +318,7 @@ class TextWrapDialog
 		private LineLengthComboBox(List<Integer> items)
 		{
 			super(FIELD_LENGTH, MAX_NUM_ITEMS, items);
-			setDefaultComparator();
+			setComparator(Comparator.naturalOrder());
 		}
 
 		//--------------------------------------------------------------
@@ -410,6 +411,7 @@ class TextWrapDialog
 	//  Instance methods : EditableComboBox.IEditor interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public Component getEditorComponent()
 		{
 			return this;
@@ -417,6 +419,7 @@ class TextWrapDialog
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Object getItem()
 		{
 			return getText();
@@ -424,6 +427,7 @@ class TextWrapDialog
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setItem(Object obj)
 		{
 			setText((obj == null) ? null : obj.toString());
@@ -431,6 +435,7 @@ class TextWrapDialog
 
 		//--------------------------------------------------------------
 
+		@Override
 		public int getFieldWidth()
 		{
 			return (getColumns() * getColumnWidth());
@@ -502,7 +507,7 @@ class TextWrapDialog
 				}
 			}
 
-			return new IntegerPair(value1, value2);
+			return IntegerPair.of(value1, value2);
 		}
 
 		//--------------------------------------------------------------
@@ -556,7 +561,7 @@ class TextWrapDialog
 ////////////////////////////////////////////////////////////////////////
 
 
-	// HELP DIALOG BOX CLASS
+	// HELP DIALOG CLASS
 
 
 	private class HelpDialog
@@ -1102,8 +1107,7 @@ class TextWrapDialog
 		Result result = null;
 		if (accepted)
 		{
-			IntegerPair indent = indentComboBox.isEnabled() ? indentComboBox.getValue(currentIndent)
-															: new IntegerPair();
+			IntegerPair indent = indentComboBox.isEnabled() ? indentComboBox.getValue(currentIndent) : IntegerPair.ZEROS;
 			result = new Result(lineLengthComboBox.getValue(), indent.getFirst(), indent.getSecond());
 		}
 		return result;

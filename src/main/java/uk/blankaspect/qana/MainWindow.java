@@ -57,16 +57,16 @@ import uk.blankaspect.common.crypto.FortunaCipher;
 
 import uk.blankaspect.common.misc.IFileImporter;
 
-import uk.blankaspect.common.swing.menu.FCheckBoxMenuItem;
-import uk.blankaspect.common.swing.menu.FMenu;
-import uk.blankaspect.common.swing.menu.FMenuItem;
-import uk.blankaspect.common.swing.menu.FRadioButtonMenuItem;
-
-import uk.blankaspect.common.swing.misc.GuiUtils;
-
-import uk.blankaspect.common.swing.tabbedpane.TabbedPane;
-
 import uk.blankaspect.common.time.CalendarTime;
+
+import uk.blankaspect.ui.swing.menu.FCheckBoxMenuItem;
+import uk.blankaspect.ui.swing.menu.FMenu;
+import uk.blankaspect.ui.swing.menu.FMenuItem;
+import uk.blankaspect.ui.swing.menu.FRadioButtonMenuItem;
+
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
+import uk.blankaspect.ui.swing.tabbedpane.TabbedPane;
 
 //----------------------------------------------------------------------
 
@@ -94,433 +94,12 @@ class MainWindow
 	private static final	String	CONTEXT_MENU_KEY	= "contextMenu";
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// MENUS
-
-
-	private enum Menu
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILE
-		(
-			"File",
-			KeyEvent.VK_F
-		)
-		{
-			protected void update()
-			{
-				updateAppCommands();
-			}
-		},
-
-		EDIT
-		(
-			"Edit",
-			KeyEvent.VK_E
-		)
-		{
-			protected void update()
-			{
-				JMenu menu = getMenu();
-				menu.removeAll();
-				Document document = App.INSTANCE.getDocument();
-				if (document == null)
-					menu.setEnabled(false);
-				else
-				{
-					menu.setEnabled(true);
-					switch (document.getKind())
-					{
-						case ARCHIVE:
-							updateArchiveDocumentCommands();
-
-							menu.add(new FMenuItem(ArchiveDocument.Command.SELECT_ALL, KeyEvent.VK_A));
-							menu.add(new FMenuItem(ArchiveDocument.Command.INVERT_SELECTION,
-												   KeyEvent.VK_I));
-							break;
-
-						case TEXT:
-							updateTextDocumentCommands();
-
-							menu.add(new FMenuItem(TextDocument.Command.UNDO, KeyEvent.VK_U));
-							menu.add(new FMenuItem(TextDocument.Command.REDO, KeyEvent.VK_R));
-							menu.add(new FMenuItem(TextDocument.Command.CLEAR_EDIT_LIST,
-												   KeyEvent.VK_L));
-
-							menu.addSeparator();
-
-							menu.add(new FMenuItem(TextDocument.Command.CUT, KeyEvent.VK_T));
-							menu.add(new FMenuItem(TextDocument.Command.COPY, KeyEvent.VK_C));
-							menu.add(new FMenuItem(TextDocument.Command.COPY_ALL, KeyEvent.VK_O));
-							menu.add(new FMenuItem(TextDocument.Command.PASTE, KeyEvent.VK_P));
-							menu.add(new FMenuItem(TextDocument.Command.PASTE_ALL, KeyEvent.VK_S));
-
-							menu.addSeparator();
-
-							menu.add(new FMenuItem(TextDocument.Command.CLEAR, KeyEvent.VK_E));
-
-							menu.addSeparator();
-
-							menu.add(new FMenuItem(TextDocument.Command.SELECT_ALL, KeyEvent.VK_A));
-
-							menu.addSeparator();
-
-							menu.add(new FMenuItem(TextDocument.Command.WRAP, KeyEvent.VK_W));
-
-							break;
-					}
-				}
-			}
-		},
-
-		ARCHIVE
-		(
-			"Archive",
-			KeyEvent.VK_A
-		)
-		{
-			protected void update()
-			{
-				getMenu().setEnabled(App.INSTANCE.getArchiveDocument() != null);
-				updateArchiveDocumentCommands();
-			}
-		},
-
-		TEXT
-		(
-			"Text",
-			KeyEvent.VK_T
-		)
-		{
-			protected void update()
-			{
-				updateAppCommands();
-				updateTextDocumentCommands();
-			}
-		},
-
-		ENCRYPTION
-		(
-			"Encryption",
-			KeyEvent.VK_C
-		)
-		{
-			protected void update()
-			{
-				updateAppCommands();
-			}
-		},
-
-		OPTIONS
-		(
-			"Options",
-			KeyEvent.VK_O
-		)
-		{
-			protected void update()
-			{
-				updateAppCommands();
-			}
-		};
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Menu(String text,
-					 int    keyCode)
-		{
-			menu = new FMenu(text, keyCode);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static void updateAppCommands()
-		{
-			App.INSTANCE.updateCommands();
-		}
-
-		//--------------------------------------------------------------
-
-		private static void updateArchiveDocumentCommands()
-		{
-			ArchiveDocument archiveDocument = App.INSTANCE.getArchiveDocument();
-			if (archiveDocument == null)
-				ArchiveDocument.Command.setAllEnabled(false);
-			else
-				archiveDocument.updateCommands();
-		}
-
-		//--------------------------------------------------------------
-
-		private static void updateTextDocumentCommands()
-		{
-			TextDocument textDocument = App.INSTANCE.getTextDocument();
-			if (textDocument == null)
-				TextDocument.Command.setAllEnabled(false);
-			else
-				textDocument.updateCommands();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Abstract methods
-	////////////////////////////////////////////////////////////////////
-
-		protected abstract void update();
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		protected JMenu getMenu()
-		{
-			return menu;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	JMenu	menu;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// CLOSE ACTION CLASS
-
-
-	private static class CloseAction
-		extends AbstractAction
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private CloseAction()
-		{
-			putValue(Action.ACTION_COMMAND_KEY, "");
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ActionListener interface
-	////////////////////////////////////////////////////////////////////
-
-		public void actionPerformed(ActionEvent event)
-		{
-			App.INSTANCE.closeDocument(Integer.parseInt(event.getActionCommand()));
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// CIPHER ACTION CLASS
-
-
-	private static class CipherAction
-		extends AbstractAction
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	COMMAND_STR	= "selectCipherKind.";
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private CipherAction(FortunaCipher cipher)
-		{
-			super(cipher.toString());
-			putValue(Action.ACTION_COMMAND_KEY, COMMAND_STR + cipher.getKey());
-			this.cipher = cipher;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ActionListener interface
-	////////////////////////////////////////////////////////////////////
-
-		public void actionPerformed(ActionEvent event)
-		{
-			AppConfig.INSTANCE.setPrngDefaultCipher(cipher);
-			App.INSTANCE.getMainWindow().updateCipher();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static FRadioButtonMenuItem getMenuItem(String        key,
-														FortunaCipher cipher)
-		{
-			Map<FortunaCipher, FRadioButtonMenuItem> menuItems = menuItemMap.get(key);
-			if (menuItems == null)
-			{
-				menuItems = new EnumMap<>(FortunaCipher.class);
-				menuItemMap.put(key, menuItems);
-			}
-
-			FRadioButtonMenuItem menuItem = menuItems.get(cipher);
-			if (menuItem == null)
-			{
-				menuItem = new FRadioButtonMenuItem(new CipherAction(cipher),
-													Utils.getCipher() == cipher);
-				menuItems.put(cipher, menuItem);
-			}
-
-			return menuItem;
-		}
-
-		//--------------------------------------------------------------
-
-		private static void updateMenuItems()
-		{
-			FortunaCipher currentCipher = Utils.getCipher();
-			for (String key : menuItemMap.keySet())
-			{
-				Map<FortunaCipher, FRadioButtonMenuItem> menuItems = menuItemMap.get(key);
-				for (FortunaCipher cipher : menuItems.keySet())
-					menuItems.get(cipher).setSelected(cipher == currentCipher);
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class variables
-	////////////////////////////////////////////////////////////////////
-
-		private static	Map<String, Map<FortunaCipher, FRadioButtonMenuItem>>	menuItemMap	=
-																						new HashMap<>();
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	FortunaCipher	cipher;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// MAIN PANEL CLASS
-
-
-	private class MainPanel
-		extends JPanel
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	VERTICAL_GAP	= 0;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private MainPanel()
-		{
-			// Lay out components explicitly
-			setLayout(null);
-
-			// Add components
-			add(tabbedPanel);
-			add(statusPanel);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public Dimension getMinimumSize()
-		{
-			int width = tabbedPanel.getMinimumSize().width;
-			int height = -VERTICAL_GAP;
-			for (Component component : getComponents())
-				height += component.getMinimumSize().height + VERTICAL_GAP;
-			return new Dimension(width, height);
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public Dimension getPreferredSize()
-		{
-			int width = tabbedPanel.getPreferredSize().width;
-			int height = -VERTICAL_GAP;
-			for (Component component : getComponents())
-				height += component.getPreferredSize().height + VERTICAL_GAP;
-			return new Dimension(width, height);
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public void doLayout()
-		{
-			int width = getWidth();
-			Dimension statusPanelSize = statusPanel.getPreferredSize();
-			Dimension tabbedPanelSize = tabbedPanel.getFrameSize();
-
-			int y = 0;
-			tabbedPanel.setBounds(0, y, Math.max(tabbedPanelSize.width, width),
-								  Math.max(tabbedPanelSize.height,
-										   getHeight() - statusPanelSize.height - VERTICAL_GAP));
-
-			y += tabbedPanel.getHeight() + VERTICAL_GAP;
-			statusPanel.setBounds(0, y, Math.min(width, statusPanelSize.width), statusPanelSize.height);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
+	private	TabbedPane	tabbedPanel;
+	private	StatusPanel	statusPanel;
+	private	JPopupMenu	contextMenu;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -735,15 +314,16 @@ class MainWindow
 		while (tabbedPanel.getNumTabs() > 0)
 			removeView(tabbedPanel.getNumTabs() - 1);
 
-		// Set location of window
-		AppConfig config = AppConfig.INSTANCE;
-		if (config.isMainWindowLocation())
-			setLocation(GuiUtils.getLocationWithinScreen(this, config.getMainWindowLocation()));
-
 		// Set size of window
+		AppConfig config = AppConfig.INSTANCE;
 		Dimension size = config.getMainWindowSize();
 		if ((size != null) && (size.width > 0) && (size.height > 0))
 			setSize(size);
+
+		// Set location of window
+		setLocation(config.isMainWindowLocation()
+								? GuiUtils.getLocationWithinScreen(this, config.getMainWindowLocation())
+								: GuiUtils.getComponentLocation(this));
 
 		// Update title and menus
 		updateTitleAndMenus();
@@ -761,6 +341,7 @@ class MainWindow
 //  Instance methods : ChangeListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void stateChanged(ChangeEvent event)
 	{
 		if (event.getSource() == tabbedPanel)
@@ -807,6 +388,7 @@ class MainWindow
 //  Instance methods : FlavorListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void flavorsChanged(FlavorEvent event)
 	{
 		Menu.updateTextDocumentCommands();
@@ -818,6 +400,7 @@ class MainWindow
 //  Instance methods : ListSelectionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void valueChanged(ListSelectionEvent event)
 	{
 		Menu.ARCHIVE.update();
@@ -830,6 +413,7 @@ class MainWindow
 //  Instance methods : MenuListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void menuCanceled(MenuEvent event)
 	{
 		// do nothing
@@ -837,6 +421,7 @@ class MainWindow
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void menuDeselected(MenuEvent event)
 	{
 		// do nothing
@@ -844,6 +429,7 @@ class MainWindow
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void menuSelected(MenuEvent event)
 	{
 		Object eventSource = event.getSource();
@@ -860,6 +446,7 @@ class MainWindow
 //  Instance methods : MouseListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void mouseClicked(MouseEvent event)
 	{
 		// do nothing
@@ -867,6 +454,7 @@ class MainWindow
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseEntered(MouseEvent event)
 	{
 		// do nothing
@@ -874,6 +462,7 @@ class MainWindow
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseExited(MouseEvent event)
 	{
 		// do nothing
@@ -881,6 +470,7 @@ class MainWindow
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mousePressed(MouseEvent event)
 	{
 		showContextMenu(event);
@@ -888,6 +478,7 @@ class MainWindow
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseReleased(MouseEvent event)
 	{
 		showContextMenu(event);
@@ -1107,12 +698,440 @@ class MainWindow
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	TabbedPane	tabbedPanel;
-	private	StatusPanel	statusPanel;
-	private	JPopupMenu	contextMenu;
+
+	// MENUS
+
+
+	private enum Menu
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILE
+		(
+			"File",
+			KeyEvent.VK_F
+		)
+		{
+			@Override
+			protected void update()
+			{
+				updateAppCommands();
+			}
+		},
+
+		EDIT
+		(
+			"Edit",
+			KeyEvent.VK_E
+		)
+		{
+			@Override
+			protected void update()
+			{
+				JMenu menu = getMenu();
+				menu.removeAll();
+				Document document = App.INSTANCE.getDocument();
+				if (document == null)
+					menu.setEnabled(false);
+				else
+				{
+					menu.setEnabled(true);
+					switch (document.getKind())
+					{
+						case ARCHIVE:
+							updateArchiveDocumentCommands();
+
+							menu.add(new FMenuItem(ArchiveDocument.Command.SELECT_ALL, KeyEvent.VK_A));
+							menu.add(new FMenuItem(ArchiveDocument.Command.INVERT_SELECTION,
+												   KeyEvent.VK_I));
+							break;
+
+						case TEXT:
+							updateTextDocumentCommands();
+
+							menu.add(new FMenuItem(TextDocument.Command.UNDO, KeyEvent.VK_U));
+							menu.add(new FMenuItem(TextDocument.Command.REDO, KeyEvent.VK_R));
+							menu.add(new FMenuItem(TextDocument.Command.CLEAR_EDIT_LIST,
+												   KeyEvent.VK_L));
+
+							menu.addSeparator();
+
+							menu.add(new FMenuItem(TextDocument.Command.CUT, KeyEvent.VK_T));
+							menu.add(new FMenuItem(TextDocument.Command.COPY, KeyEvent.VK_C));
+							menu.add(new FMenuItem(TextDocument.Command.COPY_ALL, KeyEvent.VK_O));
+							menu.add(new FMenuItem(TextDocument.Command.PASTE, KeyEvent.VK_P));
+							menu.add(new FMenuItem(TextDocument.Command.PASTE_ALL, KeyEvent.VK_S));
+
+							menu.addSeparator();
+
+							menu.add(new FMenuItem(TextDocument.Command.CLEAR, KeyEvent.VK_E));
+
+							menu.addSeparator();
+
+							menu.add(new FMenuItem(TextDocument.Command.SELECT_ALL, KeyEvent.VK_A));
+
+							menu.addSeparator();
+
+							menu.add(new FMenuItem(TextDocument.Command.WRAP, KeyEvent.VK_W));
+
+							break;
+					}
+				}
+			}
+		},
+
+		ARCHIVE
+		(
+			"Archive",
+			KeyEvent.VK_A
+		)
+		{
+			@Override
+			protected void update()
+			{
+				getMenu().setEnabled(App.INSTANCE.getArchiveDocument() != null);
+				updateArchiveDocumentCommands();
+			}
+		},
+
+		TEXT
+		(
+			"Text",
+			KeyEvent.VK_T
+		)
+		{
+			@Override
+			protected void update()
+			{
+				updateAppCommands();
+				updateTextDocumentCommands();
+			}
+		},
+
+		ENCRYPTION
+		(
+			"Encryption",
+			KeyEvent.VK_C
+		)
+		{
+			@Override
+			protected void update()
+			{
+				updateAppCommands();
+			}
+		},
+
+		OPTIONS
+		(
+			"Options",
+			KeyEvent.VK_O
+		)
+		{
+			@Override
+			protected void update()
+			{
+				updateAppCommands();
+			}
+		};
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	JMenu	menu;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Menu(String text,
+					 int    keyCode)
+		{
+			menu = new FMenu(text, keyCode);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static void updateAppCommands()
+		{
+			App.INSTANCE.updateCommands();
+		}
+
+		//--------------------------------------------------------------
+
+		private static void updateArchiveDocumentCommands()
+		{
+			ArchiveDocument archiveDocument = App.INSTANCE.getArchiveDocument();
+			if (archiveDocument == null)
+				ArchiveDocument.Command.setAllEnabled(false);
+			else
+				archiveDocument.updateCommands();
+		}
+
+		//--------------------------------------------------------------
+
+		private static void updateTextDocumentCommands()
+		{
+			TextDocument textDocument = App.INSTANCE.getTextDocument();
+			if (textDocument == null)
+				TextDocument.Command.setAllEnabled(false);
+			else
+				textDocument.updateCommands();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Abstract methods
+	////////////////////////////////////////////////////////////////////
+
+		protected abstract void update();
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		protected JMenu getMenu()
+		{
+			return menu;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLOSE ACTION CLASS
+
+
+	private static class CloseAction
+		extends AbstractAction
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private CloseAction()
+		{
+			putValue(Action.ACTION_COMMAND_KEY, "");
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ActionListener interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			App.INSTANCE.closeDocument(Integer.parseInt(event.getActionCommand()));
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CIPHER ACTION CLASS
+
+
+	private static class CipherAction
+		extends AbstractAction
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	COMMAND_STR	= "selectCipherKind.";
+
+	////////////////////////////////////////////////////////////////////
+	//  Class variables
+	////////////////////////////////////////////////////////////////////
+
+		private static	Map<String, Map<FortunaCipher, FRadioButtonMenuItem>>	menuItemMap	= new HashMap<>();
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	FortunaCipher	cipher;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private CipherAction(FortunaCipher cipher)
+		{
+			super(cipher.toString());
+			putValue(Action.ACTION_COMMAND_KEY, COMMAND_STR + cipher.getKey());
+			this.cipher = cipher;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ActionListener interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			AppConfig.INSTANCE.setPrngDefaultCipher(cipher);
+			App.INSTANCE.getMainWindow().updateCipher();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static FRadioButtonMenuItem getMenuItem(String        key,
+														FortunaCipher cipher)
+		{
+			Map<FortunaCipher, FRadioButtonMenuItem> menuItems = menuItemMap.get(key);
+			if (menuItems == null)
+			{
+				menuItems = new EnumMap<>(FortunaCipher.class);
+				menuItemMap.put(key, menuItems);
+			}
+
+			FRadioButtonMenuItem menuItem = menuItems.get(cipher);
+			if (menuItem == null)
+			{
+				menuItem = new FRadioButtonMenuItem(new CipherAction(cipher),
+													Utils.getCipher() == cipher);
+				menuItems.put(cipher, menuItem);
+			}
+
+			return menuItem;
+		}
+
+		//--------------------------------------------------------------
+
+		private static void updateMenuItems()
+		{
+			FortunaCipher currentCipher = Utils.getCipher();
+			for (String key : menuItemMap.keySet())
+			{
+				Map<FortunaCipher, FRadioButtonMenuItem> menuItems = menuItemMap.get(key);
+				for (FortunaCipher cipher : menuItems.keySet())
+					menuItems.get(cipher).setSelected(cipher == currentCipher);
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// MAIN PANEL CLASS
+
+
+	private class MainPanel
+		extends JPanel
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	VERTICAL_GAP	= 0;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private MainPanel()
+		{
+			// Lay out components explicitly
+			setLayout(null);
+
+			// Add components
+			add(tabbedPanel);
+			add(statusPanel);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public Dimension getMinimumSize()
+		{
+			int width = tabbedPanel.getMinimumSize().width;
+			int height = -VERTICAL_GAP;
+			for (Component component : getComponents())
+				height += component.getMinimumSize().height + VERTICAL_GAP;
+			return new Dimension(width, height);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public Dimension getPreferredSize()
+		{
+			int width = tabbedPanel.getPreferredSize().width;
+			int height = -VERTICAL_GAP;
+			for (Component component : getComponents())
+				height += component.getPreferredSize().height + VERTICAL_GAP;
+			return new Dimension(width, height);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public void doLayout()
+		{
+			int width = getWidth();
+			Dimension statusPanelSize = statusPanel.getPreferredSize();
+			Dimension tabbedPanelSize = tabbedPanel.getFrameSize();
+
+			int y = 0;
+			tabbedPanel.setBounds(0, y, Math.max(tabbedPanelSize.width, width),
+								  Math.max(tabbedPanelSize.height,
+										   getHeight() - statusPanelSize.height - VERTICAL_GAP));
+
+			y += tabbedPanel.getHeight() + VERTICAL_GAP;
+			statusPanel.setBounds(0, y, Math.min(width, statusPanelSize.width), statusPanelSize.height);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

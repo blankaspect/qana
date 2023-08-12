@@ -46,7 +46,7 @@ import uk.blankaspect.common.range.IntegerRange;
 // CARRIER IMAGE CLASS
 
 
-strictfp class CarrierImage
+class CarrierImage
 {
 
 ////////////////////////////////////////////////////////////////////////
@@ -526,7 +526,7 @@ strictfp class CarrierImage
 			shape.translate(dx, dy);
 
 			colour = new Color(Color.HSBtoRGB(shape.hue, SHAPE_SATURATION, SHAPE_BRIGHTNESS));
-			colour = new Color(colour.getRed(), StrictMath.round((float)colour.getGreen() * GREEN_FACTOR),
+			colour = new Color(colour.getRed(), (int)StrictMath.round((float)colour.getGreen() * GREEN_FACTOR),
 							   colour.getBlue(), ALPHA);
 			gr.setColor(colour);
 			gr.fill(shape.path);

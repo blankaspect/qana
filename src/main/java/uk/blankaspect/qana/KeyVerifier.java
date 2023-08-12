@@ -22,9 +22,7 @@ import java.awt.Component;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.indexedsub.IndexedSub;
-
-import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
+import uk.blankaspect.ui.swing.dialog.RunnableMessageDialog;
 
 //----------------------------------------------------------------------
 
@@ -39,7 +37,7 @@ class KeyVerifier
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	MESSAGE_STR	= "Verifying key '%1' " + AppConstants.ELLIPSIS_STR;
+	private static final	String	MESSAGE_STR	= "Verifying key '%s' " + AppConstants.ELLIPSIS_STR;
 
 ////////////////////////////////////////////////////////////////////////
 //  Enumerated types
@@ -116,7 +114,7 @@ class KeyVerifier
 		throws AppException
 	{
 		outOfMemory = false;
-		RunnableMessageDialog.showDialog(component, IndexedSub.sub(MESSAGE_STR, key.getName()), () ->
+		RunnableMessageDialog.showDialog(component, String.format(MESSAGE_STR, key.getName()), () ->
 		{
 			try
 			{

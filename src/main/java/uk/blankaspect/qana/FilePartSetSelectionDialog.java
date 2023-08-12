@@ -2,7 +2,7 @@
 
 FilePartSetSelectionDialog.java
 
-File-part set selection dialog box class.
+File-part set selection dialog class.
 
 \*====================================================================*/
 
@@ -52,22 +52,22 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import uk.blankaspect.common.swing.action.KeyAction;
-
-import uk.blankaspect.common.swing.button.FButton;
-
-import uk.blankaspect.common.swing.list.SingleSelectionList;
-
-import uk.blankaspect.common.swing.misc.GuiUtils;
-
-import uk.blankaspect.common.swing.text.TextRendering;
-
 import uk.blankaspect.common.time.CalendarTime;
+
+import uk.blankaspect.ui.swing.action.KeyAction;
+
+import uk.blankaspect.ui.swing.button.FButton;
+
+import uk.blankaspect.ui.swing.list.SingleSelectionList;
+
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
+import uk.blankaspect.ui.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
 
-// FILE-PART SET SELECTION DIALOG BOX CLASS
+// FILE-PART SET SELECTION DIALOG CLASS
 
 
 class FilePartSetSelectionDialog

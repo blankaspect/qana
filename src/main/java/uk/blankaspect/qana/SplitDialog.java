@@ -2,7 +2,7 @@
 
 SplitDialog.java
 
-Split dialog box class.
+Split dialog class.
 
 \*====================================================================*/
 
@@ -55,22 +55,22 @@ import uk.blankaspect.common.exception.FileException;
 
 import uk.blankaspect.common.misc.IFileImporter;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.button.FButton;
-import uk.blankaspect.common.swing.button.LinkedPairButton;
+import uk.blankaspect.ui.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.LinkedPairButton;
 
-import uk.blankaspect.common.swing.container.ByteUnitIntegerSpinnerPanel;
-import uk.blankaspect.common.swing.container.PathnamePanel;
+import uk.blankaspect.ui.swing.container.ByteUnitIntegerSpinnerPanel;
+import uk.blankaspect.ui.swing.container.PathnamePanel;
 
-import uk.blankaspect.common.swing.label.FLabel;
+import uk.blankaspect.ui.swing.label.FLabel;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
 
-// SPLIT DIALOG BOX CLASS
+// SPLIT DIALOG CLASS
 
 
 class SplitDialog

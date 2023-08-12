@@ -25,6 +25,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.nio.channels.OverlappingFileLockException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,8 +40,11 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.TempFileException;
 
+import uk.blankaspect.common.filesystem.FilenameUtils;
+
 import uk.blankaspect.common.misc.BinaryFile;
 
+import uk.blankaspect.common.number.NumberCodec;
 import uk.blankaspect.common.number.NumberUtils;
 
 //----------------------------------------------------------------------
@@ -105,6 +110,9 @@ class FileSplitter
 
 		FILE_ACCESS_NOT_PERMITTED
 		("Access to the file was not permitted."),
+
+		FAILED_TO_CREATE_DIRECTORY
+		("Failed to create the directory."),
 
 		FAILED_TO_CREATE_TEMPORARY_FILE
 		("Failed to create a temporary file."),
@@ -404,7 +412,7 @@ class FileSplitter
 	private static int[] parseHeader(byte[] data,
 									 String filename)
 	{
-		int id = NumberUtils.bytesToUIntLE(data, 0, StreamEncrypter.Header.ID_FIELD_SIZE);
+		int id = NumberCodec.bytesToUIntLE(data, 0, StreamEncrypter.Header.ID_FIELD_SIZE);
 		id ^= new FortunaAes256(filename).getRandomInt();
 		return new int[] { id & (1 << NUM_FILE_PARTS_SHIFT) - 1, id >>> NUM_FILE_PARTS_SHIFT };
 	}
@@ -423,9 +431,8 @@ class FileSplitter
 		throws AppException
 	{
 		// Validate arguments
-		if ((filePartLengthLowerBound < MIN_FILE_PART_LENGTH) ||
-			 (filePartLengthUpperBound > MAX_FILE_PART_LENGTH) ||
-			 (filePartLengthLowerBound > filePartLengthUpperBound))
+		if ((filePartLengthLowerBound < MIN_FILE_PART_LENGTH) ||(filePartLengthUpperBound > MAX_FILE_PART_LENGTH)
+				|| (filePartLengthLowerBound > filePartLengthUpperBound))
 			throw new IllegalArgumentException();
 
 		// Reset progress in progress view
@@ -440,6 +447,20 @@ class FileSplitter
 		long meanFilePartLength = (filePartLengthLowerBound + filePartLengthUpperBound) / 2;
 		if ((inFileLength + meanFilePartLength - 1) / meanFilePartLength > MAX_NUM_FILE_PARTS)
 			throw new FileException(ErrorId.FILE_IS_TOO_LONG, inFile);
+
+		// Create output directory
+		if (!outDirectory.exists())
+		{
+			try
+			{
+				if (!outDirectory.mkdirs())
+					throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, outDirectory);
+			}
+			catch (SecurityException e)
+			{
+				throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, outDirectory, e);
+			}
+		}
 
 		// Create list of names of existing file parts in output directory
 		File[] files = outDirectory.listFiles(new FilePartFilter());
@@ -498,7 +519,11 @@ class FileSplitter
 				if (inStream.getChannel().tryLock(0, Long.MAX_VALUE, true) == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile);
 			}
-			catch (Exception e)
+			catch (OverlappingFileLockException e)
+			{
+				// ignore
+			}
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile, e);
 			}
@@ -531,8 +556,8 @@ class FileSplitter
 				// Create temporary file
 				try
 				{
-					tempFile = File.createTempFile(AppConstants.TEMP_FILE_PREFIX, null,
-												   outFile.getAbsoluteFile().getParentFile());
+					tempFile = FilenameUtils.tempLocation(outFile);
+					tempFile.createNewFile();
 				}
 				catch (Exception e)
 				{
@@ -559,7 +584,7 @@ class FileSplitter
 					if (outStream.getChannel().tryLock() == null)
 						throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile);
 				}
-				catch (Exception e)
+				catch (IOException e)
 				{
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile, e);
 				}
@@ -573,7 +598,7 @@ class FileSplitter
 																					fileParts.size()));
 					encrypter.addProgressListener(progressView);
 					encrypter.encrypt(inStream, outStream, filePart.length, tstamp, key.getKey(),
-									  App.INSTANCE.getRandomKey());
+									  App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
 				}
 				catch (StreamEncrypter.InputException e)
 				{
@@ -793,11 +818,26 @@ class FileSplitter
 		boolean oldFileDeleted = false;
 		try
 		{
+			// Create parent directory of output file
+			File directory = outFile.getAbsoluteFile().getParentFile();
+			if ((directory != null) && !directory.exists())
+			{
+				try
+				{
+					if (!directory.mkdirs())
+						throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory);
+				}
+				catch (SecurityException e)
+				{
+					throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory, e);
+				}
+			}
+
 			// Create temporary file
 			try
 			{
-				tempFile = File.createTempFile(AppConstants.TEMP_FILE_PREFIX, null,
-											   outFile.getAbsoluteFile().getParentFile());
+				tempFile = FilenameUtils.tempLocation(outFile);
+				tempFile.createNewFile();
 			}
 			catch (Exception e)
 			{
@@ -824,7 +864,7 @@ class FileSplitter
 				if (outStream.getChannel().tryLock() == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile);
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile, e);
 			}
@@ -870,7 +910,11 @@ class FileSplitter
 					if (inStream.getChannel().tryLock(0, Long.MAX_VALUE, true) == null)
 						throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile);
 				}
-				catch (Exception e)
+				catch (OverlappingFileLockException e)
+				{
+					// ignore
+				}
+				catch (IOException e)
 				{
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile, e);
 				}
@@ -882,7 +926,8 @@ class FileSplitter
 																	   createHeader(filePart.name, i,
 																					fileParts.size()));
 					encrypter.addProgressListener(progressView);
-					long tstamp = encrypter.decrypt(inStream, outStream, filePart.length, key.getKey());
+					long tstamp = encrypter.decrypt(inStream, outStream, filePart.length, key.getKey(),
+													generator -> App.INSTANCE.generateKey(generator));
 					if (i == 0)
 						timestamp = tstamp;
 				}

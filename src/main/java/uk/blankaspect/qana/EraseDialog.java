@@ -2,7 +2,7 @@
 
 EraseDialog.java
 
-File erasure dialog box class.
+File erasure dialog class.
 
 \*====================================================================*/
 
@@ -32,14 +32,14 @@ import uk.blankaspect.common.filesystem.PathnameUtils;
 
 import uk.blankaspect.common.misc.SystemUtils;
 
-import uk.blankaspect.common.swing.dialog.FileMultipleSelectionDialog;
+import uk.blankaspect.ui.swing.dialog.FileMultipleSelectionDialog;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 //----------------------------------------------------------------------
 
 
-// FILE ERASURE DIALOG BOX CLASS
+// FILE ERASURE DIALOG CLASS
 
 
 class EraseDialog

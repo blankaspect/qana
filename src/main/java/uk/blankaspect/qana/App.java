@@ -20,6 +20,7 @@ package uk.blankaspect.qana;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Window;
 
 import java.awt.image.BufferedImage;
 
@@ -27,12 +28,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 
-import java.time.LocalDateTime;
-
-import java.time.format.DateTimeFormatter;
+import java.lang.invoke.MethodHandles;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -40,13 +38,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+
+import uk.blankaspect.common.build.BuildUtils;
+
+import uk.blankaspect.common.bytedata.IByteDataInputStream;
 
 import uk.blankaspect.common.cls.ClassUtils;
 
@@ -69,18 +71,17 @@ import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.exception2.LocationException;
 
+import uk.blankaspect.common.filesystem.FilenameUtils;
 import uk.blankaspect.common.filesystem.PathnameUtils;
-
-import uk.blankaspect.common.indexedsub.IndexedSub;
 
 import uk.blankaspect.common.logging.ErrorLogger;
 
 import uk.blankaspect.common.misc.BinaryFile;
 import uk.blankaspect.common.misc.DataTxChannel;
-import uk.blankaspect.common.misc.IByteDataInputStream;
 import uk.blankaspect.common.misc.IFileImporter;
 import uk.blankaspect.common.misc.ImportQueue;
 
+import uk.blankaspect.common.number.NumberCodec;
 import uk.blankaspect.common.number.NumberUtils;
 
 import uk.blankaspect.common.platform.windows.FileAssociations;
@@ -90,11 +91,15 @@ import uk.blankaspect.common.resource.ResourceUtils;
 
 import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.common.ui.progress.IProgressView;
 
-import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.dialog.RunnableMessageDialog;
 
-import uk.blankaspect.common.swing.textfield.TextFieldUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
+import uk.blankaspect.ui.swing.text.TextRendering;
+
+import uk.blankaspect.ui.swing.textfield.TextFieldUtils;
 
 //----------------------------------------------------------------------
 
@@ -125,17 +130,11 @@ public class App
 
 	private static final	int		TIMER_INTERVAL	= 500;
 
-	private static final	String	VERSION_PROPERTY_KEY	= "version";
-	private static final	String	BUILD_PROPERTY_KEY		= "build";
-	private static final	String	RELEASE_PROPERTY_KEY	= "release";
-
-	private static final	String	VERSION_DATE_TIME_PATTERN	= "uuuuMMdd-HHmmss";
-
 	private static final	String	BUILD_PROPERTIES_FILENAME	= "build.properties";
 
 	private static final	String	OS_NAME_KEY	= "os.name";
 
-	private static final	String	RX_ID	= App.class.getCanonicalName();
+	private static final	String	RX_ID	= MethodHandles.lookup().lookupClass().getCanonicalName();
 
 	private static final	String	ASSOC_SCRIPT_DIR_PREFIX	= NAME_KEY + "_";
 	private static final	String	ASSOC_SCRIPT_FILENAME	= NAME_KEY + "Associations";
@@ -192,6 +191,7 @@ public class App
 																"not seeded.\nYou should wait until " +
 																"enough entropy has accumulated before " +
 																"performing encryption.";
+	private static final	String	GENERATING_KEY_STR		= "Generating the content-encryption key ...";
 	private static final	String	SET_GLOBAL_KEY_STR		= "Set global key";
 	private static final	String	KEY_FOR_STR				= "Key for ";
 	private static final	String	TEMP_KEY_STR			= "Encrypt with temporary key";
@@ -199,7 +199,7 @@ public class App
 																"key.\nDo you want to proceed?";
 	private static final	String	CLEAR_KEY_STR			= "Clear global key";
 	private static final	String	CLEAR_KEY_MESSAGE_STR	= "Do you want to clear the global key?";
-	private static final	String	NO_KEY_DATABASE1_STR	= "File: %1\nThe key database file does not " +
+	private static final	String	NO_KEY_DATABASE1_STR	= "File: %s\nThe key database file does not " +
 																"exist.\nWhen the program exits, a key " +
 																"database will be created at the " +
 																"location\nspecified in the preferences.";
@@ -212,9 +212,9 @@ public class App
 	private static final	String	WINDOWS_STR				= "Windows";
 	private static final	String	FILE_ASSOCIATIONS_STR	= "File associations";
 	private static final	String	FILE_PARTS_STR			= "The output directory already contains " +
-																"%1 file part%2.\n" +
-																"Do you want to delete %3 file%4?";
-	private static final	String[][]	FILE_PARTS_STRS		=
+																"%d file part%s.\n" +
+																"Do you want to delete %s file%s?";
+	private static final	String[][]	FILE_PARTS_STRS	=
 	{
 		{ "", "s" },
 		{ "this", "these" },
@@ -228,616 +228,6 @@ public class App
 		KDF_PARAMS,
 		RANDOM_DATA
 	}
-
-////////////////////////////////////////////////////////////////////////
-//  Enumerated types
-////////////////////////////////////////////////////////////////////////
-
-
-	// ENUMERATION: FILE OPERATION
-
-
-	private enum FileOperation
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		PROCESS
-		(
-			null,
-			"processed"
-		),
-
-		OPEN
-		(
-			OPEN_FILE_STR,
-			"opened"
-		),
-
-		ENCRYPT
-		(
-			ENCRYPT_FILE_STR,
-			"encrypted"
-		),
-
-		DECRYPT
-		(
-			DECRYPT_FILE_STR,
-			"decrypted"
-		),
-
-		VALIDATE
-		(
-			VALIDATE_FILE_STR,
-			"validated"
-		);
-
-		//--------------------------------------------------------------
-
-		private static final	Set<FileOperation>	COUNTABLE_OPERATIONS	= EnumSet.of
-		(
-			ENCRYPT,
-			DECRYPT,
-			VALIDATE
-		);
-
-		private static final	String	NUM_FILES_STR	= "Number of files ";
-
-	////////////////////////////////////////////////////////////////////
-	//  Class variables
-	////////////////////////////////////////////////////////////////////
-
-		private static	Map<FileOperation, Integer>	operationCounts	= new EnumMap<>(FileOperation.class);
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	titleStr;
-		private	String	completedStr;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private FileOperation(String titleStr,
-							  String completedStr)
-		{
-			this.titleStr = titleStr;
-			this.completedStr = completedStr;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static void initCounts()
-		{
-			operationCounts.clear();
-			for (FileOperation fileOp : FileOperation.values())
-				operationCounts.put(fileOp, 0);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private boolean isOperation()
-		{
-			return (operationCounts.get(this) > 0);
-		}
-
-		//--------------------------------------------------------------
-
-		private String getCountString()
-		{
-			return (NUM_FILES_STR + completedStr + " = " + operationCounts.get(this));
-		}
-
-		//--------------------------------------------------------------
-
-		private void incrementCount()
-		{
-			operationCounts.put(this, operationCounts.get(this) + 1);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// ENUMERATION: ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILE_DOES_NOT_EXIST
-		("The file does not exist."),
-
-		NOT_A_FILE
-		("The pathname does not denote a file."),
-
-		NOT_A_DIRECTORY
-		("The pathname does not denote a directory."),
-
-		FAILED_TO_CREATE_ARCHIVE_DIRECTORY
-		("Failed to create the output directory."),
-
-		FAILED_TO_CREATE_TEMPORARY_FILE
-		("Failed to create a temporary file."),
-
-		FAILED_TO_DELETE_TEMPORARY_FILE
-		("Failed to delete the temporary file."),
-
-		FAILED_TO_CREATE_OUTPUT_DIRECTORY
-		("Failed to create the output directory."),
-
-		FAILED_TO_GET_TIMESTAMP
-		("Failed to get the timestamp of the file."),
-
-		FAILED_TO_SET_TIMESTAMP
-		("Failed to set the timestamp of the file."),
-
-		FAILED_TO_DELETE_FILE_PART
-		("Failed to delete the file part."),
-
-		FAILED_TO_CLEAR_CLIPBOARD
-		("Failed to clear the system clipboard."),
-
-		PAYLOAD_TOO_LARGE
-		("The payload is too large to be concealed."),
-
-		NOT_ENOUGH_MEMORY
-		("There was not enough memory to perform the command."),
-
-		NOT_ENOUGH_MEMORY_TO_GENERATE_CARRIER_IMAGE
-		("There was not enough memory to generate a carrier image of the required size.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// CLASS: DOCUMENT-VIEW
-
-
-	private static class DocumentView
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	Document	document;
-		private	View		view;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private DocumentView(Document document)
-		{
-			this.document = document;
-			view = document.createView();
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// CLASS: CONCEALED PAYLOAD LENGTH ENCODER AND DECODER
-
-
-	private static class LengthCoder
-		implements StreamConcealer.ILengthDecoder, StreamConcealer.ILengthEncoder
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	MAX_LENGTH_SIZE	= StreamConcealer.MAX_NUM_LENGTH_BITS / Byte.SIZE;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private LengthCoder()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : StreamConcealer.ILengthDecoder interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public int getLengthFieldNumBits(int numPixels)
-		{
-			int maxLength = numPixels + (numPixels >>> 1);
-			return (Integer.SIZE - Integer.numberOfLeadingZeros(maxLength));
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public int decodeLength(byte[] data,
-								int    numPixels)
-		{
-			// Create PRNG
-			Fortuna prng = createPrng(numPixels);
-
-			// Get permutation of bit indices
-			int numLengthBits = getLengthFieldNumBits(numPixels);
-			int[] indices = getBitIndices(numLengthBits, prng);
-
-			// XOR length data
-			prng.createCombiner(MAX_LENGTH_SIZE).combine(data);
-
-			// Extract length from input data
-			int length = 0;
-			for (int i = 0; i < numLengthBits; i++)
-			{
-				int index = indices[i];
-				if ((data[index >>> 3] & 1 << (index & 0x07)) != 0)
-					length |= 1 << i;
-			}
-
-			// Return length
-			return length;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : StreamConcealer.LengthEncoder interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public byte[] encodeLength(int length,
-								   int numPixels)
-		{
-			// Create PRNG
-			Fortuna prng = createPrng(numPixels);
-
-			// Get permutation of bit indices
-			int numLengthBits = getLengthFieldNumBits(numPixels);
-			int[] indices = getBitIndices(numLengthBits, prng);
-
-			// Permute bits of length
-			byte[] data = new byte[NumberUtils.roundUpQuotientInt(numLengthBits, Byte.SIZE)];
-			for (int i = 0; i < numLengthBits; i++)
-			{
-				int index = indices[i];
-				if ((length & 1 << i) != 0)
-					data[index >>> 3] |= 1 << (index & 0x07);
-			}
-
-			// XOR length data
-			prng.createCombiner(MAX_LENGTH_SIZE).combine(data);
-
-			// Return encoded length data
-			return data;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private Fortuna createPrng(int value)
-		{
-			byte[] key = new byte[FortunaAes256.KEY_SIZE];
-			NumberUtils.intToBytesLE(value, key);
-			return new FortunaAes256(key);
-		}
-
-		//--------------------------------------------------------------
-
-		private int[] getBitIndices(int     numIndices,
-									Fortuna prng)
-		{
-			final	int	NUM_ITERATIONS	= 1000;
-
-			int[] indices = new int[numIndices];
-			for (int i = 0; i < NUM_ITERATIONS; i++)
-			{
-				for (int j = 0; j < numIndices; j++)
-				{
-					int k = ((prng.getRandomByte() & 0xFF) * (j + 1)) >>> 8;
-					indices[j] = indices[k];
-					indices[k] = j;
-				}
-			}
-			return indices;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// CLASS: RANDOM-DATA INPUT STREAM
-
-
-	private class RandomDataInputStream
-		extends InputStream
-		implements IByteDataInputStream
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	KDF_PARAM_DATA_SIZE	= 4;
-		private static final	int	BLOCK_LENGTH		= 4096;
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int						length;
-		private	RandomDataStreamState	state;
-		private	Fortuna					prng;
-		private	byte[]					salt;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private RandomDataInputStream(int     length,
-									  boolean hasHeader)
-		{
-			StreamEncrypter encrypter = new StreamEncrypter(Utils.getCipher(),
-															hasHeader ? getEncryptionHeader() : null);
-			this.length = length + encrypter.getMaxOverheadSize();
-			state = hasHeader ? RandomDataStreamState.HEADER : RandomDataStreamState.SALT;
-			prng = new FortunaAes256(getRandomKey());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ByteDataInputStream interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public long getLength()
-		{
-			return length;
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public void reset()
-		{
-			// do nothing
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public int read(byte[] buffer,
-						int    offset,
-						int    length)
-		{
-			byte[] data = null;
-			switch (state)
-			{
-				case HEADER:
-					data = getEncryptionHeader().toByteArray();
-					state = RandomDataStreamState.SALT;
-					break;
-
-				case SALT:
-					salt = getRandomBytes(StreamEncrypter.SALT_SIZE);
-					data = salt;
-					state = RandomDataStreamState.KDF_PARAMS;
-					break;
-
-				case KDF_PARAMS:
-					data = new byte[KDF_PARAM_DATA_SIZE];
-					NumberUtils.
-							intToBytesLE(KdfUse.GENERATION.getKdfParameters().getEncodedValue(false),
-										 data);
-					FortunaAes256.createCombiner(salt, KDF_PARAM_DATA_SIZE).combine(data);
-					state = RandomDataStreamState.RANDOM_DATA;
-					break;
-
-				case RANDOM_DATA:
-					data = prng.getRandomBytes(Math.min(length, BLOCK_LENGTH));
-					break;
-			}
-			System.arraycopy(data, 0, buffer, offset, data.length);
-			return data.length;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * This method implements an abstract method in java.io.InputStream.  It is implemented only to
-		 * complete the definition of the RandomDataInputStream class, and it should never be called.
-		 */
-
-		@Override
-		public int read()
-		{
-			throw new UnexpectedRuntimeException();
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// CLASS: RANDOM SOURCE FOR CONCEALER
-
-
-	private class RandomSource
-		implements StreamConcealer.IRandomSource
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private RandomSource()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : StreamConcealer.IRandomSource interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public int getRandomBytes(byte[] buffer,
-								  int    offset,
-								  int    length)
-		{
-			prng.getRandomBytes(buffer, offset, length);
-			return length;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// CLASS: CARRIER-IMAGE GENERATOR
-
-
-	private class CarrierImageGenerator
-		implements FileConcealer.IImageSource
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	WIDTH_FACTOR	= 4;
-		private static final	int	HEIGHT_FACTOR	= 3;
-
-		private static final	int	SIZE_INTERVAL	= 16;
-		private static final	int	MIN_WIDTH		= WIDTH_FACTOR * 2 * SIZE_INTERVAL;
-		private static final	int	MIN_HEIGHT		= HEIGHT_FACTOR * 2 * SIZE_INTERVAL;
-
-		private static final	int	MIN_CELL_SIZE	= 16;
-
-		private static final	int	BYTES_PER_PIXEL	= 3;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private CarrierImageGenerator()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : FileConcealer.IImageSource interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public BufferedImage getImage(int payloadLength)
-			throws AppException
-		{
-			if (payloadLength > StreamConcealer.MAX_PAYLOAD_LENGTH)
-				throw new AppException(ErrorId.PAYLOAD_TOO_LARGE);
-
-			try
-			{
-				long numPixels = NumberUtils.roundUpQuotientLong((long)payloadLength * 8,
-																 BYTES_PER_PIXEL * CarrierImage.NUM_CARRIER_BITS);
-				double d = Math.sqrt((double)numPixels / (double)(WIDTH_FACTOR * HEIGHT_FACTOR));
-				int width = NumberUtils.roundUpInt((int)Math.ceil(d * (double)WIDTH_FACTOR), SIZE_INTERVAL);
-				int height = NumberUtils.roundUpInt((int)Math.ceil(d * (double)HEIGHT_FACTOR), SIZE_INTERVAL);
-				CarrierImage.Kind imageKind = AppConfig.INSTANCE.getCarrierImageKind();
-				return new CarrierImage(Math.max(MIN_WIDTH, width), Math.max(MIN_HEIGHT, height),
-										Math.max(MIN_CELL_SIZE, width / imageKind.getCellSizeDivisor()),
-										imageKind).getImage();
-			}
-			catch (OutOfMemoryError e)
-			{
-				throw new AppException(ErrorId.NOT_ENOUGH_MEMORY_TO_GENERATE_CARRIER_IMAGE);
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Instance variables
@@ -891,6 +281,13 @@ public class App
 ////////////////////////////////////////////////////////////////////////
 //  Instance methods
 ////////////////////////////////////////////////////////////////////////
+
+	public String getVersionString()
+	{
+		return versionStr;
+	}
+
+	//------------------------------------------------------------------
 
 	public MainWindow getMainWindow()
 	{
@@ -1024,51 +421,6 @@ public class App
 
 	//------------------------------------------------------------------
 
-	/**
-	 * Returns a string representation of the version of this application.  If this class was loaded from a JAR, the
-	 * string is created from the values of properties that are defined in a resource named 'build.properties';
-	 * otherwise, the string is created from the date and time when this method is first called.
-	 *
-	 * @return a string representation of the version of this application.
-	 */
-
-	public String getVersionString()
-	{
-		if (versionStr == null)
-		{
-			StringBuilder buffer = new StringBuilder(32);
-			if (ClassUtils.isFromJar(getClass()))
-			{
-				// Append version number
-				String str = buildProperties.get(VERSION_PROPERTY_KEY);
-				if (str != null)
-					buffer.append(str);
-
-				// If this is not a release, append build
-				boolean release = Boolean.parseBoolean(buildProperties.get(RELEASE_PROPERTY_KEY));
-				if (!release)
-				{
-					str = buildProperties.get(BUILD_PROPERTY_KEY);
-					if (str != null)
-					{
-						if (buffer.length() > 0)
-							buffer.append(' ');
-						buffer.append(str);
-					}
-				}
-			}
-			else
-			{
-				buffer.append('b');
-				buffer.append(DateTimeFormatter.ofPattern(VERSION_DATE_TIME_PATTERN).format(LocalDateTime.now()));
-			}
-			versionStr = buffer.toString();
-		}
-		return versionStr;
-	}
-
-	//------------------------------------------------------------------
-
 	public byte[] getRandomBytes(int length)
 	{
 		return prng.getRandomBytes(length);
@@ -1168,6 +520,24 @@ public class App
 
 	//------------------------------------------------------------------
 
+	public void generateKey(Runnable generator)
+	{
+		// Get window
+		Window window = null;
+		IProgressView progressView = Task.getProgressView();
+		window = (progressView instanceof Window) ? (Window)progressView : mainWindow;
+
+		// If no window, run generator ...
+		if (window == null)
+			generator.run();
+
+		// ... otherwise, run generator in dialog
+		else
+			RunnableMessageDialog.showDialog(window, GENERATING_KEY_STR, generator);
+	}
+
+	//------------------------------------------------------------------
+
 	public void showInfoMessage(String titleStr,
 								Object message)
 	{
@@ -1259,7 +629,7 @@ public class App
 				else
 				{
 					if (!directory.mkdirs())
-						throw new FileException(ErrorId.FAILED_TO_CREATE_ARCHIVE_DIRECTORY, directory);
+						throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory);
 				}
 
 				// Set directory in document and view
@@ -1293,11 +663,26 @@ public class App
 			progressView.setProgress(1, 0.0);
 			progressView.waitForIdle();
 
+			// Create parent directory of output file
+			File directory = outFile.getAbsoluteFile().getParentFile();
+			if ((directory != null) && !directory.exists())
+			{
+				try
+				{
+					if (!directory.mkdirs())
+						throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory);
+				}
+				catch (SecurityException e)
+				{
+					throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory, e);
+				}
+			}
+
 			// Create temporary file
 			try
 			{
-				tempFile = File.createTempFile(AppConstants.TEMP_FILE_PREFIX, null,
-											   outFile.getAbsoluteFile().getParentFile());
+				tempFile = FilenameUtils.tempLocation(outFile);
+				tempFile.createNewFile();
 			}
 			catch (Exception e)
 			{
@@ -1306,7 +691,8 @@ public class App
 
 			// Encrypt input file
 			progressView.initOverallProgress(0, 1, 2);
-			key.getFileEncrypter(Utils.getCipher(key)).encrypt(inFile, tempFile, key.getKey(), getRandomKey());
+			key.getFileEncrypter(Utils.getCipher(key)).encrypt(inFile, tempFile, key.getKey(), getRandomKey(),
+															   generator -> generateKey(generator));
 
 			// Conceal encrypted file
 			progressView.initOverallProgress(1, 1, 2);
@@ -1381,7 +767,7 @@ public class App
 
 			// Decrypt input file
 			progressView.initOverallProgress(1, 1, 2);
-			key.getFileEncrypter(null).decrypt(tempFile, outFile, key.getKey());
+			key.getFileEncrypter(null).decrypt(tempFile, outFile, key.getKey(), generator -> generateKey(generator));
 
 			// Delete temporary file
 			if (!tempFile.delete())
@@ -1848,10 +1234,11 @@ public class App
 		importQueue = new ImportQueue();
 		pendingFiles = new ArrayList<>();
 
-		// Read build properties
+		// Read build properties and initialise version string
 		try
 		{
-			buildProperties = new ResourceProperties(ResourceUtils.absoluteName(getClass(), BUILD_PROPERTIES_FILENAME));
+			buildProperties = new ResourceProperties(ResourceUtils.normalisedPathname(getClass(), BUILD_PROPERTIES_FILENAME));
+			versionStr = BuildUtils.versionString(getClass(), buildProperties);
 		}
 		catch (LocationException e)
 		{
@@ -1859,9 +1246,7 @@ public class App
 		}
 
 		// Create list of files from command-line arguments
-		List<File> files = Arrays.stream(args)
-									.map(arg -> new File(PathnameUtils.parsePathname(arg)))
-									.collect(Collectors.toList());
+		List<File> files = Stream.of(args).map(arg -> new File(PathnameUtils.parsePathname(arg))).toList();
 
 		// Read TX port number from file
 		int txPort = PortNumber.getValue(NAME_KEY);
@@ -1871,10 +1256,7 @@ public class App
 		{
 			String txId = getClass().getSimpleName() + "." + DataTxChannel.getIdSuffix();
 			DataTxChannel txChannel = new DataTxChannel(txId);
-			if (txChannel.transmit(txPort, RX_ID,
-								   files.stream()
-										.map(file -> file.getAbsolutePath() + "\n")
-										.collect(Collectors.toList())))
+			if (txChannel.transmit(txPort, RX_ID, files.stream().map(file -> file.getAbsolutePath() + "\n").toList()))
 				System.exit(0);
 		}
 
@@ -1893,14 +1275,16 @@ public class App
 					// Add pathnames to list of pending files
 					List<String> pathnames = StringUtils.split(data, '\n');
 					if (!pathnames.isEmpty())
+					{
 						pendingFiles.addAll(pathnames.stream()
 														.filter(pathname -> !pathname.isEmpty())
 														.map(pathname -> new File(pathname))
-														.collect(Collectors.toList()));
+														.toList());
+					}
 				});
 			});
 
-			// On shutdown, write invalid port number to file
+			// On shutdown, invalidate port-number file
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> PortNumber.setValue(NAME_KEY, -1)));
 
 			// Write port number to file
@@ -1982,7 +1366,7 @@ public class App
 			{
 				if (!keyFile.exists())
 					showWarningMessage(SHORT_NAME + " : " + KEY_DATABASE_STR,
-									   IndexedSub.sub(NO_KEY_DATABASE1_STR, Utils.getPathname(keyFile)));
+									   String.format(NO_KEY_DATABASE1_STR, Utils.getPathname(keyFile)));
 				else
 				{
 					try
@@ -2215,7 +1599,7 @@ public class App
 			{
 				if (fileOp.isOperation())
 				{
-					if (buffer.length() > 0)
+					if (!buffer.isEmpty())
 						buffer.append('\n');
 					buffer.append(fileOp.getCountString());
 				}
@@ -2630,7 +2014,7 @@ public class App
 				File outDirectory = (result.outDirectory == null) ? result.inFile.getAbsoluteFile().getParentFile()
 																  : result.outDirectory;
 				if (!outDirectory.exists() && !outDirectory.mkdirs())
-					throw new FileException(ErrorId.FAILED_TO_CREATE_OUTPUT_DIRECTORY, outDirectory);
+					throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, outDirectory);
 
 				// Delete existing file parts from output directory
 				List<File> fileParts = FileSplitter.getFileParts(outDirectory);
@@ -2638,9 +2022,8 @@ public class App
 				{
 					int numFiles = fileParts.size();
 					int index = (numFiles == 1) ? 0 : 1;
-					String messageStr = IndexedSub.sub(FILE_PARTS_STR, Integer.toString(numFiles),
-													   FILE_PARTS_STRS[0][index], FILE_PARTS_STRS[1][index],
-													   FILE_PARTS_STRS[2][index]);
+					String messageStr = String.format(FILE_PARTS_STR, numFiles, FILE_PARTS_STRS[0][index],
+													  FILE_PARTS_STRS[1][index], FILE_PARTS_STRS[2][index]);
 					String[] optionStrs = Utils.getOptionStrings(AppConstants.DELETE_STR, KEEP_STR);
 					int result1 = JOptionPane.showOptionDialog(mainWindow, messageStr, SPLIT_FILE_STR,
 															   JOptionPane.YES_NO_CANCEL_OPTION,
@@ -2696,7 +2079,7 @@ public class App
 					// Create output directory
 					File outDirectory = result.outFile.getAbsoluteFile().getParentFile();
 					if (!outDirectory.exists() && !outDirectory.mkdirs())
-						throw new FileException(ErrorId.FAILED_TO_CREATE_OUTPUT_DIRECTORY, outDirectory);
+						throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, outDirectory);
 
 					// Join files
 					TaskProgressDialog.showDialog2(mainWindow, JOIN_FILES_STR,
@@ -2952,6 +2335,7 @@ public class App
 				// Text
 				else
 				{
+					@SuppressWarnings("resource")
 					RandomDataInputStream inStream = new RandomDataInputStream(result.length, false);
 					int length = (int)inStream.getLength();
 					byte[] buffer = new byte[length];
@@ -3017,6 +2401,610 @@ public class App
 	}
 
 	//------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////
+//  Enumerated types
+////////////////////////////////////////////////////////////////////////
+
+
+	// ENUMERATION: FILE OPERATION
+
+
+	private enum FileOperation
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		PROCESS
+		(
+			null,
+			"processed"
+		),
+
+		OPEN
+		(
+			OPEN_FILE_STR,
+			"opened"
+		),
+
+		ENCRYPT
+		(
+			ENCRYPT_FILE_STR,
+			"encrypted"
+		),
+
+		DECRYPT
+		(
+			DECRYPT_FILE_STR,
+			"decrypted"
+		),
+
+		VALIDATE
+		(
+			VALIDATE_FILE_STR,
+			"validated"
+		);
+
+		//--------------------------------------------------------------
+
+		private static final	Set<FileOperation>	COUNTABLE_OPERATIONS	= EnumSet.of
+		(
+			ENCRYPT,
+			DECRYPT,
+			VALIDATE
+		);
+
+		private static final	String	NUM_FILES_STR	= "Number of files ";
+
+	////////////////////////////////////////////////////////////////////
+	//  Class variables
+	////////////////////////////////////////////////////////////////////
+
+		private static	Map<FileOperation, Integer>	operationCounts	= new EnumMap<>(FileOperation.class);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	titleStr;
+		private	String	completedStr;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private FileOperation(String titleStr,
+							  String completedStr)
+		{
+			this.titleStr = titleStr;
+			this.completedStr = completedStr;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static void initCounts()
+		{
+			operationCounts.clear();
+			for (FileOperation fileOp : FileOperation.values())
+				operationCounts.put(fileOp, 0);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private boolean isOperation()
+		{
+			return (operationCounts.get(this) > 0);
+		}
+
+		//--------------------------------------------------------------
+
+		private String getCountString()
+		{
+			return (NUM_FILES_STR + completedStr + " = " + operationCounts.get(this));
+		}
+
+		//--------------------------------------------------------------
+
+		private void incrementCount()
+		{
+			operationCounts.put(this, operationCounts.get(this) + 1);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILE_DOES_NOT_EXIST
+		("The file does not exist."),
+
+		NOT_A_FILE
+		("The pathname does not denote a file."),
+
+		NOT_A_DIRECTORY
+		("The pathname does not denote a directory."),
+
+		FAILED_TO_CREATE_DIRECTORY
+		("Failed to create the directory."),
+
+		FAILED_TO_CREATE_TEMPORARY_FILE
+		("Failed to create a temporary file."),
+
+		FAILED_TO_DELETE_TEMPORARY_FILE
+		("Failed to delete the temporary file."),
+
+		FAILED_TO_GET_TIMESTAMP
+		("Failed to get the timestamp of the file."),
+
+		FAILED_TO_SET_TIMESTAMP
+		("Failed to set the timestamp of the file."),
+
+		FAILED_TO_DELETE_FILE_PART
+		("Failed to delete the file part."),
+
+		FAILED_TO_CLEAR_CLIPBOARD
+		("Failed to clear the system clipboard."),
+
+		PAYLOAD_TOO_LARGE
+		("The payload is too large to be concealed."),
+
+		NOT_ENOUGH_MEMORY
+		("There was not enough memory to perform the command."),
+
+		NOT_ENOUGH_MEMORY_TO_GENERATE_CARRIER_IMAGE
+		("There was not enough memory to generate a carrier image of the required size.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: DOCUMENT-VIEW
+
+
+	private static class DocumentView
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Document	document;
+		private	View		view;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private DocumentView(Document document)
+		{
+			this.document = document;
+			view = document.createView();
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: CONCEALED PAYLOAD LENGTH ENCODER AND DECODER
+
+
+	private static class LengthCoder
+		implements StreamConcealer.ILengthDecoder, StreamConcealer.ILengthEncoder
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	MAX_LENGTH_SIZE	= StreamConcealer.MAX_NUM_LENGTH_BITS / Byte.SIZE;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private LengthCoder()
+		{
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : StreamConcealer.ILengthDecoder interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public int getLengthFieldNumBits(int numPixels)
+		{
+			int maxLength = numPixels + (numPixels >>> 1);
+			return (Integer.SIZE - Integer.numberOfLeadingZeros(maxLength));
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public int decodeLength(byte[] data,
+								int    numPixels)
+		{
+			// Create PRNG
+			Fortuna prng = createPrng(numPixels);
+
+			// Get permutation of bit indices
+			int numLengthBits = getLengthFieldNumBits(numPixels);
+			int[] indices = getBitIndices(numLengthBits, prng);
+
+			// XOR length data
+			prng.createCombiner(MAX_LENGTH_SIZE).combine(data);
+
+			// Extract length from input data
+			int length = 0;
+			for (int i = 0; i < numLengthBits; i++)
+			{
+				int index = indices[i];
+				if ((data[index >>> 3] & 1 << (index & 0x07)) != 0)
+					length |= 1 << i;
+			}
+
+			// Return length
+			return length;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : StreamConcealer.LengthEncoder interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public byte[] encodeLength(int length,
+								   int numPixels)
+		{
+			// Create PRNG
+			Fortuna prng = createPrng(numPixels);
+
+			// Get permutation of bit indices
+			int numLengthBits = getLengthFieldNumBits(numPixels);
+			int[] indices = getBitIndices(numLengthBits, prng);
+
+			// Permute bits of length
+			byte[] data = new byte[NumberUtils.roundUpQuotientInt(numLengthBits, Byte.SIZE)];
+			for (int i = 0; i < numLengthBits; i++)
+			{
+				int index = indices[i];
+				if ((length & 1 << i) != 0)
+					data[index >>> 3] |= 1 << (index & 0x07);
+			}
+
+			// XOR length data
+			prng.createCombiner(MAX_LENGTH_SIZE).combine(data);
+
+			// Return encoded length data
+			return data;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private Fortuna createPrng(int value)
+		{
+			byte[] key = new byte[FortunaAes256.KEY_SIZE];
+			NumberCodec.uIntToBytesLE(value, key);
+			return new FortunaAes256(key);
+		}
+
+		//--------------------------------------------------------------
+
+		private int[] getBitIndices(int     numIndices,
+									Fortuna prng)
+		{
+			final	int	NUM_ITERATIONS	= 1000;
+
+			int[] indices = new int[numIndices];
+			for (int i = 0; i < NUM_ITERATIONS; i++)
+			{
+				for (int j = 0; j < numIndices; j++)
+				{
+					int k = ((prng.getRandomByte() & 0xFF) * (j + 1)) >>> 8;
+					indices[j] = indices[k];
+					indices[k] = j;
+				}
+			}
+			return indices;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: RANDOM-DATA INPUT STREAM
+
+
+	private class RandomDataInputStream
+		extends InputStream
+		implements IByteDataInputStream
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	KDF_PARAM_DATA_SIZE	= 4;
+		private static final	int	BLOCK_LENGTH		= 4096;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int						length;
+		private	RandomDataStreamState	state;
+		private	Fortuna					prng;
+		private	byte[]					salt;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private RandomDataInputStream(int     length,
+									  boolean hasHeader)
+		{
+			StreamEncrypter encrypter = new StreamEncrypter(Utils.getCipher(), hasHeader ? getEncryptionHeader() : null);
+			this.length = length + encrypter.getMaxOverheadSize();
+			state = hasHeader ? RandomDataStreamState.HEADER : RandomDataStreamState.SALT;
+			prng = new FortunaAes256(getRandomKey());
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ByteDataInputStream interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public long getLength()
+		{
+			return length;
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public void reset()
+		{
+			// do nothing
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public int read(byte[] buffer,
+						int    offset,
+						int    length)
+		{
+			byte[] data = null;
+			switch (state)
+			{
+				case HEADER:
+					data = getEncryptionHeader().toByteArray();
+					state = RandomDataStreamState.SALT;
+					break;
+
+				case SALT:
+					salt = getRandomBytes(StreamEncrypter.SALT_SIZE);
+					data = salt;
+					state = RandomDataStreamState.KDF_PARAMS;
+					break;
+
+				case KDF_PARAMS:
+					data = new byte[KDF_PARAM_DATA_SIZE];
+					NumberCodec.uIntToBytesLE(KdfUse.GENERATION.getKdfParameters().getEncodedValue(false), data);
+					FortunaAes256.createCombiner(salt, KDF_PARAM_DATA_SIZE).combine(data);
+					state = RandomDataStreamState.RANDOM_DATA;
+					break;
+
+				case RANDOM_DATA:
+					data = prng.getRandomBytes(Math.min(length, BLOCK_LENGTH));
+					break;
+			}
+			System.arraycopy(data, 0, buffer, offset, data.length);
+			return data.length;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * This method implements an abstract method in java.io.InputStream.  It is implemented only to
+		 * complete the definition of the RandomDataInputStream class, and it should never be called.
+		 */
+
+		@Override
+		public int read()
+		{
+			throw new UnexpectedRuntimeException();
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: RANDOM SOURCE FOR CONCEALER
+
+
+	private class RandomSource
+		implements StreamConcealer.IRandomSource
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private RandomSource()
+		{
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : StreamConcealer.IRandomSource interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public int getRandomBytes(byte[] buffer,
+								  int    offset,
+								  int    length)
+		{
+			prng.getRandomBytes(buffer, offset, length);
+			return length;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: CARRIER-IMAGE GENERATOR
+
+
+	private class CarrierImageGenerator
+		implements FileConcealer.IImageSource
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	WIDTH_FACTOR	= 4;
+		private static final	int	HEIGHT_FACTOR	= 3;
+
+		private static final	int	SIZE_INTERVAL	= 16;
+		private static final	int	MIN_WIDTH		= WIDTH_FACTOR * 2 * SIZE_INTERVAL;
+		private static final	int	MIN_HEIGHT		= HEIGHT_FACTOR * 2 * SIZE_INTERVAL;
+
+		private static final	int	MIN_CELL_SIZE	= 16;
+
+		private static final	int	BYTES_PER_PIXEL	= 3;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private CarrierImageGenerator()
+		{
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : FileConcealer.IImageSource interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public BufferedImage getImage(int payloadLength)
+			throws AppException
+		{
+			if (payloadLength > StreamConcealer.MAX_PAYLOAD_LENGTH)
+				throw new AppException(ErrorId.PAYLOAD_TOO_LARGE);
+
+			try
+			{
+				long numPixels = NumberUtils.roundUpQuotientLong((long)payloadLength * 8,
+																 BYTES_PER_PIXEL * CarrierImage.NUM_CARRIER_BITS);
+				double d = Math.sqrt((double)numPixels / (double)(WIDTH_FACTOR * HEIGHT_FACTOR));
+				int width = NumberUtils.roundUpInt((int)Math.ceil(d * (double)WIDTH_FACTOR), SIZE_INTERVAL);
+				int height = NumberUtils.roundUpInt((int)Math.ceil(d * (double)HEIGHT_FACTOR), SIZE_INTERVAL);
+				CarrierImage.Kind imageKind = AppConfig.INSTANCE.getCarrierImageKind();
+				return new CarrierImage(Math.max(MIN_WIDTH, width), Math.max(MIN_HEIGHT, height),
+										Math.max(MIN_CELL_SIZE, width / imageKind.getCellSizeDivisor()),
+										imageKind).getImage();
+			}
+			catch (OutOfMemoryError e)
+			{
+				throw new AppException(ErrorId.NOT_ENOUGH_MEMORY_TO_GENERATE_CARRIER_IMAGE);
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

@@ -2,7 +2,7 @@
 
 GarbageGeneratorDialog.java
 
-Garbage generator dialog box class.
+Garbage generator dialog class.
 
 \*====================================================================*/
 
@@ -58,27 +58,27 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.misc.FilenameSuffixFilter;
 import uk.blankaspect.common.misc.MaxValueMap;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.button.FButton;
-import uk.blankaspect.common.swing.button.FixedWidthRadioButton;
+import uk.blankaspect.ui.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FixedWidthRadioButton;
 
-import uk.blankaspect.common.swing.combobox.FComboBox;
+import uk.blankaspect.ui.swing.combobox.FComboBox;
 
-import uk.blankaspect.common.swing.container.PathnamePanel;
+import uk.blankaspect.ui.swing.container.PathnamePanel;
 
-import uk.blankaspect.common.swing.font.FontUtils;
+import uk.blankaspect.ui.swing.font.FontUtils;
 
-import uk.blankaspect.common.swing.label.FLabel;
+import uk.blankaspect.ui.swing.label.FLabel;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.textfield.IntegerField;
+import uk.blankaspect.ui.swing.textfield.IntegerField;
 
 //----------------------------------------------------------------------
 
 
-// GARBAGE GENERATOR DIALOG BOX CLASS
+// GARBAGE GENERATOR DIALOG CLASS
 
 
 class GarbageGeneratorDialog

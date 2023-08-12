@@ -2,7 +2,7 @@
 
 FileSelectionDialog.java
 
-File selection dialog box class.
+File selection dialog class.
 
 \*====================================================================*/
 
@@ -41,6 +41,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -57,22 +58,22 @@ import uk.blankaspect.common.number.NumberUtils;
 
 import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FButton;
 
-import uk.blankaspect.common.swing.colour.Colours;
+import uk.blankaspect.ui.swing.colour.Colours;
 
-import uk.blankaspect.common.swing.label.FLabel;
+import uk.blankaspect.ui.swing.label.FLabel;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
 
-// FILE SELECTION DIALOG BOX CLASS
+// FILE SELECTION DIALOG CLASS
 
 
 class FileSelectionDialog
@@ -84,8 +85,8 @@ class FileSelectionDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	FILE_LIST_NUM_COLUMNS	= 80;
-	private static final	int	FILE_LIST_NUM_ROWS		= 20;
+	private static final	int		FILE_LIST_NUM_COLUMNS	= 80;
+	private static final	int		FILE_LIST_NUM_ROWS		= 20;
 
 	private static final	String	INPUT_FILES_STR			= "Input files";
 	private static final	String	INPUT_FILES_TITLE_STR	= "Input files";
@@ -106,7 +107,7 @@ class FileSelectionDialog
 
 
 	private static class FileSelectionPanel
-		extends uk.blankaspect.common.swing.container.FileSelectionPanel
+		extends uk.blankaspect.ui.swing.container.FileSelectionPanel
 	{
 
 	////////////////////////////////////////////////////////////////////
@@ -209,8 +210,7 @@ class FileSelectionDialog
 			this.maxLength = maxLength;
 			AppFont.MAIN.apply(this);
 			int numDigits = NumberUtils.getNumDecDigitsInt(maxLength);
-			String prototypeStr = PREFIX + EXCESS_PREFIX +
-												StringUtils.createCharString('0', numDigits) + SUFFIX;
+			String prototypeStr = PREFIX + EXCESS_PREFIX + "0".repeat(numDigits) + SUFFIX;
 			FontMetrics fontMetrics = getFontMetrics(getFont());
 			setPreferredSize(new Dimension(fontMetrics.stringWidth(prototypeStr),
 										   fontMetrics.getAscent() + fontMetrics.getDescent()));
@@ -262,7 +262,7 @@ class FileSelectionDialog
 		{
 			String str = PREFIX + ((length > maxLength) ? EXCESS_PREFIX + Integer.toString(maxLength)
 														: Integer.toString(length)) + SUFFIX;
-			if (!StringUtils.equal(str, text))
+			if (!Objects.equals(str, text))
 			{
 				text = str;
 				repaint();

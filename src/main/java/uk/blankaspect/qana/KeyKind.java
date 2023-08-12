@@ -24,7 +24,7 @@ import uk.blankaspect.common.misc.IStringKeyed;
 
 import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.swing.colour.Colours;
+import uk.blankaspect.ui.swing.colour.Colours;
 
 //----------------------------------------------------------------------
 

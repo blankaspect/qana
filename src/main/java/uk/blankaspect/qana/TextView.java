@@ -37,13 +37,13 @@ import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import uk.blankaspect.common.swing.menu.FCheckBoxMenuItem;
-import uk.blankaspect.common.swing.menu.FMenuItem;
+import uk.blankaspect.ui.swing.menu.FCheckBoxMenuItem;
+import uk.blankaspect.ui.swing.menu.FMenuItem;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.transfer.DataImporter;
-import uk.blankaspect.common.swing.transfer.TextExporter;
+import uk.blankaspect.ui.swing.transfer.DataImporter;
+import uk.blankaspect.ui.swing.transfer.TextExporter;
 
 //----------------------------------------------------------------------
 

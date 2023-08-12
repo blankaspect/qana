@@ -29,9 +29,7 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.indexedsub.IndexedSub;
-
-import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
+import uk.blankaspect.ui.swing.dialog.RunnableMessageDialog;
 
 //----------------------------------------------------------------------
 
@@ -46,7 +44,7 @@ class KeyCreator
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	PERSISTENT_MESSAGE_STR	= "Creating key '%1'" + AppConstants.ELLIPSIS_STR;
+	private static final	String	PERSISTENT_MESSAGE_STR	= "Creating key '%s'" + AppConstants.ELLIPSIS_STR;
 	private static final	String	TEMPORARY_MESSAGE_STR	= "Creating a temporary key " + AppConstants.ELLIPSIS_STR;
 
 ////////////////////////////////////////////////////////////////////////
@@ -127,7 +125,7 @@ class KeyCreator
 		throws AppException
 	{
 		outOfMemory = false;
-		String message = (name == null) ? TEMPORARY_MESSAGE_STR : IndexedSub.sub(PERSISTENT_MESSAGE_STR, name);
+		String message = (name == null) ? TEMPORARY_MESSAGE_STR : String.format(PERSISTENT_MESSAGE_STR, name);
 		RunnableMessageDialog.showDialog(component, message, () ->
 		{
 			try

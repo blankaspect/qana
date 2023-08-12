@@ -68,8 +68,6 @@ import uk.blankaspect.common.misc.ModernCalendar;
 
 import uk.blankaspect.common.regex.RegexUtils;
 
-import uk.blankaspect.common.string.StringUtils;
-
 import uk.blankaspect.common.xml.AttributeList;
 import uk.blankaspect.common.xml.XmlConstants;
 import uk.blankaspect.common.xml.XmlParseException;
@@ -275,7 +273,7 @@ class TextDocument
 
 		private Command(String key)
 		{
-			command = new uk.blankaspect.common.swing.action.Command(this);
+			command = new uk.blankaspect.ui.swing.action.Command(this);
 			putValue(Action.ACTION_COMMAND_KEY, key);
 		}
 
@@ -394,7 +392,7 @@ class TextDocument
 	//  Instance variables
 	////////////////////////////////////////////////////////////////////
 
-		private	uk.blankaspect.common.swing.action.Command	command;
+		private	uk.blankaspect.ui.swing.action.Command	command;
 
 	}
 
@@ -972,14 +970,14 @@ class TextDocument
 				++lineLength;
 			}
 		}
-		if (buffer.length() > 0)
+		if (!buffer.isEmpty())
 			paragraphs.add(buffer.toString());
 
 		// Format ends of sentences
 		if (endOfSentencePattern != null)
 		{
 			int numSpaces = AppConfig.INSTANCE.getTextWrapNumSpacesBetweenSentences();
-			String replacementStr = "$1" + StringUtils.createCharString(' ', numSpaces);
+			String replacementStr = "$1" + " ".repeat(numSpaces);
 			for (int i = 0; i < paragraphs.size(); i++)
 			{
 				String str = paragraphs.get(i);
@@ -989,7 +987,7 @@ class TextDocument
 		}
 
 		// Format paragraphs
-		char[] indentChars = StringUtils.createCharArray(' ', Math.max(indent1, indent2));
+		String indentChars = " ".repeat(Math.max(indent1, indent2));
 		textBuffer.setLength(0);
 		for (String str : paragraphs)
 		{
@@ -1075,8 +1073,8 @@ class TextDocument
 		StreamEncrypter encrypter = key.getStreamEncrypter(Utils.getCipher(key));
 		if (progressListener != null)
 			encrypter.addProgressListener(progressListener);
-		encrypter.encrypt(inStream, outStream, data.length, new ModernCalendar().getTimeInMillis(),
-						  key.getKey(), App.INSTANCE.getRandomKey());
+		encrypter.encrypt(inStream, outStream, data.length, new ModernCalendar().getTimeInMillis(), key.getKey(),
+						  App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
 
 		// Return encrypted data
 		return outStream.toByteArray();
@@ -1108,7 +1106,8 @@ class TextDocument
 		};
 		if (progressListener != null)
 			decrypter.addProgressListener(progressListener);
-		setTimestamp(decrypter.decrypt(inStream, outStream, data.length, key.getKey()));
+		setTimestamp(decrypter.decrypt(inStream, outStream, data.length, key.getKey(),
+									   generator -> App.INSTANCE.generateKey(generator)));
 
 		// Set decrypted text
 		setText(outStream.toString(), true);
@@ -1136,8 +1135,7 @@ class TextDocument
 		}
 		catch (PatternSyntaxException e)
 		{
-			throw new AppException(ErrorId.MALFORMED_END_OF_SENTENCE_PATTERN,
-								   RegexUtils.getExceptionMessage(e));
+			throw new AppException(ErrorId.MALFORMED_END_OF_SENTENCE_PATTERN, RegexUtils.getExceptionMessage(e));
 		}
 	}
 

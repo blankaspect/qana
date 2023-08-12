@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import uk.blankaspect.common.bytedata.ByteDataList;
+
 import uk.blankaspect.common.crypto.FileEncrypter;
 import uk.blankaspect.common.crypto.Fortuna;
 import uk.blankaspect.common.crypto.FortunaCipher;
@@ -38,10 +40,9 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.misc.BinaryFile;
-import uk.blankaspect.common.misc.ByteDataList;
 import uk.blankaspect.common.misc.FileWritingMode;
 
-import uk.blankaspect.common.number.NumberUtils;
+import uk.blankaspect.common.number.NumberCodec;
 
 //----------------------------------------------------------------------
 
@@ -254,7 +255,7 @@ class KeyList
 
 			// Parse field: name offset
 			int length = NAME_OFFSET_FIELD_SIZE;
-			int nameOffset = NumberUtils.bytesToUIntLE(data, offset, length);
+			int nameOffset = NumberCodec.bytesToUIntLE(data, offset, length);
 			offset += length;
 
 			// Get name from string table
@@ -264,22 +265,22 @@ class KeyList
 
 			// Parse field: KDF parameters, verification
 			length = KDF_PARAMS_VER_FIELD_SIZE;
-			kdfParamsVer = NumberUtils.bytesToUIntLE(data, offset, length);
+			kdfParamsVer = NumberCodec.bytesToUIntLE(data, offset, length);
 			offset += length;
 
 			// Parse field: KDF parameters, CEK generation
 			length = KDF_PARAMS_GEN_FIELD_SIZE;
-			kdfParamsGen = NumberUtils.bytesToUIntLE(data, offset, length);
+			kdfParamsGen = NumberCodec.bytesToUIntLE(data, offset, length);
 			offset += length;
 
 			// Parse field: allowed ciphers
 			length = ALLOWED_CIPHERS_FIELD_SIZE;
-			allowedCiphers = NumberUtils.bytesToUIntLE(data, offset, length);
+			allowedCiphers = NumberCodec.bytesToUIntLE(data, offset, length);
 			offset += length;
 
 			// Parse field: preferred cipher
 			length = PREFERRED_CIPHER_FIELD_SIZE;
-			preferredCipher = NumberUtils.bytesToIntLE(data, offset, length);
+			preferredCipher = NumberCodec.bytesToIntLE(data, offset, length);
 			offset += length;
 
 			// Skip field: reserved
@@ -516,27 +517,27 @@ class KeyList
 
 			// Set field: name offset
 			int length = NAME_OFFSET_FIELD_SIZE;
-			NumberUtils.intToBytesLE(stringTable.add(name), buffer, offset, length);
+			NumberCodec.uIntToBytesLE(stringTable.add(name), buffer, offset, length);
 			offset += length;
 
 			// Set field: KDF parameters, verification
 			length = KDF_PARAMS_VER_FIELD_SIZE;
-			NumberUtils.intToBytesLE(kdfParamsVer, buffer, offset, length);
+			NumberCodec.uIntToBytesLE(kdfParamsVer, buffer, offset, length);
 			offset += length;
 
 			// Set field: KDF parameters, CEK generation
 			length = KDF_PARAMS_GEN_FIELD_SIZE;
-			NumberUtils.intToBytesLE(kdfParamsGen, buffer, offset, length);
+			NumberCodec.uIntToBytesLE(kdfParamsGen, buffer, offset, length);
 			offset += length;
 
 			// Set field: allowed ciphers
 			length = ALLOWED_CIPHERS_FIELD_SIZE;
-			NumberUtils.intToBytesLE(allowedCiphers, buffer, offset, length);
+			NumberCodec.uIntToBytesLE(allowedCiphers, buffer, offset, length);
 			offset += length;
 
 			// Set field: preferred cipher
 			length = PREFERRED_CIPHER_FIELD_SIZE;
-			NumberUtils.intToBytesLE(preferredCipher, buffer, offset, length);
+			NumberCodec.uIntToBytesLE(preferredCipher, buffer, offset, length);
 			offset += length;
 
 			// Skip field: reserved
@@ -720,27 +721,27 @@ class KeyList
 
 		// Parse field: file identifier
 		int length = ID_FIELD_SIZE;
-		if (NumberUtils.bytesToUIntLE(data, offset, length) != FILE_ID)
+		if (NumberCodec.bytesToUIntLE(data, offset, length) != FILE_ID)
 			throw new AppException(ErrorId.NOT_A_KEY_FILE);
 		offset += length;
 
 		// Parse field: version number
 		length = VERSION_FIELD_SIZE;
-		int version = NumberUtils.bytesToUIntLE(data, offset, length);
+		int version = NumberCodec.bytesToUIntLE(data, offset, length);
 		offset += length;
 		if ((version < MIN_SUPPORTED_VERSION) || (version > MAX_SUPPORTED_VERSION))
 			throw new AppException(ErrorId.UNSUPPORTED_FILE_VERSION, Integer.toString(version));
 
 		// Parse field: string table offset
 		length = STRING_TABLE_OFFSET_FIELD_SIZE;
-		int stringTableOffset = NumberUtils.bytesToUIntLE(data, offset, length);
+		int stringTableOffset = NumberCodec.bytesToUIntLE(data, offset, length);
 		offset += length;
 		if (stringTableOffset >= data.length)
 			throw new AppException(ErrorId.MALFORMED_KEY_FILE);
 
 		// Parse field: number of keys
 		length = NUM_KEYS_FIELD_SIZE;
-		int numKeys = NumberUtils.bytesToUIntLE(data, offset, length);
+		int numKeys = NumberCodec.bytesToUIntLE(data, offset, length);
 		offset += length;
 
 		// Parse string table
@@ -778,22 +779,22 @@ class KeyList
 
 		// Set field: file identifier
 		int length = ID_FIELD_SIZE;
-		NumberUtils.intToBytesLE(FILE_ID, buffer, offset, length);
+		NumberCodec.uIntToBytesLE(FILE_ID, buffer, offset, length);
 		offset += length;
 
 		// Set field: version number
 		length = VERSION_FIELD_SIZE;
-		NumberUtils.intToBytesLE(VERSION, buffer, offset, length);
+		NumberCodec.uIntToBytesLE(VERSION, buffer, offset, length);
 		offset += length;
 
 		// Set field: string table offset
 		length = STRING_TABLE_OFFSET_FIELD_SIZE;
-		NumberUtils.intToBytesLE(HEADER_SIZE + keys.size() * Key.SIZE, buffer, offset, length);
+		NumberCodec.uIntToBytesLE(HEADER_SIZE + keys.size() * Key.SIZE, buffer, offset, length);
 		offset += length;
 
 		// Set field: number of keys
 		length = NUM_KEYS_FIELD_SIZE;
-		NumberUtils.intToBytesLE(keys.size(), buffer, offset, length);
+		NumberCodec.uIntToBytesLE(keys.size(), buffer, offset, length);
 		offset += length;
 
 		return buffer;

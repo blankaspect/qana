@@ -46,15 +46,16 @@ import javax.swing.SwingUtilities;
 
 import uk.blankaspect.common.crypto.FortunaCipher;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.colour.Colours;
+import uk.blankaspect.ui.swing.colour.Colours;
 
-import uk.blankaspect.common.swing.font.FontUtils;
+import uk.blankaspect.ui.swing.font.FontUtils;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiConstants;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -71,26 +72,26 @@ class CipherTable
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	NUM_ROWS	= FortunaCipher.values().length + 1;
-	private static final	int	NUM_COLUMNS	= Column.values().length;
+	private static final	int		NUM_ROWS	= FortunaCipher.values().length + 1;
+	private static final	int		NUM_COLUMNS	= Column.values().length;
 
-	private static final	int	CELL_VERTICAL_MARGIN	= 1;
-	private static final	int	CELL_HORIZONTAL_MARGIN	= 5;
-	private static final	int	GRID_LINE_WIDTH			= 1;
+	private static final	int		CELL_VERTICAL_MARGIN	= 1;
+	private static final	int		CELL_HORIZONTAL_MARGIN	= 5;
+	private static final	int		GRID_LINE_WIDTH			= 1;
 
-	private static final	Color	BACKGROUND_COLOUR					=
-													Colours.Table.BACKGROUND.getColour();
-	private static final	Color	HIGHLIGHTED_BACKGROUND1_COLOUR		= new Color(255, 248, 192);
-	private static final	Color	HIGHLIGHTED_BACKGROUND2_COLOUR		=
-													Colours.FOCUSED_SELECTION_BACKGROUND;
-	private static final	Color	TEXT_COLOUR							=
-													Colours.Table.FOREGROUND.getColour();
-	private static final	Color	HEADER_BACKGROUND_COLOUR			=
-													Colours.Table.HEADER_BACKGROUND1.getColour();
-	private static final	Color	FOCUSED_HEADER_BACKGROUND_COLOUR	=
-													Colours.Table.FOCUSED_HEADER_BACKGROUND1.getColour();
-	private static final	Color	FOCUSED_BORDER_COLOUR				= Color.BLACK;
-	private static final	Color	GRID_COLOUR							= new Color(184, 192, 184);
+	private static final	Color	BACKGROUND_COLOUR				= Colours.Table.BACKGROUND.getColour();
+	private static final	Color	HIGHLIGHTED_BACKGROUND_COLOUR1	= new Color(255, 248, 192);
+	private static final	Color	HIGHLIGHTED_BACKGROUND_COLOUR2	= Colours.FOCUSED_SELECTION_BACKGROUND;
+
+	private static final	Color	TEXT_COLOUR	= Colours.Table.FOREGROUND.getColour();
+
+	private static final	Color	HEADER_BACKGROUND_COLOUR			= Colours.Table.HEADER_BACKGROUND1.getColour();
+	private static final	Color	FOCUSED_HEADER_BACKGROUND_COLOUR	= Colours.Table.FOCUSED_HEADER_BACKGROUND1.getColour();
+
+	private static final	Color	FOCUSED_BORDER_COLOUR1	= Color.WHITE;
+	private static final	Color	FOCUSED_BORDER_COLOUR2	= Color.BLACK;
+
+	private static final	Color	GRID_COLOUR	= new Color(184, 192, 184);
 
 	private enum CellState
 	{
@@ -529,31 +530,31 @@ class CipherTable
 	protected void paintComponent(Graphics gr)
 	{
 		// Create copy of graphics context
-		gr = gr.create();
+		Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 		// Get dimensions
 		int width = getWidth();
 		int height = getHeight();
 
 		// Draw background of header
-		gr.setColor(isFocusOwner() ? FOCUSED_HEADER_BACKGROUND_COLOUR : HEADER_BACKGROUND_COLOUR);
-		gr.fillRect(0, 0, width, rowHeight);
+		gr2d.setColor(isFocusOwner() ? FOCUSED_HEADER_BACKGROUND_COLOUR : HEADER_BACKGROUND_COLOUR);
+		gr2d.fillRect(0, 0, width, rowHeight);
 
 		// Draw background of remaining rows
-		gr.setColor(BACKGROUND_COLOUR);
-		gr.fillRect(0, rowHeight, width, height - rowHeight);
+		gr2d.setColor(BACKGROUND_COLOUR);
+		gr2d.fillRect(0, rowHeight, width, height - rowHeight);
 
 		// Draw vertical grid lines
 		int x = 0;
 		int y1 = 0;
 		int y2 = height - 1;
-		gr.setColor(GRID_COLOUR);
+		gr2d.setColor(GRID_COLOUR);
 		for (Column column : columnWidths.keySet())
 		{
-			gr.drawLine(x, y1, x, y2);
+			gr2d.drawLine(x, y1, x, y2);
 			x += columnWidths.get(column);
 		}
-		gr.drawLine(x, y1, x, y2);
+		gr2d.drawLine(x, y1, x, y2);
 
 		// Draw horizontal grid lines
 		int x1 = 0;
@@ -561,21 +562,21 @@ class CipherTable
 		int y = 0;
 		for (int i = 0; i <= NUM_ROWS; i++)
 		{
-			gr.drawLine(x1, y, x2, y);
+			gr2d.drawLine(x1, y, x2, y);
 			y += rowHeight;
 		}
 
 		// Set rendering hints for text antialiasing and fractional metrics
-		TextRendering.setHints((Graphics2D)gr);
+		TextRendering.setHints(gr2d);
 
 		// Draw header text
-		FontMetrics fontMetrics = gr.getFontMetrics();
+		FontMetrics fontMetrics = gr2d.getFontMetrics();
 		x = GRID_LINE_WIDTH + CELL_HORIZONTAL_MARGIN;
 		y = GRID_LINE_WIDTH + FontUtils.getBaselineOffset(rowHeight - GRID_LINE_WIDTH, fontMetrics);
-		gr.setColor(TEXT_COLOUR);
+		gr2d.setColor(TEXT_COLOUR);
 		for (Column column : columnWidths.keySet())
 		{
-			gr.drawString(column.text, x, y);
+			gr2d.drawString(column.text, x, y);
 			x += columnWidths.get(column);
 		}
 
@@ -587,7 +588,7 @@ class CipherTable
 		for (FortunaCipher cipher : FortunaCipher.values())
 		{
 			y += rowHeight;
-			gr.drawString(cipher.toString(), x, y);
+			gr2d.drawString(cipher.toString(), x, y);
 		}
 		columnX += columnWidth;
 
@@ -609,17 +610,17 @@ class CipherTable
 							break;
 
 						case OVER:
-							colour = HIGHLIGHTED_BACKGROUND1_COLOUR;
+							colour = HIGHLIGHTED_BACKGROUND_COLOUR1;
 							break;
 
 						case PRESSED:
-							colour = HIGHLIGHTED_BACKGROUND2_COLOUR;
+							colour = HIGHLIGHTED_BACKGROUND_COLOUR2;
 							break;
 					}
 					if (colour != null)
 					{
-						gr.setColor(colour);
-						gr.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+						gr2d.setColor(colour);
+						gr2d.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
 					}
 				}
 
@@ -643,7 +644,7 @@ class CipherTable
 				{
 					x = bounds.x + (bounds.width - TICK_ICON.getIconWidth()) / 2;
 					y = bounds.y + (bounds.height - TICK_ICON.getIconHeight()) / 2;
-					gr.drawImage(TICK_ICON.getImage(), x, y, null);
+					gr2d.drawImage(TICK_ICON.getImage(), x, y, null);
 				}
 			}
 		}
@@ -652,9 +653,12 @@ class CipherTable
 		if (isFocusOwner())
 		{
 			Rectangle bounds = getCellBounds(selectedCell.column, selectedCell.cipher);
-			((Graphics2D)gr).setStroke(GuiUtils.getBasicDash());
-			gr.setColor(FOCUSED_BORDER_COLOUR);
-			gr.drawRect(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1);
+			gr2d.setColor(FOCUSED_BORDER_COLOUR1);
+			gr2d.drawRect(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1);
+
+			gr2d.setStroke(GuiConstants.BASIC_DASH);
+			gr2d.setColor(FOCUSED_BORDER_COLOUR2);
+			gr2d.drawRect(bounds.x, bounds.y, bounds.width - 1, bounds.height - 1);
 		}
 	}
 

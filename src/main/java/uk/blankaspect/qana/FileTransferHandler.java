@@ -33,9 +33,9 @@ import uk.blankaspect.common.exception.AppException;
 
 import uk.blankaspect.common.misc.IFileImporter;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.transfer.DataImporter;
+import uk.blankaspect.ui.swing.transfer.DataImporter;
 
 //----------------------------------------------------------------------
 

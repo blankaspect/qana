@@ -55,9 +55,6 @@ interface AppConstants
 	String	DELETE_STR			= "Delete";
 	String	ALREADY_EXISTS_STR	= "\nThe file already exists.\nDo you want to replace it?";
 
-	// Temporary-file prefix
-	String	TEMP_FILE_PREFIX	= "_$_";
-
 	// Filename suffixes
 	String	BMP_FILE_SUFFIX		= ".bmp";
 	String	EXE_FILE_SUFFIX		= ".exe";

@@ -2,7 +2,7 @@
 
 ArchiveDocument.java
 
-Archive document class.
+Class: archive document.
 
 \*====================================================================*/
 
@@ -33,10 +33,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.nio.channels.OverlappingFileLockException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.swing.Action;
 import javax.swing.JOptionPane;
@@ -56,31 +58,30 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 import uk.blankaspect.common.exception.TempFileException;
 
-import uk.blankaspect.common.indexedsub.IndexedSub;
+import uk.blankaspect.common.filesystem.FilenameUtils;
 
 import uk.blankaspect.common.misc.ByteBlockInputStream;
 import uk.blankaspect.common.misc.IStringKeyed;
 import uk.blankaspect.common.misc.NullOutputStream;
 
+import uk.blankaspect.common.number.NumberCodec;
 import uk.blankaspect.common.number.NumberUtils;
-
-import uk.blankaspect.common.string.StringUtils;
-
-import uk.blankaspect.common.swing.container.FileSelectionPanel;
-
-import uk.blankaspect.common.swing.dialog.NonEditableTextAreaDialog;
-import uk.blankaspect.common.swing.dialog.QuestionDialog;
-
-import uk.blankaspect.common.swing.misc.GuiUtils;
 
 import uk.blankaspect.common.time.CalendarTime;
 
 import uk.blankaspect.common.ui.progress.IProgressView;
 
+import uk.blankaspect.ui.swing.container.FileSelectionPanel;
+
+import uk.blankaspect.ui.swing.dialog.NonEditableTextAreaDialog;
+import uk.blankaspect.ui.swing.dialog.QuestionDialog;
+
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
 //----------------------------------------------------------------------
 
 
-// ARCHIVE DOCUMENT CLASS
+// CLASS: ARCHIVE DOCUMENT
 
 
 class ArchiveDocument
@@ -91,24 +92,29 @@ class ArchiveDocument
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		int	ENCRYPTION_KEY_SIZE	= FortunaAes256.KEY_SIZE;
+	public static final		int		ENCRYPTION_KEY_SIZE	= FortunaAes256.KEY_SIZE;
 
-	private static final	int	FILE_HASH_VALUE_SIZE	= HmacSha256.HASH_VALUE_SIZE;
+	public static final		SortingOrder	DEFAULT_SORTING_ORDER	=
+			new SortingOrder(ArchiveView.Column.PATH, ArchiveView.SortingDirection.ASCENDING);
 
-	private static final	int	MAX_NUM_ELEMENTS	= (1 << 24) - 1;
+	private static final	int		FILE_HASH_VALUE_SIZE	= HmacSha256.HASH_VALUE_SIZE;
 
-	private static final	int	ENCRYPTION_ID	= 0x35DC4EB9;
+	private static final	int		MAX_NUM_ELEMENTS	= (1 << 24) - 1;
 
-	private static final	int	VERSION					= 0;
-	private static final	int	MIN_SUPPORTED_VERSION	= VERSION;
-	private static final	int	MAX_SUPPORTED_VERSION	= VERSION;
+	private static final	int		ENCRYPTION_ID	= 0x35DC4EB9;
 
-	private static final	int	STRING_TABLE_OFFSET_FIELD_SIZE	= 4;
-	private static final	int	NUM_ELEMENTS_FIELD_SIZE			= 4;
-	private static final	int	HASH_VALUE_FIELD_SIZE			= FILE_HASH_VALUE_SIZE;
+	private static final	int		VERSION					= 0;
+	private static final	int		MIN_SUPPORTED_VERSION	= VERSION;
+	private static final	int		MAX_SUPPORTED_VERSION	= VERSION;
 
-	private static final	int	HEADER_SIZE		= STRING_TABLE_OFFSET_FIELD_SIZE + NUM_ELEMENTS_FIELD_SIZE;
-	private static final	int	METADATA_SIZE	= HEADER_SIZE + HASH_VALUE_FIELD_SIZE;
+	private static final	int		STRING_TABLE_OFFSET_FIELD_SIZE	= 4;
+	private static final	int		NUM_ELEMENTS_FIELD_SIZE			= 4;
+	private static final	int		HASH_VALUE_FIELD_SIZE			= FILE_HASH_VALUE_SIZE;
+
+	private static final	int		HEADER_SIZE		= STRING_TABLE_OFFSET_FIELD_SIZE + NUM_ELEMENTS_FIELD_SIZE;
+	private static final	int		METADATA_SIZE	= HEADER_SIZE + HASH_VALUE_FIELD_SIZE;
+
+	private static final	String	TEMPORARY_FILENAME_EXTENSION	= ".$tmp";
 
 	private static final	String	UNNAMED_STR					= "Unnamed";
 	private static final	String	FILE_STR					= "file";
@@ -132,11 +138,11 @@ class ArchiveDocument
 	private static final	String	ADD_CONFLICT_STR			= "The archive already contains a file with this path.";
 	private static final	String	EXTRACT_CONFLICT_STR		= "The file already exists.";
 	private static final	String	DO_WHAT_STR					= "What do you want to do?";
-	private static final	String	CONFIRM_DELETE_STR			= "Number of files to be deleted = %1\n" +
+	private static final	String	CONFIRM_DELETE_STR			= "Number of files to be deleted = %d\n" +
 																	"Do you want to delete the files?";
 	private static final	String	ALL_FILES_VALID_STR			= "All files were valid.";
-	private static final	String	NUM_PROCESSED_STR			= "Number of files processed = %1\n";
-	private static final	String	NUM_FAILED_VALIDATION_STR	= "Number of files that failed validation = %1\n" +
+	private static final	String	NUM_PROCESSED_STR			= "Number of files processed = %d\n";
+	private static final	String	NUM_FAILED_VALIDATION_STR	= "Number of files that failed validation = %d\n" +
 																	"The invalid files have been selected.";
 	private static final	String	NONEXISTENT_FILES1_STR		= "Some of the files listed in the archive do not " +
 																	"exist.\nThose files have been removed from the " +
@@ -149,970 +155,57 @@ class ArchiveDocument
 
 	private static final	QuestionDialog.Option[]	CONFLICT_OPTIONS	=
 	{
-		new QuestionDialog.Option(ConflictOption.REPLACE.key,
-								  REPLACE_THIS_STR,
-								  KeyEvent.VK_R),
-		new QuestionDialog.Option(ConflictOption.REPLACE_ALL.key,
-								  REPLACE_ALL_STR,
-								  KeyEvent.VK_E),
-		new QuestionDialog.Option(ConflictOption.SKIP.key,
-								  SKIP_THIS_STR,
-								  KeyEvent.VK_S),
-		new QuestionDialog.Option(ConflictOption.SKIP_ALL.key,
-								  SKIP_ALL_STR,
-								  KeyEvent.VK_K),
+		new QuestionDialog.Option
+		(
+			ConflictOption.REPLACE.key,
+			REPLACE_THIS_STR,
+			KeyEvent.VK_R
+		),
+		new QuestionDialog.Option
+		(
+			ConflictOption.REPLACE_ALL.key,
+			REPLACE_ALL_STR,
+			KeyEvent.VK_E
+		),
+		new QuestionDialog.Option
+		(
+			ConflictOption.SKIP.key,
+			SKIP_THIS_STR,
+			KeyEvent.VK_S
+		),
+		new QuestionDialog.Option
+		(
+			ConflictOption.SKIP_ALL.key,
+			SKIP_ALL_STR,
+			KeyEvent.VK_K
+		),
 		null,
-		new QuestionDialog.Option(QuestionDialog.CANCEL_KEY,
-								  AppConstants.CANCEL_STR)
+		new QuestionDialog.Option
+		(
+			QuestionDialog.CANCEL_KEY,
+			AppConstants.CANCEL_STR
+		)
 	};
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// COMMANDS
-
-
-	enum Command
-		implements Action
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		CHOOSE_ARCHIVE_DIRECTORY
-		(
-			"chooseArchiveDirectory",
-			"Choose archive directory" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.ALT_DOWN_MASK | KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		SELECT_ALL
-		(
-			"selectAll",
-			"Select all",
-			KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		INVERT_SELECTION
-		(
-			"invertSelection",
-			"Invert selection"
-		),
-
-		ADD_FILES
-		(
-			"addFiles",
-			"Add files" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0)
-		),
-
-		EXTRACT_FILES
-		(
-			"extractFiles",
-			"Extract files" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0)
-		),
-
-		VALIDATE_FILES
-		(
-			"validateFiles",
-			"Validate files"
-		),
-
-		DELETE_FILES
-		(
-			"deleteFiles",
-			"Delete files",
-			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
-		),
-
-		DISPLAY_FILE_LIST
-		(
-			"displayFileList",
-			"Display list of files",
-			KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.ALT_DOWN_MASK | KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		DISPLAY_FILE_MAP
-		(
-			"displayFileMap",
-			"Display map of files",
-			KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.ALT_DOWN_MASK | KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		SET_KEY
-		(
-			"setKey",
-			"Set key" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		CLEAR_KEY
-		(
-			"clearKey",
-			"Clear key" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
-		);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Command(String key)
-		{
-			command = new uk.blankaspect.common.swing.action.Command(this);
-			putValue(Action.ACTION_COMMAND_KEY, key);
-		}
-
-		//--------------------------------------------------------------
-
-		private Command(String key,
-						String name)
-		{
-			this(key);
-			putValue(Action.NAME, name);
-		}
-
-		//--------------------------------------------------------------
-
-		private Command(String    key,
-						String    name,
-						KeyStroke acceleratorKey)
-		{
-			this(key, name);
-			putValue(Action.ACCELERATOR_KEY, acceleratorKey);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		public static void setAllEnabled(boolean enabled)
-		{
-			for (Command command : values())
-				command.setEnabled(enabled);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Action interface
-	////////////////////////////////////////////////////////////////////
-
-		public void addPropertyChangeListener(PropertyChangeListener listener)
-		{
-			command.addPropertyChangeListener(listener);
-		}
-
-		//--------------------------------------------------------------
-
-		public Object getValue(String key)
-		{
-			return command.getValue(key);
-		}
-
-		//--------------------------------------------------------------
-
-		public boolean isEnabled()
-		{
-			return command.isEnabled();
-		}
-
-		//--------------------------------------------------------------
-
-		public void putValue(String key,
-							 Object value)
-		{
-			command.putValue(key, value);
-		}
-
-		//--------------------------------------------------------------
-
-		public void removePropertyChangeListener(PropertyChangeListener listener)
-		{
-			command.removePropertyChangeListener(listener);
-		}
-
-		//--------------------------------------------------------------
-
-		public void setEnabled(boolean enabled)
-		{
-			command.setEnabled(enabled);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ActionListener interface
-	////////////////////////////////////////////////////////////////////
-
-		public void actionPerformed(ActionEvent event)
-		{
-			ArchiveDocument document = App.INSTANCE.getArchiveDocument();
-			if (document != null)
-				document.executeCommand(this);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		public void execute()
-		{
-			actionPerformed(null);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	uk.blankaspect.common.swing.action.Command	command;
-
-	}
-
-	//==================================================================
-
-
-	// CONFLICT OPTIONS
-
-
-	private enum ConflictOption
-		implements IStringKeyed
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		REPLACE     ("replace"),
-		REPLACE_ALL ("replaceAll"),
-		SKIP        ("skip"),
-		SKIP_ALL    ("skipAll");
-
-		//--------------------------------------------------------------
-
-		private static final	String	ALL_SUFFIX	= "All";
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ConflictOption(String key)
-		{
-			this.key = key;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static ConflictOption get(String key)
-		{
-			for (ConflictOption value : values())
-			{
-				if (value.key.equals(key))
-					return value;
-			}
-			return null;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : IStringKeyed interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getKey()
-		{
-			return key;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private boolean isAll()
-		{
-			return key.endsWith(ALL_SUFFIX);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	key;
-
-	}
-
-	//==================================================================
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FAILED_TO_OPEN_FILE
-		("Failed to open the file."),
-
-		FAILED_TO_CLOSE_FILE
-		("Failed to close the file."),
-
-		FAILED_TO_LOCK_FILE
-		("Failed to lock the file."),
-
-		FILE_ACCESS_NOT_PERMITTED
-		("Access to the file was not permitted."),
-
-		FAILED_TO_CREATE_TEMPORARY_FILE
-		("Failed to create a temporary file."),
-
-		FAILED_TO_DELETE_FILE
-		("Failed to delete the existing file."),
-
-		FAILED_TO_RENAME_FILE
-		("Failed to rename the temporary file to the specified filename."),
-
-		FILE_DOES_NOT_EXIST
-		("The file does not exist."),
-
-		NOT_A_FILE
-		("The pathname does not denote a normal file."),
-
-		FAILED_TO_CREATE_OUTPUT_DIRECTORY
-		("Failed to create the output directory."),
-
-		NOT_A_LIST_ARCHIVE_FILE
-		("The file is not a list archive file."),
-
-		MALFORMED_LIST_ARCHIVE_FILE
-		("The list archive file is malformed."),
-
-		INCORRECT_ENCRYPTION_KEY
-		("The current key does not match the one that was used to encrypt the file."),
-
-		INCORRECT_FILE_SIZE
-		("The size of the extracted file does not match the stored size."),
-
-		TOO_MANY_FILES
-		("Adding all the selected files would exceed the maximum length of the archive.\n" +
-			"Number of selected files = %1\n" +
-			"Remaining capacity of archive = %2"),
-
-		NOT_ENOUGH_MEMORY_TO_PERFORM_COMMAND
-		("There was not enough memory to perform the command.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
+	private static	SortingOrder	sortingOrder	= DEFAULT_SORTING_ORDER;
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// SORTING ORDER CLASS
-
-
-	public static class SortingOrder
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private SortingOrder(ArchiveView.Column           key,
-							 ArchiveView.SortingDirection direction)
-		{
-			this.key = key;
-			this.direction = direction;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		ArchiveView.Column				key;
-		ArchiveView.SortingDirection	direction;
-
-	}
-
-	//==================================================================
-
-
-	// INPUT FILE CLASS
-
-
-	public static class InputFile
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private InputFile(File   file,
-						  String path)
-		{
-			this.file = file;
-			this.path = path;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		File	file;
-		String	path;
-
-	}
-
-	//==================================================================
-
-
-	// LIST ELEMENT CLASS
-
-
-	private static class Element
-		implements Comparable<Element>
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	PATH_OFFSET_FIELD_SIZE	= 4;
-		private static final	int	SIZE_FIELD_SIZE			= 8;
-		private static final	int	TIMESTAMP_FIELD_SIZE	= 8;
-		private static final	int	KEY_FIELD_SIZE			= ENCRYPTION_KEY_SIZE;
-		private static final	int	SALT_FIELD_SIZE			= FILE_HASH_VALUE_SIZE;
-		private static final	int	HASH_VALUE_FIELD_SIZE	= FILE_HASH_VALUE_SIZE;
-
-		private static final	int	SIZE	= PATH_OFFSET_FIELD_SIZE + SIZE_FIELD_SIZE +
-												TIMESTAMP_FIELD_SIZE + KEY_FIELD_SIZE + SALT_FIELD_SIZE +
-												HASH_VALUE_FIELD_SIZE;
-
-		private static final	char	FILE_SEPARATOR_CHAR	= '/';
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Element(String path,
-						long   size,
-						long   timestamp,
-						byte[] key,
-						byte[] salt,
-						byte[] hashValue)
-		{
-			this.path = path;
-			this.size = size;
-			this.timestamp = timestamp;
-			this.key = key;
-			this.salt = salt;
-			this.hashValue = hashValue;
-		}
-
-		//--------------------------------------------------------------
-
-		private Element(byte[]      data,
-						int         offset,
-						StringTable stringTable)
-			throws AppException
-		{
-			// Test whether element extends beyond end of data
-			if (offset + SIZE > data.length)
-				throw new AppException(ErrorId.MALFORMED_LIST_ARCHIVE_FILE);
-
-			// Parse field: path offset
-			int length = PATH_OFFSET_FIELD_SIZE;
-			int pathOffset = NumberUtils.bytesToUIntLE(data, offset, length);
-			offset += length;
-
-			// Get path from string table
-			path = stringTable.get(pathOffset);
-			if (path == null)
-				throw new AppException(ErrorId.MALFORMED_LIST_ARCHIVE_FILE);
-
-			// Parse field: size
-			length = SIZE_FIELD_SIZE;
-			size = NumberUtils.bytesToULongLE(data, offset, length);
-			offset += length;
-
-			// Parse field: timestamp
-			length = TIMESTAMP_FIELD_SIZE;
-			timestamp = NumberUtils.bytesToULongLE(data, offset, length);
-			offset += length;
-
-			// Parse field: key
-			length = KEY_FIELD_SIZE;
-			key = Arrays.copyOfRange(data, offset, offset + length);
-			offset += length;
-
-			// Extract field: salt
-			length = SALT_FIELD_SIZE;
-			salt = Arrays.copyOfRange(data, offset, offset + length);
-			offset += length;
-
-			// Extract field: hash value
-			length = HASH_VALUE_FIELD_SIZE;
-			hashValue = Arrays.copyOfRange(data, offset, offset + length);
-			offset += length;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Comparable interface
-	////////////////////////////////////////////////////////////////////
-
-		public int compareTo(Element element)
-		{
-			List<String> path1 = getPathComponents();
-			String name1 = path1.remove(path1.size() - 1);
-			List<String> path2 = element.getPathComponents();
-			String name2 = path2.remove(path2.size() - 1);
-
-			int index = 0;
-			while (true)
-			{
-				if (path1.size() == index)
-					return ((path2.size() == index) ? name1.compareTo(name2) : -1);
-				else
-				{
-					if (path2.size() == index)
-						return 1;
-				}
-				int result = path1.get(index).compareTo(path2.get(index));
-				if (result != 0)
-					return result;
-				++index;
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			return ((obj instanceof Element) && StringUtils.equal(path, ((Element)obj).path));
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public int hashCode()
-		{
-			return ((path == null) ? 0 : path.hashCode());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private String getHashValueString()
-		{
-			return hashValueToString(hashValue);
-		}
-
-		//--------------------------------------------------------------
-
-		private List<String> getPathComponents()
-		{
-			List<String> pathnameComponents = new ArrayList<>();
-			if (path != null)
-			{
-				int index = 0;
-				while (index < path.length())
-				{
-					int startIndex = index;
-					index = path.indexOf(FILE_SEPARATOR_CHAR, index);
-					if (index < 0)
-						index = path.length();
-					pathnameComponents.add(path.substring(startIndex, index));
-					++index;
-				}
-			}
-			return pathnameComponents;
-		}
-
-		//--------------------------------------------------------------
-
-		private byte[] toByteArray(StringTable stringTable)
-		{
-			byte[] buffer = new byte[SIZE];
-			int offset = 0;
-
-			// Set field: path offset
-			int length = PATH_OFFSET_FIELD_SIZE;
-			NumberUtils.intToBytesLE(stringTable.add(path), buffer, offset, length);
-			offset += length;
-
-			// Set field: size
-			length = SIZE_FIELD_SIZE;
-			NumberUtils.longToBytesLE(size, buffer, offset, length);
-			offset += length;
-
-			// Set field: timestamp
-			length = TIMESTAMP_FIELD_SIZE;
-			NumberUtils.longToBytesLE(timestamp, buffer, offset, length);
-			offset += length;
-
-			// Set field: key
-			length = KEY_FIELD_SIZE;
-			System.arraycopy(key, 0, buffer, offset, length);
-			offset += length;
-
-			// Set field: salt
-			length = SALT_FIELD_SIZE;
-			System.arraycopy(salt, 0, buffer, offset, length);
-			offset += length;
-
-			// Set field: hash value
-			length = HASH_VALUE_FIELD_SIZE;
-			System.arraycopy(hashValue, 0, buffer, offset, length);
-			offset += length;
-
-			return buffer;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	path;
-		private	long	size;
-		private	long	timestamp;
-		private	byte[]	key;
-		private	byte[]	salt;
-		private	byte[]	hashValue;
-
-	}
-
-	//==================================================================
-
-
-	// ELEMENT COMPARATOR CLASS
-
-
-	private static class ElementComparator
-		implements Comparator<Element>
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	ElementComparator	INSTANCE	= new ElementComparator();
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ElementComparator()
-		{
-			sortingOrder = new SortingOrder(ArchiveView.Column.PATH, ArchiveView.SortingDirection.ASCENDING);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Comparator interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public int compare(Element element1,
-						   Element element2)
-		{
-			int result = 0;
-			switch (sortingOrder.key)
-			{
-				case PATH:
-					break;
-
-				case SIZE:
-					result = Long.compare(element1.size, element2.size);
-					break;
-
-				case TIMESTAMP:
-					result = Long.compare(element1.timestamp, element2.timestamp);
-					break;
-
-				case HASH_VALUE:
-					for (int i = 0; i < element1.hashValue.length; i++)
-					{
-						result = Long.compare(element1.hashValue[i] & 0xFFFFFFFFL,
-											  element2.hashValue[i] & 0xFFFFFFFFL);
-						if (result != 0)
-							break;
-					}
-					break;
-			}
-			if (result == 0)
-				result = element1.compareTo(element2);
-			return ((sortingOrder.direction == ArchiveView.SortingDirection.ASCENDING) ? result : -result);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	SortingOrder	sortingOrder;
-
-	}
-
-	//==================================================================
-
-
-	// HASH GENERATOR CLASS
-
-
-	private static class HashGenerator
-		extends ScryptSalsa20
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	NUM_ITERATIONS	= 4;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private HashGenerator()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private byte[] generate(StreamEncrypter encrypter,
-								byte[]          salt)
-		{
-			return pbkdf2HmacSha256(encrypter.getHashValue(), salt, NUM_ITERATIONS, HASH_VALUE_FIELD_SIZE);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// TEXT AREA DIALOG BOX CLASS
-
-
-	private static class TextAreaDialog
-		extends NonEditableTextAreaDialog
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	NUM_COLUMNS	= 72;
-		private static final	int	NUM_ROWS	= 20;
-
-		private static final	String	KEY	= TextAreaDialog.class.getCanonicalName();
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private TextAreaDialog(Window owner,
-							   String titleStr,
-							   String text)
-		{
-			super(owner, titleStr, KEY, NUM_COLUMNS, NUM_ROWS, text);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static TextAreaDialog showDialog(Component parent,
-												 String titleStr,
-												 String    text)
-		{
-			return new TextAreaDialog(GuiUtils.getWindow(parent), titleStr, text);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected void setTextAreaAttributes()
-		{
-			setCaretToStart();
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// TABLE MODEL CLASS
-
-
-	private class TableModel
-		extends AbstractTableModel
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private TableModel()
-		{
-			columns = new ArrayList<>();
-			for (ArchiveView.Column column : ArchiveView.Column.values())
-			{
-				if (column.isVisible())
-					columns.add(column);
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public int getRowCount()
-		{
-			return elements.size();
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public int getColumnCount()
-		{
-			return columns.size();
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public Object getValueAt(int row,
-								 int column)
-		{
-			Object value = null;
-			if (row < elements.size())
-			{
-				Element element = elements.get(row);
-				switch (columns.get(column))
-				{
-					case PATH:
-						value = element.path;
-						break;
-
-					case SIZE:
-						value = Long.toString(element.size);
-						break;
-
-					case TIMESTAMP:
-						value = CalendarTime.timeToString(element.timestamp, "  ");
-						break;
-
-					case HASH_VALUE:
-						value = element.getHashValueString();
-						break;
-				}
-			}
-			return value;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	List<ArchiveView.Column>	columns;
-
-	}
-
-	//==================================================================
+	private	File			file;
+	private	File			archiveDirectory;
+	private	int				unnamedIndex;
+	private	boolean			executingCommand;
+	private	boolean			changed;
+	private	ArchiveView		view;
+	private	List<Element>	elements;
+	private	TableModel		tableModel;
+	private	ConflictOption	conflictOption;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -1140,7 +233,7 @@ class ArchiveDocument
 
 	public static SortingOrder getSortingOrder()
 	{
-		return ElementComparator.INSTANCE.sortingOrder;
+		return sortingOrder;
 	}
 
 	//------------------------------------------------------------------
@@ -1298,7 +391,7 @@ class ArchiveDocument
 	public void setSortingOrder(ArchiveView.Column           key,
 								ArchiveView.SortingDirection direction)
 	{
-		ElementComparator.INSTANCE.sortingOrder = new SortingOrder(key, direction);
+		sortingOrder = new SortingOrder(key, direction);
 		sort();
 		tableModel.fireTableDataChanged();
 	}
@@ -1361,7 +454,11 @@ class ArchiveDocument
 				if (inStream.getChannel().tryLock(0, Long.MAX_VALUE, true) == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, file);
 			}
-			catch (Exception e)
+			catch (OverlappingFileLockException e)
+			{
+				// ignore
+			}
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, file, e);
 			}
@@ -1370,7 +467,8 @@ class ArchiveDocument
 			try
 			{
 				decrypter.addProgressListener(progressView);
-				decrypter.decrypt(inStream, outStream, file.length(), key.getKey());
+				decrypter.decrypt(inStream, outStream, file.length(), key.getKey(),
+								  generator -> App.INSTANCE.generateKey(generator));
 			}
 			catch (StreamEncrypter.InputException e)
 			{
@@ -1436,7 +534,7 @@ class ArchiveDocument
 			for (int index : indices)
 			{
 				Element element = elements.get(index);
-				if (buffer.length() > 0)
+				if (!buffer.isEmpty())
 					buffer.append('\n');
 				buffer.append(element.path);
 				buffer.append("  (");
@@ -1515,11 +613,26 @@ class ArchiveDocument
 		setTimestamp(0);
 		try
 		{
+			// Create parent directory of output file
+			File directory = file.getAbsoluteFile().getParentFile();
+			if ((directory != null) && !directory.exists())
+			{
+				try
+				{
+					if (!directory.mkdirs())
+						throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory);
+				}
+				catch (SecurityException e)
+				{
+					throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory, e);
+				}
+			}
+
 			// Create temporary file
 			try
 			{
-				tempFile = File.createTempFile(AppConstants.TEMP_FILE_PREFIX, null,
-											   file.getAbsoluteFile().getParentFile());
+				tempFile = FilenameUtils.tempLocation(file);
+				tempFile.createNewFile();
 			}
 			catch (Exception e)
 			{
@@ -1546,7 +659,7 @@ class ArchiveDocument
 				if (outStream.getChannel().tryLock() == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile);
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile, e);
 			}
@@ -1557,7 +670,7 @@ class ArchiveDocument
 				StreamEncrypter encrypter = key.getStreamEncrypter(cipher, getOuterHeader());
 				encrypter.addProgressListener(progressView);
 				encrypter.encrypt(inStream, outStream, inStream.getLength(), 0, key.getKey(),
-								  App.INSTANCE.getRandomKey());
+								  App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
 			}
 			catch (StreamEncrypter.OutputException e)
 			{
@@ -1873,7 +986,7 @@ class ArchiveDocument
 		}
 
 		// Display result of validation
-		String numProcessedStr = IndexedSub.sub(NUM_PROCESSED_STR, Integer.toString(indices.length));
+		String numProcessedStr = String.format(NUM_PROCESSED_STR, indices.length);
 		if ((numValidated == indices.length) && invalidIndices.isEmpty())
 			App.INSTANCE.showInfoMessage(VALIDATE_FILES_STR, numProcessedStr + ALL_FILES_VALID_STR);
 		if (!invalidIndices.isEmpty())
@@ -1882,7 +995,7 @@ class ArchiveDocument
 			selectionModel.clearSelection();
 			for (int index : invalidIndices)
 				selectionModel.addSelectionInterval(index, index);
-			String failedStr = IndexedSub.sub(NUM_FAILED_VALIDATION_STR, Integer.toString(invalidIndices.size()));
+			String failedStr = String.format(NUM_FAILED_VALIDATION_STR, invalidIndices.size());
 			App.INSTANCE.showWarningMessage(VALIDATE_FILES_STR, numProcessedStr + failedStr);
 		}
 	}
@@ -1921,7 +1034,7 @@ class ArchiveDocument
 			// Delete file
 			if (!file.delete())
 			{
-				if (buffer.length() > 0)
+				if (!buffer.isEmpty())
 					buffer.append('\n');
 				buffer.append(Utils.getPathname(file));
 			}
@@ -1931,7 +1044,7 @@ class ArchiveDocument
 		}
 
 		// Display list of files that were not deleted
-		if (buffer.length() > 0)
+		if (!buffer.isEmpty())
 		{
 			App.INSTANCE.showErrorMessage(DELETE_FILES_STR, NOT_ALL_DELETED_STR);
 			TextAreaDialog.showDialog(getWindow(), NOT_DELETED_STR, buffer.toString());
@@ -2033,7 +1146,36 @@ class ArchiveDocument
 
 	private void sort()
 	{
-		elements.sort(ElementComparator.INSTANCE);
+		elements.sort((element1, element2) ->
+		{
+			int result = 0;
+			switch (sortingOrder.key)
+			{
+				case PATH:
+					break;
+
+				case SIZE:
+					result = Long.compare(element1.size, element2.size);
+					break;
+
+				case TIMESTAMP:
+					result = Long.compare(element1.timestamp, element2.timestamp);
+					break;
+
+				case HASH_VALUE:
+					for (int i = 0; i < element1.hashValue.length; i++)
+					{
+						result = Long.compare(element1.hashValue[i] & 0xFFFFFFFFL,
+											  element2.hashValue[i] & 0xFFFFFFFFL);
+						if (result != 0)
+							break;
+					}
+					break;
+			}
+			if (result == 0)
+				result = element1.compareTo(element2);
+			return (sortingOrder.direction == ArchiveView.SortingDirection.ASCENDING) ? result : -result;
+		});
 	}
 
 	//------------------------------------------------------------------
@@ -2081,14 +1223,14 @@ class ArchiveDocument
 		// Parse field: string table offset
 		int offset = 0;
 		int length = STRING_TABLE_OFFSET_FIELD_SIZE;
-		int stringTableOffset = NumberUtils.bytesToUIntLE(data, offset, length);
+		int stringTableOffset = NumberCodec.bytesToUIntLE(data, offset, length);
 		offset += length;
 		if (stringTableOffset >= data.length)
 			throw new AppException(ErrorId.MALFORMED_LIST_ARCHIVE_FILE);
 
 		// Parse field: number of elements
 		length = NUM_ELEMENTS_FIELD_SIZE;
-		int numElements = NumberUtils.bytesToUIntLE(data, offset, length);
+		int numElements = NumberCodec.bytesToUIntLE(data, offset, length);
 		offset += length;
 
 		// Extract field: hash value
@@ -2097,13 +1239,11 @@ class ArchiveDocument
 		offset += length;
 
 		// Test hash value
-		if (!Arrays.equals(hashValue,
-						   new HmacSha256(key).getValue(data, offset, data.length - offset)))
+		if (!Arrays.equals(hashValue, new HmacSha256(key).getValue(data, offset, data.length - offset)))
 			throw new AppException(ErrorId.INCORRECT_ENCRYPTION_KEY);
 
 		// Parse string table
-		StringTable stringTable = new StringTable(data, stringTableOffset,
-												  data.length - stringTableOffset);
+		StringTable stringTable = new StringTable(data, stringTableOffset, data.length - stringTableOffset);
 
 		// Parse elements
 		for (int i = 0; i < numElements; i++)
@@ -2122,13 +1262,12 @@ class ArchiveDocument
 
 		// Set field: string table offset
 		int length = STRING_TABLE_OFFSET_FIELD_SIZE;
-		NumberUtils.intToBytesLE(METADATA_SIZE + elements.size() * Element.SIZE,
-								 buffer, offset, length);
+		NumberCodec.uIntToBytesLE(METADATA_SIZE + elements.size() * Element.SIZE, buffer, offset, length);
 		offset += length;
 
 		// Set field: number of elements
 		length = NUM_ELEMENTS_FIELD_SIZE;
-		NumberUtils.intToBytesLE(elements.size(), buffer, offset, length);
+		NumberCodec.uIntToBytesLE(elements.size(), buffer, offset, length);
 		offset += length;
 
 		return buffer;
@@ -2154,7 +1293,7 @@ class ArchiveDocument
 			// Create temporary file
 			try
 			{
-				tempFile = File.createTempFile(AppConstants.TEMP_FILE_PREFIX, null, outDirectory);
+				tempFile = File.createTempFile(null, TEMPORARY_FILENAME_EXTENSION, outDirectory);
 			}
 			catch (Exception e)
 			{
@@ -2181,7 +1320,7 @@ class ArchiveDocument
 				if (outStream.getChannel().tryLock() == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile);
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile, e);
 			}
@@ -2206,7 +1345,11 @@ class ArchiveDocument
 				if (inStream.getChannel().tryLock(0, Long.MAX_VALUE, true) == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile);
 			}
-			catch (Exception e)
+			catch (OverlappingFileLockException e)
+			{
+				// ignore
+			}
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile, e);
 			}
@@ -2219,7 +1362,7 @@ class ArchiveDocument
 			StreamEncrypter encrypter = new StreamEncrypter(Utils.getCipher(getKey()));
 			encrypter.addProgressListener(progressView);
 			encrypter.encrypt(inStream, outStream, inFile.length(), App.INSTANCE.getRandomLong(),
-							  key, App.INSTANCE.getRandomKey());
+							  key, App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
 
 			// Close input file
 			try
@@ -2352,11 +1495,26 @@ class ArchiveDocument
 		boolean oldFileDeleted = false;
 		try
 		{
+			// Create parent directory of output file
+			File directory = outFile.getAbsoluteFile().getParentFile();
+			if ((directory != null) && !directory.exists())
+			{
+				try
+				{
+					if (!directory.mkdirs())
+						throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory);
+				}
+				catch (SecurityException e)
+				{
+					throw new FileException(ErrorId.FAILED_TO_CREATE_DIRECTORY, directory, e);
+				}
+			}
+
 			// Create temporary file
 			try
 			{
-				tempFile = File.createTempFile(AppConstants.TEMP_FILE_PREFIX, null,
-											   outFile.getAbsoluteFile().getParentFile());
+				tempFile = FilenameUtils.tempLocation(outFile);
+				tempFile.createNewFile();
 			}
 			catch (Exception e)
 			{
@@ -2383,7 +1541,7 @@ class ArchiveDocument
 				if (outStream.getChannel().tryLock() == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile);
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, tempFile, e);
 			}
@@ -2408,7 +1566,11 @@ class ArchiveDocument
 				if (inStream.getChannel().tryLock(0, Long.MAX_VALUE, true) == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile);
 			}
-			catch (Exception e)
+			catch (OverlappingFileLockException e)
+			{
+				// ignore
+			}
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile, e);
 			}
@@ -2420,7 +1582,7 @@ class ArchiveDocument
 			// Decrypt file
 			StreamEncrypter decrypter = new StreamEncrypter(null);
 			decrypter.addProgressListener(progressView);
-			decrypter.decrypt(inStream, outStream, inFile.length(), key);
+			decrypter.decrypt(inStream, outStream, inFile.length(), key, generator -> App.INSTANCE.generateKey(generator));
 
 			// Close input file
 			try
@@ -2564,7 +1726,11 @@ class ArchiveDocument
 				if (inStream.getChannel().tryLock(0, Long.MAX_VALUE, true) == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile);
 			}
-			catch (Exception e)
+			catch (OverlappingFileLockException e)
+			{
+				// ignore
+			}
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, inFile, e);
 			}
@@ -2576,7 +1742,8 @@ class ArchiveDocument
 			// Decrypt file
 			StreamEncrypter decrypter = new StreamEncrypter(null);
 			decrypter.addProgressListener(progressView);
-			decrypter.decrypt(inStream, new NullOutputStream(), inFile.length(), key);
+			decrypter.decrypt(inStream, new NullOutputStream(), inFile.length(), key,
+							  generator -> App.INSTANCE.generateKey(generator));
 
 			// Close input file
 			try
@@ -2705,7 +1872,7 @@ class ArchiveDocument
 		int[] indices = getTable().getSelectedRows();
 		if (indices.length > 0)
 		{
-			String messageStr = IndexedSub.sub(CONFIRM_DELETE_STR, Integer.toString(indices.length));
+			String messageStr = String.format(CONFIRM_DELETE_STR, indices.length);
 			String[] optionStrs = Utils.getOptionStrings(AppConstants.DELETE_STR);
 			if (JOptionPane.showOptionDialog(getWindow(), messageStr, DELETE_FILES_STR,
 											 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -2769,18 +1936,908 @@ class ArchiveDocument
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	File			file;
-	private	File			archiveDirectory;
-	private	int				unnamedIndex;
-	private	boolean			executingCommand;
-	private	boolean			changed;
-	private	ArchiveView		view;
-	private	List<Element>	elements;
-	private	TableModel		tableModel;
-	private	ConflictOption	conflictOption;
+
+	// ENUMERATION: COMMANDS
+
+
+	enum Command
+		implements Action
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		CHOOSE_ARCHIVE_DIRECTORY
+		(
+			"chooseArchiveDirectory",
+			"Choose archive directory" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.ALT_DOWN_MASK | KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		SELECT_ALL
+		(
+			"selectAll",
+			"Select all",
+			KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		INVERT_SELECTION
+		(
+			"invertSelection",
+			"Invert selection"
+		),
+
+		ADD_FILES
+		(
+			"addFiles",
+			"Add files" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0)
+		),
+
+		EXTRACT_FILES
+		(
+			"extractFiles",
+			"Extract files" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0)
+		),
+
+		VALIDATE_FILES
+		(
+			"validateFiles",
+			"Validate files"
+		),
+
+		DELETE_FILES
+		(
+			"deleteFiles",
+			"Delete files",
+			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
+		),
+
+		DISPLAY_FILE_LIST
+		(
+			"displayFileList",
+			"Display list of files",
+			KeyStroke.getKeyStroke(KeyEvent.VK_L, KeyEvent.ALT_DOWN_MASK | KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		DISPLAY_FILE_MAP
+		(
+			"displayFileMap",
+			"Display map of files",
+			KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.ALT_DOWN_MASK | KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		SET_KEY
+		(
+			"setKey",
+			"Set key" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		CLEAR_KEY
+		(
+			"clearKey",
+			"Clear key" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
+		);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	uk.blankaspect.ui.swing.action.Command	command;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Command(String key)
+		{
+			command = new uk.blankaspect.ui.swing.action.Command(this);
+			putValue(Action.ACTION_COMMAND_KEY, key);
+		}
+
+		//--------------------------------------------------------------
+
+		private Command(String key,
+						String name)
+		{
+			this(key);
+			putValue(Action.NAME, name);
+		}
+
+		//--------------------------------------------------------------
+
+		private Command(String    key,
+						String    name,
+						KeyStroke acceleratorKey)
+		{
+			this(key, name);
+			putValue(Action.ACCELERATOR_KEY, acceleratorKey);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		public static void setAllEnabled(boolean enabled)
+		{
+			for (Command command : values())
+				command.setEnabled(enabled);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Action interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public void addPropertyChangeListener(PropertyChangeListener listener)
+		{
+			command.addPropertyChangeListener(listener);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public Object getValue(String key)
+		{
+			return command.getValue(key);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public boolean isEnabled()
+		{
+			return command.isEnabled();
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public void putValue(String key,
+							 Object value)
+		{
+			command.putValue(key, value);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public void removePropertyChangeListener(PropertyChangeListener listener)
+		{
+			command.removePropertyChangeListener(listener);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public void setEnabled(boolean enabled)
+		{
+			command.setEnabled(enabled);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ActionListener interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			ArchiveDocument document = App.INSTANCE.getArchiveDocument();
+			if (document != null)
+				document.executeCommand(this);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		public void execute()
+		{
+			actionPerformed(null);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// ENUMERATION: CONFLICT OPTIONS
+
+
+	private enum ConflictOption
+		implements IStringKeyed
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		REPLACE
+		(
+			"replace"
+		),
+
+		REPLACE_ALL
+		(
+			"replaceAll"
+		),
+
+		SKIP
+		(
+			"skip"
+		),
+
+		SKIP_ALL
+		(
+			"skipAll"
+		);
+
+		//--------------------------------------------------------------
+
+		private static final	String	ALL_SUFFIX	= "All";
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	key;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ConflictOption(String key)
+		{
+			this.key = key;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static ConflictOption get(String key)
+		{
+			for (ConflictOption value : values())
+			{
+				if (value.key.equals(key))
+					return value;
+			}
+			return null;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : IStringKeyed interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getKey()
+		{
+			return key;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private boolean isAll()
+		{
+			return key.endsWith(ALL_SUFFIX);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FAILED_TO_OPEN_FILE
+		("Failed to open the file."),
+
+		FAILED_TO_CLOSE_FILE
+		("Failed to close the file."),
+
+		FAILED_TO_LOCK_FILE
+		("Failed to lock the file."),
+
+		FILE_ACCESS_NOT_PERMITTED
+		("Access to the file was not permitted."),
+
+		FAILED_TO_CREATE_DIRECTORY
+		("Failed to create the directory."),
+
+		FAILED_TO_CREATE_TEMPORARY_FILE
+		("Failed to create a temporary file."),
+
+		FAILED_TO_DELETE_FILE
+		("Failed to delete the existing file."),
+
+		FAILED_TO_RENAME_FILE
+		("Failed to rename the temporary file to the specified filename."),
+
+		FILE_DOES_NOT_EXIST
+		("The file does not exist."),
+
+		NOT_A_FILE
+		("The pathname does not denote a normal file."),
+
+		FAILED_TO_CREATE_OUTPUT_DIRECTORY
+		("Failed to create the output directory."),
+
+		NOT_A_LIST_ARCHIVE_FILE
+		("The file is not a list archive file."),
+
+		MALFORMED_LIST_ARCHIVE_FILE
+		("The list archive file is malformed."),
+
+		INCORRECT_ENCRYPTION_KEY
+		("The current key does not match the one that was used to encrypt the file."),
+
+		INCORRECT_FILE_SIZE
+		("The size of the extracted file does not match the stored size."),
+
+		TOO_MANY_FILES
+		("Adding all the selected files would exceed the maximum length of the archive.\n" +
+			"Number of selected files = %1\n" +
+			"Remaining capacity of archive = %2"),
+
+		NOT_ENOUGH_MEMORY_TO_PERFORM_COMMAND
+		("There was not enough memory to perform the command.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: SORTING ORDER
+
+
+	public static class SortingOrder
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		ArchiveView.Column				key;
+		ArchiveView.SortingDirection	direction;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private SortingOrder(ArchiveView.Column           key,
+							 ArchiveView.SortingDirection direction)
+		{
+			this.key = key;
+			this.direction = direction;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: INPUT FILE
+
+
+	public static class InputFile
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		File	file;
+		String	path;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private InputFile(File   file,
+						  String path)
+		{
+			this.file = file;
+			this.path = path;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: LIST ELEMENT
+
+
+	private static class Element
+		implements Comparable<Element>
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	PATH_OFFSET_FIELD_SIZE	= 4;
+		private static final	int	SIZE_FIELD_SIZE			= 8;
+		private static final	int	TIMESTAMP_FIELD_SIZE	= 8;
+		private static final	int	KEY_FIELD_SIZE			= ENCRYPTION_KEY_SIZE;
+		private static final	int	SALT_FIELD_SIZE			= FILE_HASH_VALUE_SIZE;
+		private static final	int	HASH_VALUE_FIELD_SIZE	= FILE_HASH_VALUE_SIZE;
+
+		private static final	int	SIZE	= PATH_OFFSET_FIELD_SIZE + SIZE_FIELD_SIZE + TIMESTAMP_FIELD_SIZE
+												+ KEY_FIELD_SIZE + SALT_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
+
+		private static final	char	FILE_SEPARATOR_CHAR	= '/';
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	path;
+		private	long	size;
+		private	long	timestamp;
+		private	byte[]	key;
+		private	byte[]	salt;
+		private	byte[]	hashValue;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Element(String path,
+						long   size,
+						long   timestamp,
+						byte[] key,
+						byte[] salt,
+						byte[] hashValue)
+		{
+			this.path = path;
+			this.size = size;
+			this.timestamp = timestamp;
+			this.key = key;
+			this.salt = salt;
+			this.hashValue = hashValue;
+		}
+
+		//--------------------------------------------------------------
+
+		private Element(byte[]      data,
+						int         offset,
+						StringTable stringTable)
+			throws AppException
+		{
+			// Test whether element extends beyond end of data
+			if (offset + SIZE > data.length)
+				throw new AppException(ErrorId.MALFORMED_LIST_ARCHIVE_FILE);
+
+			// Parse field: path offset
+			int length = PATH_OFFSET_FIELD_SIZE;
+			int pathOffset = NumberCodec.bytesToUIntLE(data, offset, length);
+			offset += length;
+
+			// Get path from string table
+			path = stringTable.get(pathOffset);
+			if (path == null)
+				throw new AppException(ErrorId.MALFORMED_LIST_ARCHIVE_FILE);
+
+			// Parse field: size
+			length = SIZE_FIELD_SIZE;
+			size = NumberCodec.bytesToULongLE(data, offset, length);
+			offset += length;
+
+			// Parse field: timestamp
+			length = TIMESTAMP_FIELD_SIZE;
+			timestamp = NumberCodec.bytesToULongLE(data, offset, length);
+			offset += length;
+
+			// Parse field: key
+			length = KEY_FIELD_SIZE;
+			key = Arrays.copyOfRange(data, offset, offset + length);
+			offset += length;
+
+			// Extract field: salt
+			length = SALT_FIELD_SIZE;
+			salt = Arrays.copyOfRange(data, offset, offset + length);
+			offset += length;
+
+			// Extract field: hash value
+			length = HASH_VALUE_FIELD_SIZE;
+			hashValue = Arrays.copyOfRange(data, offset, offset + length);
+			offset += length;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Comparable interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public int compareTo(Element element)
+		{
+			List<String> path1 = getPathComponents();
+			String name1 = path1.remove(path1.size() - 1);
+			List<String> path2 = element.getPathComponents();
+			String name2 = path2.remove(path2.size() - 1);
+
+			int index = 0;
+			while (true)
+			{
+				if (path1.size() == index)
+					return ((path2.size() == index) ? name1.compareTo(name2) : -1);
+				else
+				{
+					if (path2.size() == index)
+						return 1;
+				}
+				int result = path1.get(index).compareTo(path2.get(index));
+				if (result != 0)
+					return result;
+				++index;
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+
+			return (obj instanceof Element other) && Objects.equals(path, other.path);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public int hashCode()
+		{
+			return Objects.hashCode(path);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private String getHashValueString()
+		{
+			return hashValueToString(hashValue);
+		}
+
+		//--------------------------------------------------------------
+
+		private List<String> getPathComponents()
+		{
+			List<String> pathnameComponents = new ArrayList<>();
+			if (path != null)
+			{
+				int index = 0;
+				while (index < path.length())
+				{
+					int startIndex = index;
+					index = path.indexOf(FILE_SEPARATOR_CHAR, index);
+					if (index < 0)
+						index = path.length();
+					pathnameComponents.add(path.substring(startIndex, index));
+					++index;
+				}
+			}
+			return pathnameComponents;
+		}
+
+		//--------------------------------------------------------------
+
+		private byte[] toByteArray(StringTable stringTable)
+		{
+			byte[] buffer = new byte[SIZE];
+			int offset = 0;
+
+			// Set field: path offset
+			int length = PATH_OFFSET_FIELD_SIZE;
+			NumberCodec.uIntToBytesLE(stringTable.add(path), buffer, offset, length);
+			offset += length;
+
+			// Set field: size
+			length = SIZE_FIELD_SIZE;
+			NumberCodec.uLongToBytesLE(size, buffer, offset, length);
+			offset += length;
+
+			// Set field: timestamp
+			length = TIMESTAMP_FIELD_SIZE;
+			NumberCodec.uLongToBytesLE(timestamp, buffer, offset, length);
+			offset += length;
+
+			// Set field: key
+			length = KEY_FIELD_SIZE;
+			System.arraycopy(key, 0, buffer, offset, length);
+			offset += length;
+
+			// Set field: salt
+			length = SALT_FIELD_SIZE;
+			System.arraycopy(salt, 0, buffer, offset, length);
+			offset += length;
+
+			// Set field: hash value
+			length = HASH_VALUE_FIELD_SIZE;
+			System.arraycopy(hashValue, 0, buffer, offset, length);
+			offset += length;
+
+			return buffer;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: HASH GENERATOR
+
+
+	private static class HashGenerator
+		extends ScryptSalsa20
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	NUM_ITERATIONS	= 4;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private HashGenerator()
+		{
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private byte[] generate(StreamEncrypter encrypter,
+								byte[]          salt)
+		{
+			return pbkdf2HmacSha256(encrypter.getHashValue(), salt, NUM_ITERATIONS, HASH_VALUE_FIELD_SIZE);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: TEXT AREA DIALOG
+
+
+	private static class TextAreaDialog
+		extends NonEditableTextAreaDialog
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	NUM_COLUMNS	= 72;
+		private static final	int	NUM_ROWS	= 20;
+
+		private static final	String	KEY	= TextAreaDialog.class.getCanonicalName();
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private TextAreaDialog(Window owner,
+							   String titleStr,
+							   String text)
+		{
+			super(owner, titleStr, KEY, NUM_COLUMNS, NUM_ROWS, text);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static TextAreaDialog showDialog(Component parent,
+												 String titleStr,
+												 String    text)
+		{
+			return new TextAreaDialog(GuiUtils.getWindow(parent), titleStr, text);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected void setTextAreaAttributes()
+		{
+			setCaretToStart();
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: TABLE MODEL
+
+
+	private class TableModel
+		extends AbstractTableModel
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	List<ArchiveView.Column>	columns;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private TableModel()
+		{
+			columns = new ArrayList<>();
+			for (ArchiveView.Column column : ArchiveView.Column.values())
+			{
+				if (column.isVisible())
+					columns.add(column);
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public int getRowCount()
+		{
+			return elements.size();
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public int getColumnCount()
+		{
+			return columns.size();
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public Object getValueAt(int row,
+								 int column)
+		{
+			Object value = null;
+			if (row < elements.size())
+			{
+				Element element = elements.get(row);
+				switch (columns.get(column))
+				{
+					case PATH:
+						value = element.path;
+						break;
+
+					case SIZE:
+						value = Long.toString(element.size);
+						break;
+
+					case TIMESTAMP:
+						value = CalendarTime.timeToString(element.timestamp, "  ");
+						break;
+
+					case HASH_VALUE:
+						value = element.getHashValueString();
+						break;
+				}
+			}
+			return value;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

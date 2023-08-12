@@ -40,6 +40,7 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -67,20 +68,18 @@ import uk.blankaspect.common.misc.IStringKeyed;
 
 import uk.blankaspect.common.range.IntegerRange;
 
-import uk.blankaspect.common.string.StringUtils;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.colour.Colours;
 
-import uk.blankaspect.common.swing.colour.Colours;
+import uk.blankaspect.ui.swing.font.FontUtils;
 
-import uk.blankaspect.common.swing.font.FontUtils;
+import uk.blankaspect.ui.swing.menu.FMenuItem;
 
-import uk.blankaspect.common.swing.menu.FMenuItem;
+import uk.blankaspect.ui.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextUtils;
 
-import uk.blankaspect.common.swing.text.TextRendering;
-import uk.blankaspect.common.swing.text.TextUtils;
-
-import uk.blankaspect.common.swing.transfer.DataImporter;
+import uk.blankaspect.ui.swing.transfer.DataImporter;
 
 //----------------------------------------------------------------------
 
@@ -427,9 +426,8 @@ class ArchiveView
 				{
 					Column id = (Column)getColumnModel().getColumn(index).getHeaderValue();
 					ArchiveDocument.SortingOrder sortingOrder = ArchiveDocument.getSortingOrder();
-					SortingDirection direction = (sortingOrder.key == id)
-																	? sortingOrder.direction.getOpposite()
-																	: SortingDirection.ASCENDING;
+					SortingDirection direction = (sortingOrder.key == id) ? sortingOrder.direction.getOpposite()
+																		  : SortingDirection.ASCENDING;
 					App.INSTANCE.getArchiveDocument().setSortingOrder(id, direction);
 				}
 			}
@@ -1276,7 +1274,7 @@ class ArchiveView
 
 		private void setPathname(String pathname)
 		{
-			if (!StringUtils.equal(this.pathname, pathname))
+			if (!Objects.equals(this.pathname, pathname))
 			{
 				this.pathname = pathname;
 				preferredWidth = 2 * HORIZONTAL_MARGIN;

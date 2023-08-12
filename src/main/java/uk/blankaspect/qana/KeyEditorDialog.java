@@ -2,7 +2,7 @@
 
 KeyEditorDialog.java
 
-Key editor dialog box class.
+Key editor dialog class.
 
 \*====================================================================*/
 
@@ -48,6 +48,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -73,36 +74,32 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.CancelledException;
 
-import uk.blankaspect.common.indexedsub.IndexedSub;
-
 import uk.blankaspect.common.misc.MaxValueMap;
 
-import uk.blankaspect.common.string.StringUtils;
+import uk.blankaspect.ui.swing.action.KeyAction;
 
-import uk.blankaspect.common.swing.action.KeyAction;
+import uk.blankaspect.ui.swing.border.TitledBorder;
 
-import uk.blankaspect.common.swing.border.TitledBorder;
+import uk.blankaspect.ui.swing.button.FButton;
 
-import uk.blankaspect.common.swing.button.FButton;
+import uk.blankaspect.ui.swing.container.FixedWidthPanel;
 
-import uk.blankaspect.common.swing.container.FixedWidthPanel;
+import uk.blankaspect.ui.swing.font.FontUtils;
 
-import uk.blankaspect.common.swing.font.FontUtils;
+import uk.blankaspect.ui.swing.label.FixedWidthLabel;
+import uk.blankaspect.ui.swing.label.FLabel;
 
-import uk.blankaspect.common.swing.label.FixedWidthLabel;
-import uk.blankaspect.common.swing.label.FLabel;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextUtils;
 
-import uk.blankaspect.common.swing.text.TextRendering;
-import uk.blankaspect.common.swing.text.TextUtils;
-
-import uk.blankaspect.common.swing.textfield.ConstrainedTextField;
+import uk.blankaspect.ui.swing.textfield.ConstrainedTextField;
 
 //----------------------------------------------------------------------
 
 
-// KEY EDITOR DIALOG BOX CLASS
+// KEY EDITOR DIALOG CLASS
 
 
 class KeyEditorDialog
@@ -131,7 +128,7 @@ class KeyEditorDialog
 	private static final	String	CIPHERS_STR					= "Ciphers";
 	private static final	String	ALLOWED_STR					= "Allowed";
 	private static final	String	PREFERRED_STR				= "Preferred";
-	private static final	String	RENAME_MESSAGE_STR			= "Do you want to rename the key to '%1'?";
+	private static final	String	RENAME_MESSAGE_STR			= "Do you want to rename the key to '%s'?";
 	private static final	String	DELETE_MESSAGE_STR			= "Do you want to delete the key?";
 	private static final	String	ADD_TOOLTIP_STR				= "Create a key with the specified name";
 	private static final	String	RENAME_TOOLTIP_STR			= "Rename the selected key";
@@ -289,7 +286,7 @@ class KeyEditorDialog
 
 		private void setText(String text)
 		{
-			if (!StringUtils.equal(text, this.text))
+			if (!Objects.equals(text, this.text))
 			{
 				this.text = text;
 				repaint();
@@ -1106,7 +1103,7 @@ class KeyEditorDialog
 		StringBuilder buffer = new StringBuilder(64);
 		for (FortunaCipher cipher : ciphers)
 		{
-			if (buffer.length() > 0)
+			if (!buffer.isEmpty())
 				buffer.append(", ");
 			buffer.append(cipher);
 		}
@@ -1261,7 +1258,7 @@ class KeyEditorDialog
 			verifyKey(key);
 
 			// Add key and update list
-			String messageStr = IndexedSub.sub(RENAME_MESSAGE_STR, name);
+			String messageStr = String.format(RENAME_MESSAGE_STR, name);
 			String[] optionStrs = Utils.getOptionStrings(RENAME_STR);
 			if (JOptionPane.showOptionDialog(this, KEY2_STR + key.getQuotedName() + "\n" + messageStr,
 											 RENAME_TITLE_STR, JOptionPane.OK_CANCEL_OPTION,

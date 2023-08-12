@@ -33,6 +33,7 @@ import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -48,22 +49,20 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 
-import uk.blankaspect.common.string.StringUtils;
+import uk.blankaspect.ui.swing.button.FButton;
+import uk.blankaspect.ui.swing.button.FRadioButton;
 
-import uk.blankaspect.common.swing.button.FButton;
-import uk.blankaspect.common.swing.button.FRadioButton;
+import uk.blankaspect.ui.swing.combobox.FComboBox;
 
-import uk.blankaspect.common.swing.combobox.FComboBox;
+import uk.blankaspect.ui.swing.dialog.RunnableMessageDialog;
 
-import uk.blankaspect.common.swing.dialog.RunnableMessageDialog;
+import uk.blankaspect.ui.swing.label.FLabel;
 
-import uk.blankaspect.common.swing.label.FLabel;
+import uk.blankaspect.ui.swing.misc.GuiUtils;
 
-import uk.blankaspect.common.swing.misc.GuiUtils;
+import uk.blankaspect.ui.swing.spinner.FIntegerSpinner;
 
-import uk.blankaspect.common.swing.spinner.FIntegerSpinner;
-
-import uk.blankaspect.common.swing.text.TextRendering;
+import uk.blankaspect.ui.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
 
@@ -224,14 +223,14 @@ class KdfParameterPanel
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		private static final	int	VERTICAL_MARGIN		= 3;
-		private static final	int	HORIZONTAL_MARGIN	= 6;
-
-		private static final	int	NUM_DIGITS	= 10;
+		private static final	int		VERTICAL_MARGIN		= 3;
+		private static final	int		HORIZONTAL_MARGIN	= 6;
 
 		private static final	Color	TEXT_COLOUR			= Color.BLACK;
 		private static final	Color	BACKGROUND_COLOUR	= new Color(248, 240, 200);
 		private static final	Color	BORDER_COLOUR		= new Color(224, 200, 160);
+
+		private static final	String	PROTOTYPE_STR	= "0".repeat(10);
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -244,8 +243,7 @@ class KdfParameterPanel
 
 			// Set preferred size
 			FontMetrics fontMetrics = getFontMetrics(getFont());
-			String prototypeStr = StringUtils.createCharString('0', NUM_DIGITS);
-			int width = 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(prototypeStr);
+			int width = 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(PROTOTYPE_STR);
 			int height = 2 * VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
 			setPreferredSize(new Dimension(width, height));
 
@@ -300,7 +298,7 @@ class KdfParameterPanel
 
 		private void setText(String text)
 		{
-			if (!StringUtils.equal(text, this.text))
+			if (!Objects.equals(text, this.text))
 			{
 				this.text = text;
 				repaint();

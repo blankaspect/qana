@@ -50,15 +50,20 @@ class FileEraser
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		int	MIN_NUM_PASSES		= 1;
-	public static final		int	MAX_NUM_PASSES		= 20;
-	public static final		int	DEFAULT_NUM_PASSES	= 4;
+	public static final		int		MIN_NUM_PASSES		= 1;
+	public static final		int		MAX_NUM_PASSES		= 20;
+	public static final		int		DEFAULT_NUM_PASSES	= 4;
 
-	private static final	int	BUFFER_SIZE	= 1 << 13;  // 8192
+	private static final	int		BUFFER_SIZE	= 1 << 13;  // 8192
 
-	private static final	int	MAX_FILENAME_LENGTH	= 224;
+	private static final	int		MAX_FILENAME_LENGTH	= 224;
 
-	private static final	int	ASSUMED_DIRECTORY_LENGTH	= 1 << 16;
+	private static final	int		ASSUMED_DIRECTORY_LENGTH	= 1 << 16;
+
+	private static final	char	PATHNAME_SEPARATOR_CHAR	= '/';
+	private static final	String	PATHNAME_SEPARATOR_STR	= Character.toString(PATHNAME_SEPARATOR_CHAR);
+
+	private static final	Comparator<File>	PATHNAME_COMPARATOR;
 
 	private static final	String	ERASE_FILES_STR	= "Erase files";
 	private static final	String	ERASING_STR		= "Erasing";
@@ -66,159 +71,27 @@ class FileEraser
 	private static final	String	SKIP_STR		= "Skip";
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
+	private	byte[]	buffer;
+	private	Prng01	prng;
 
-	// ERROR IDENTIFIERS
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
 
-
-	private enum ErrorId
-		implements AppException.IId
+	static
 	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FAILED_TO_GET_PATHNAME
-		("Failed to get the canonical pathname for the file."),
-
-		FILE_OR_DIRECTORY_DOES_NOT_EXIST
-		("The file or directory does not exist."),
-
-		FAILED_TO_OPEN_FILE
-		("Failed to open the file."),
-
-		FAILED_TO_CLOSE_FILE
-		("Failed to close the file."),
-
-		FAILED_TO_LOCK_FILE
-		("Failed to lock the file."),
-
-		ERROR_READING_FILE
-		("An error occurred when reading the file."),
-
-		ERROR_WRITING_FILE
-		("An error occurred when writing the file."),
-
-		FILE_ACCESS_NOT_PERMITTED
-		("Access to the file was not permitted."),
-
-		FAILED_TO_RENAME_FILE
-		("Failed to rename the file."),
-
-		FAILED_TO_RENAME_DIRECTORY
-		("Failed to rename the directory."),
-
-		FAILED_TO_DELETE_FILE
-		("Failed to delete the file."),
-
-		FAILED_TO_DELETE_DIRECTORY
-		("Failed to delete the directory.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// PATHNAME COMPARATOR CLASS
-
-
-	private static class PathnameComparator
-		implements Comparator<File>
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	char	SEPARATOR_CHAR	= '/';
-		private static final	String	SEPARATOR_STR	= Character.toString(SEPARATOR_CHAR);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private PathnameComparator()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static boolean isAncestor(File directory,
-										  File file)
-		{
-			String pathname1 = directory.getPath().replace(File.separatorChar, SEPARATOR_CHAR);
-			while (pathname1.endsWith(SEPARATOR_STR))
-				pathname1 = pathname1.substring(0, pathname1.length() - 1);
-
-			String pathname2 = file.getPath().replace(File.separatorChar, SEPARATOR_CHAR);
-			while (pathname2.endsWith(SEPARATOR_STR))
-				pathname2 = pathname2.substring(0, pathname2.length() - 1);
-
-			int length1 = pathname1.length();
-			return ((length1 < pathname2.length()) && pathname2.startsWith(pathname1) &&
-					 (pathname2.charAt(length1) == SEPARATOR_CHAR));
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Comparator interface
-	////////////////////////////////////////////////////////////////////
-
-		public int compare(File file1,
-						   File file2)
+		PATHNAME_COMPARATOR = (file1, file2) ->
 		{
 			if (file2.isDirectory() && (file1.isFile() || isAncestor(file2, file1)))
 				return -1;
 			if (file1.isDirectory() && (file2.isFile() || isAncestor(file1, file2)))
 				return 1;
 			return file1.compareTo(file2);
-		}
-
-		//--------------------------------------------------------------
-
+		};
 	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -228,6 +101,28 @@ class FileEraser
 	{
 		buffer = new byte[BUFFER_SIZE];
 		prng = new Prng01();
+	}
+
+	//------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////
+//  Class methods
+////////////////////////////////////////////////////////////////////////
+
+	private static boolean isAncestor(File directory,
+									  File file)
+	{
+		String pathname1 = directory.getPath().replace(File.separatorChar, PATHNAME_SEPARATOR_CHAR);
+		while (pathname1.endsWith(PATHNAME_SEPARATOR_STR))
+			pathname1 = pathname1.substring(0, pathname1.length() - 1);
+
+		String pathname2 = file.getPath().replace(File.separatorChar, PATHNAME_SEPARATOR_CHAR);
+		while (pathname2.endsWith(PATHNAME_SEPARATOR_STR))
+			pathname2 = pathname2.substring(0, pathname2.length() - 1);
+
+		int length1 = pathname1.length();
+		return ((length1 < pathname2.length()) && pathname2.startsWith(pathname1) &&
+				 (pathname2.charAt(length1) == PATHNAME_SEPARATOR_CHAR));
 	}
 
 	//------------------------------------------------------------------
@@ -261,7 +156,7 @@ class FileEraser
 		}
 
 		// Sort pathnames
-		Arrays.sort(files, new PathnameComparator());
+		Arrays.sort(files, PATHNAME_COMPARATOR);
 
 		// Reset progress in progress view
 		TaskProgressDialog progressView = (TaskProgressDialog)Task.getProgressView();
@@ -388,7 +283,7 @@ class FileEraser
 				if (raFile.getChannel().tryLock() == null)
 					throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, file);
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
 				throw new FileException(ErrorId.FAILED_TO_LOCK_FILE, file, e);
 			}
@@ -535,11 +430,89 @@ class FileEraser
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	byte[]	buffer;
-	private	Prng01	prng;
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FAILED_TO_GET_PATHNAME
+		("Failed to get the canonical pathname for the file."),
+
+		FILE_OR_DIRECTORY_DOES_NOT_EXIST
+		("The file or directory does not exist."),
+
+		FAILED_TO_OPEN_FILE
+		("Failed to open the file."),
+
+		FAILED_TO_CLOSE_FILE
+		("Failed to close the file."),
+
+		FAILED_TO_LOCK_FILE
+		("Failed to lock the file."),
+
+		ERROR_READING_FILE
+		("An error occurred when reading the file."),
+
+		ERROR_WRITING_FILE
+		("An error occurred when writing the file."),
+
+		FILE_ACCESS_NOT_PERMITTED
+		("Access to the file was not permitted."),
+
+		FAILED_TO_RENAME_FILE
+		("Failed to rename the file."),
+
+		FAILED_TO_RENAME_DIRECTORY
+		("Failed to rename the directory."),
+
+		FAILED_TO_DELETE_FILE
+		("Failed to delete the file."),
+
+		FAILED_TO_DELETE_DIRECTORY
+		("Failed to delete the directory.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 
