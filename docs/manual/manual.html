@@ -405,7 +405,7 @@
         Qana.
       </p>
       <p class="wrap">
-        The <code>src</code> directory of the distribution contains all the source code and
+        The <code>src</code> directory of the repository contains all the source code and
         resources that constitute the application; there are no external dependencies.  The
         directory conforms to the Maven standard directory layout: the source code is in
         <code>src/main/java</code> and the resources are in <code>src/main/resources</code>.
@@ -873,11 +873,10 @@
       </p>
       <p class="wrap">
         You may be able to increase the amount of memory that is available to a Java virtual
-        machine from the default value with a command-line option of the <a class="external"
-        href="https://docs.oracle.com/javase/7/docs/technotes/tools/windows/java.html">Java
-        launcher</a>.  For example, the maximum heap size can be specified for Oracle&apos;s
-        HotSpot <abbr title="Java virtual machine">JVM</abbr> by using the <code>-Xmx</code>
-        option on the command line of the <code>java</code> tool.
+        machine from the default value with a command-line option of the Java launcher.  For
+        example, the maximum heap size can be specified for the HotSpot <abbr
+        title="Java virtual machine">JVM</abbr> by using the <code>-Xmx</code> option on the
+        command line of the <code>java</code> tool.
       </p>
       <p class="wrap">
         You can try out sets of KDF parameters with the <span class="command">Generate a test
@@ -3027,16 +3026,14 @@
       <dl class="fileAssoc">
         <dt>Java launcher</dt>
         <dd class="wrap">
-          This is the Windows executable that launches a Java program; with <a class="external"
-          href="https://www.oracle.com/java/technologies/javase-jre8-downloads.html">Oracle&apos;s
-          JRE</a>, you have a choice of <code>javaw.exe</code> (no console) or
-          <code>java.exe</code> (console).  The corresponding <span
-          class="command">Default</span> command sets the pathname to that of the file
-          <code>bin\javaw.exe</code> in the directory specified by the <code>java.home</code>
-          system property, which is the Java installation directory that is associated with the
-          current Qana application.  If you install another version of Java, the Java launcher
-          might be at a different location; if so, you will need to update the file association
-          accordingly.
+          This is the Windows executable that launches a Java program.  You have a choice of
+          <code>javaw.exe</code> (no console) or <code>java.exe</code> (console).  The
+          corresponding <span class="command">Default</span> command sets the pathname to that
+          of the file <code>bin\javaw.exe</code> in the directory specified by the
+          <code>java.home</code> system property, which is the Java installation directory that
+          is associated with the current Qana application.  If you install another version of
+          Java, the Java launcher might be at a different location; if so, you will need to
+          update the file association accordingly.
         </dd>
         <dt>JAR</dt>
         <dd class="wrap">
@@ -4517,7 +4514,7 @@
     <div id="lastModified">
       <div>
         <div>
-          Last modified: 2023-08-12
+          Last modified: 2023-08-13
         </div>
         <div class="image">
           <a class="hideHover" href="http://validator.w3.org/check?uri=referer">
