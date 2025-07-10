@@ -2,7 +2,7 @@
 
 FileConcealer.java
 
-File concealer class.
+Class: file concealer.
 
 \*====================================================================*/
 
@@ -47,7 +47,7 @@ import uk.blankaspect.common.ui.progress.IProgressView;
 //----------------------------------------------------------------------
 
 
-// FILE CONCEALER CLASS
+// CLASS: FILE CONCEALER
 
 
 /**
@@ -71,133 +71,6 @@ public class FileConcealer
 	private static final	String	WRITING_STR		= "Writing";
 	private static final	String	CONCEALING_STR	= "Concealing data " + Constants.ELLIPSIS_STR;
 	private static final	String	RECOVERING_STR	= "Recovering data " + Constants.ELLIPSIS_STR;
-
-////////////////////////////////////////////////////////////////////////
-//  Enumerated types
-////////////////////////////////////////////////////////////////////////
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FAILED_TO_OPEN_FILE
-		("Failed to open the file."),
-
-		FAILED_TO_CLOSE_FILE
-		("Failed to close the file."),
-
-		FAILED_TO_LOCK_FILE
-		("Failed to lock the file."),
-
-		ERROR_READING_FILE
-		("An error occurred when reading the file."),
-
-		ERROR_WRITING_FILE
-		("An error occurred when writing the file."),
-
-		FILE_ACCESS_NOT_PERMITTED
-		("Access to the file was not permitted."),
-
-		FAILED_TO_CREATE_DIRECTORY
-		("Failed to create the directory."),
-
-		FAILED_TO_CREATE_TEMPORARY_FILE
-		("Failed to create a temporary file."),
-
-		FAILED_TO_DELETE_FILE
-		("Failed to delete the existing file."),
-
-		FAILED_TO_RENAME_FILE
-		("Failed to rename the temporary file to the specified filename."),
-
-		FILE_IS_TOO_LONG
-		("The file is too long to be concealed in an image."),
-
-		INPUT_FORMAT_NOT_SUPPORTED
-		("The input file may not be an image file or it may be an image file whose format is not\n" +
-			"supported by this implementation of Java."),
-
-		PNG_OUTPUT_NOT_SUPPORTED
-		("This implementation of Java does not support the writing of PNG files.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member interfaces
-////////////////////////////////////////////////////////////////////////
-
-
-	// IMAGE SOURCE INTERFACE
-
-
-	/**
-	 * This interface specifies the method that must be implemented by a delegate that provides an image for
-	 * use as a carrier in a concealment operation.
-	 */
-
-	public interface IImageSource
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Returns an image for use as a carrier to conceal a payload of a specified length.
-		 *
-		 * @param  payloadLength  the length (in bytes) of the payload that the image will be used to
-		 *                        conceal.
-		 * @return an image for use as a carrier to conceal a payload of length {@code payloadLength}.
-		 * @throws AppException
-		 *           if an error occurred in the production of the image.
-		 */
-
-		BufferedImage getImage(int payloadLength)
-			throws AppException;
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -253,13 +126,14 @@ public class FileConcealer
 	 * @see    #recover(File, OutputStream, StreamConcealer.ILengthDecoder)
 	 */
 
-	public void conceal(File                           inFile,
-						IImageSource                   carrierImageSource,
-						File                           carrierFile,
-						File                           outFile,
-						StreamConcealer.ILengthEncoder lengthEncoder,
-						int                            maxReplacementDepth,
-						StreamConcealer.IRandomSource  randomSource)
+	public void conceal(
+		File							inFile,
+		IImageSource					carrierImageSource,
+		File							carrierFile,
+		File							outFile,
+		StreamConcealer.ILengthEncoder	lengthEncoder,
+		int								maxReplacementDepth,
+		StreamConcealer.IRandomSource	randomSource)
 		throws AppException, TaskCancelledException
 	{
 		// Validate arguments
@@ -381,14 +255,15 @@ public class FileConcealer
 	 * @see    #recover(File, OutputStream, StreamConcealer.ILengthDecoder)
 	 */
 
-	public void conceal(InputStream                    inStream,
-						IImageSource                   carrierImageSource,
-						File                           carrierFile,
-						File                           outFile,
-						int                            length,
-						StreamConcealer.ILengthEncoder lengthEncoder,
-						int                            maxReplacementDepth,
-						StreamConcealer.IRandomSource  randomSource)
+	public void conceal(
+		InputStream						inStream,
+		IImageSource					carrierImageSource,
+		File							carrierFile,
+		File							outFile,
+		int								length,
+		StreamConcealer.ILengthEncoder	lengthEncoder,
+		int								maxReplacementDepth,
+		StreamConcealer.IRandomSource	randomSource)
 		throws AppException, TaskCancelledException
 	{
 		// Validate arguments
@@ -501,9 +376,10 @@ public class FileConcealer
 	 *                  StreamConcealer.IRandomSource)
 	 */
 
-	public void recover(File                           inFile,
-						File                           outFile,
-						StreamConcealer.ILengthDecoder lengthDecoder)
+	public void recover(
+		File							inFile,
+		File							outFile,
+		StreamConcealer.ILengthDecoder	lengthDecoder)
 		throws AppException, TaskCancelledException
 	{
 		File tempFile = null;
@@ -646,9 +522,9 @@ public class FileConcealer
 	 * @param  outStream      the output stream to which the recovered data will be written.
 	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
 	 * @throws FileException
-	 *           if an error occurred when reading the input file or recovering the concealed data.
+	 *           if an error occurs when reading the input file or recovering the concealed data.
 	 * @throws StreamConcealer.OutputException
-	 *           if an error occurred when writing to the output stream.
+	 *           if an error occurs when writing to the output stream.
 	 * @throws TaskCancelledException
 	 *           if the recovery operation was cancelled by the user.
 	 * @see    #recover(File, File, StreamConcealer.ILengthDecoder)
@@ -658,9 +534,10 @@ public class FileConcealer
 	 *                  StreamConcealer.IRandomSource)
 	 */
 
-	public void recover(File                           inFile,
-						OutputStream                   outStream,
-						StreamConcealer.ILengthDecoder lengthDecoder)
+	public void recover(
+		File							inFile,
+		OutputStream					outStream,
+		StreamConcealer.ILengthDecoder	lengthDecoder)
 		throws FileException, StreamConcealer.OutputException, TaskCancelledException
 	{
 		// Reset progress in progress view
@@ -715,6 +592,137 @@ public class FileConcealer
 	}
 
 	//------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////
+//  Enumerated types
+////////////////////////////////////////////////////////////////////////
+
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FAILED_TO_OPEN_FILE
+		("Failed to open the file."),
+
+		FAILED_TO_CLOSE_FILE
+		("Failed to close the file."),
+
+		FAILED_TO_LOCK_FILE
+		("Failed to lock the file."),
+
+		ERROR_READING_FILE
+		("An error occurred when reading the file."),
+
+		ERROR_WRITING_FILE
+		("An error occurred when writing the file."),
+
+		FILE_ACCESS_NOT_PERMITTED
+		("Access to the file was not permitted."),
+
+		FAILED_TO_CREATE_DIRECTORY
+		("Failed to create the directory."),
+
+		FAILED_TO_CREATE_TEMPORARY_FILE
+		("Failed to create a temporary file."),
+
+		FAILED_TO_DELETE_FILE
+		("Failed to delete the existing file."),
+
+		FAILED_TO_RENAME_FILE
+		("Failed to rename the temporary file to the specified filename."),
+
+		FILE_IS_TOO_LONG
+		("The file is too long to be concealed in an image."),
+
+		INPUT_FORMAT_NOT_SUPPORTED
+		("The input file may not be an image file or it may be an image file whose format is not\n" +
+			"supported by this implementation of Java."),
+
+		PNG_OUTPUT_NOT_SUPPORTED
+		("This implementation of Java does not support the writing of PNG files.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(
+			String	message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member interfaces
+////////////////////////////////////////////////////////////////////////
+
+
+	// INTERFACE: IMAGE SOURCE
+
+
+	/**
+	 * This functional interface specifies the method that must be implemented by the provider of an image for use as a
+	 * carrier in a concealment operation.
+	 */
+
+	@FunctionalInterface
+	public interface IImageSource
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Returns an image for use as a carrier to conceal a payload of a specified length.
+		 *
+		 * @param  payloadLength  the length (in bytes) of the payload that the image will be used to
+		 *                        conceal.
+		 * @return an image for use as a carrier to conceal a payload of length {@code payloadLength}.
+		 * @throws AppException
+		 *           if an error occurred in the production of the image.
+		 */
+
+		BufferedImage getImage(
+			int	payloadLength)
+			throws AppException;
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

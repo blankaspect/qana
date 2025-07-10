@@ -467,8 +467,7 @@ class ArchiveDocument
 			try
 			{
 				decrypter.addProgressListener(progressView);
-				decrypter.decrypt(inStream, outStream, file.length(), key.getKey(),
-								  generator -> App.INSTANCE.generateKey(generator));
+				decrypter.decrypt(inStream, outStream, file.length(), key.getKey(), QanaApp.INSTANCE::generateKey);
 			}
 			catch (StreamEncrypter.InputException e)
 			{
@@ -550,7 +549,7 @@ class ArchiveDocument
 			}
 			changed = true;
 
-			App.INSTANCE.showErrorMessage(App.SHORT_NAME, NONEXISTENT_FILES1_STR);
+			QanaApp.INSTANCE.showErrorMessage(QanaApp.SHORT_NAME, NONEXISTENT_FILES1_STR);
 			TextAreaDialog.showDialog(getWindow(), NONEXISTENT_FILES2_STR, buffer.toString());
 		}
 	}
@@ -568,7 +567,7 @@ class ArchiveDocument
 
 		// Get key
 		KeyList.Key key = getKey(SAVE_ARCHIVE_STR);
-		if ((key == null) || !App.INSTANCE.confirmUseTemporaryKey(key))
+		if ((key == null) || !QanaApp.INSTANCE.confirmUseTemporaryKey(key))
 			throw new TaskCancelledException();
 
 		// Check cipher
@@ -670,7 +669,7 @@ class ArchiveDocument
 				StreamEncrypter encrypter = key.getStreamEncrypter(cipher, getOuterHeader());
 				encrypter.addProgressListener(progressView);
 				encrypter.encrypt(inStream, outStream, inStream.getLength(), 0, key.getKey(),
-								  App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
+								  QanaApp.INSTANCE.getRandomKey(), QanaApp.INSTANCE::generateKey);
 			}
 			catch (StreamEncrypter.OutputException e)
 			{
@@ -805,12 +804,11 @@ class ArchiveDocument
 				// Encrypt file and add it to archive
 				if (index >= 0)
 				{
-					byte[] key = App.INSTANCE.getRandomKey();
+					byte[] key = QanaApp.INSTANCE.getRandomKey();
 					byte[] salt = new byte[Element.SALT_FIELD_SIZE];
-					byte[] hashValue = encryptFile(inFile, archiveDirectory, key, fileOffset,
-												   totalFileLength, salt);
-					Element element = new Element(inputFile.path, inFile.length(), inFile.lastModified(),
-												  key, salt, hashValue);
+					byte[] hashValue = encryptFile(inFile, archiveDirectory, key, fileOffset, totalFileLength, salt);
+					Element element =
+							new Element(inputFile.path, inFile.length(), inFile.lastModified(), key, salt, hashValue);
 					if (index < elements.size())
 					{
 						elements.set(index, element);
@@ -831,10 +829,9 @@ class ArchiveDocument
 			catch (AppException e)
 			{
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
-				if (JOptionPane.showOptionDialog(getWindow(), e, App.SHORT_NAME + " : " + ADD_FILES_STR,
-												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
-												 null, optionStrs, optionStrs[0]) !=
-																					JOptionPane.OK_OPTION)
+				if (JOptionPane.showOptionDialog(getWindow(), e, QanaApp.SHORT_NAME + " : " + ADD_FILES_STR,
+												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+												 optionStrs, optionStrs[0]) != JOptionPane.OK_OPTION)
 					break;
 			}
 
@@ -861,8 +858,7 @@ class ArchiveDocument
 		// Calculate total length of files
 		long totalFileLength = 0;
 		for (int index : indices)
-			totalFileLength += new File(archiveDirectory,
-										elements.get(index).getHashValueString()).length();
+			totalFileLength += new File(archiveDirectory, elements.get(index).getHashValueString()).length();
 
 		// Decrypt files
 		conflictOption = null;
@@ -895,8 +891,8 @@ class ArchiveDocument
 				// Decrypt file
 				if (outFile != null)
 				{
-					if (!decryptFile(inFile, outFile, element.key, element.salt, element.timestamp,
-									 fileOffset, totalFileLength))
+					if (!decryptFile(inFile, outFile, element.key, element.salt, element.timestamp, fileOffset,
+									 totalFileLength))
 						throw new FileException(ErrorId.INCORRECT_ENCRYPTION_KEY, inFile);
 					if (outFile.length() != element.size)
 						throw new FileException(ErrorId.INCORRECT_FILE_SIZE, outFile);
@@ -909,11 +905,9 @@ class ArchiveDocument
 			catch (AppException e)
 			{
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
-				if (JOptionPane.showOptionDialog(getWindow(), e,
-												 App.SHORT_NAME + " : " + EXTRACT_FILES_STR,
-												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
-												 null, optionStrs, optionStrs[0]) !=
-																					JOptionPane.OK_OPTION)
+				if (JOptionPane.showOptionDialog(getWindow(), e, QanaApp.SHORT_NAME + " : " + EXTRACT_FILES_STR,
+												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+												 optionStrs, optionStrs[0]) != JOptionPane.OK_OPTION)
 					break;
 			}
 
@@ -935,8 +929,7 @@ class ArchiveDocument
 		// Calculate total length of files
 		long totalFileLength = 0;
 		for (int index : indices)
-			totalFileLength += new File(archiveDirectory,
-										elements.get(index).getHashValueString()).length();
+			totalFileLength += new File(archiveDirectory, elements.get(index).getHashValueString()).length();
 
 		// Validate files
 		List<Integer> invalidIndices = new ArrayList<>();
@@ -973,11 +966,9 @@ class ArchiveDocument
 			{
 				invalidIndices.add(index);
 				String[] optionStrs = Utils.getOptionStrings(AppConstants.CONTINUE_STR);
-				if (JOptionPane.showOptionDialog(getWindow(), e,
-												 App.SHORT_NAME + " : " + VALIDATE_FILES_STR,
-												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE,
-												 null, optionStrs, optionStrs[0]) !=
-																					JOptionPane.OK_OPTION)
+				if (JOptionPane.showOptionDialog(getWindow(), e, QanaApp.SHORT_NAME + " : " + VALIDATE_FILES_STR,
+												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+												 optionStrs, optionStrs[0]) != JOptionPane.OK_OPTION)
 					break;
 			}
 
@@ -988,7 +979,7 @@ class ArchiveDocument
 		// Display result of validation
 		String numProcessedStr = String.format(NUM_PROCESSED_STR, indices.length);
 		if ((numValidated == indices.length) && invalidIndices.isEmpty())
-			App.INSTANCE.showInfoMessage(VALIDATE_FILES_STR, numProcessedStr + ALL_FILES_VALID_STR);
+			QanaApp.INSTANCE.showInfoMessage(VALIDATE_FILES_STR, numProcessedStr + ALL_FILES_VALID_STR);
 		if (!invalidIndices.isEmpty())
 		{
 			ListSelectionModel selectionModel = getTable().getSelectionModel();
@@ -996,7 +987,7 @@ class ArchiveDocument
 			for (int index : invalidIndices)
 				selectionModel.addSelectionInterval(index, index);
 			String failedStr = String.format(NUM_FAILED_VALIDATION_STR, invalidIndices.size());
-			App.INSTANCE.showWarningMessage(VALIDATE_FILES_STR, numProcessedStr + failedStr);
+			QanaApp.INSTANCE.showWarningMessage(VALIDATE_FILES_STR, numProcessedStr + failedStr);
 		}
 	}
 
@@ -1046,7 +1037,7 @@ class ArchiveDocument
 		// Display list of files that were not deleted
 		if (!buffer.isEmpty())
 		{
-			App.INSTANCE.showErrorMessage(DELETE_FILES_STR, NOT_ALL_DELETED_STR);
+			QanaApp.INSTANCE.showErrorMessage(DELETE_FILES_STR, NOT_ALL_DELETED_STR);
 			TextAreaDialog.showDialog(getWindow(), NOT_DELETED_STR, buffer.toString());
 		}
 	}
@@ -1117,11 +1108,11 @@ class ArchiveDocument
 		}
 		catch (AppException e)
 		{
-			App.INSTANCE.showErrorMessage(App.SHORT_NAME, e);
+			QanaApp.INSTANCE.showErrorMessage(QanaApp.SHORT_NAME, e);
 		}
 
 		// Update tab text and title and menus in main window
-		App.INSTANCE.updateTabText(this);
+		QanaApp.INSTANCE.updateTabText(this);
 		getWindow().updateTitleAndMenus();
 
 		// Clear command execution flag
@@ -1192,16 +1183,16 @@ class ArchiveDocument
 
 	//------------------------------------------------------------------
 
-	private boolean resolveConflict(String   titleStr,
+	private boolean resolveConflict(String   title,
 									String[] messageStrs)
 		throws TaskCancelledException
 	{
 		boolean replace = false;
 		if (conflictOption == null)
 		{
-			String optionKey = QuestionDialog.showDialog(getWindow(), titleStr, messageStrs, CONFLICT_OPTIONS, 2,
-														 QuestionDialog.CANCEL_KEY, null).selectedKey;
-			if (optionKey.equals(QuestionDialog.CANCEL_KEY))
+			String optionKey = QuestionDialog.showDialog(getWindow(), title, messageStrs, CONFLICT_OPTIONS, 2,
+														 QuestionDialog.CANCEL_KEY, null).selectedKey();
+			if (QuestionDialog.CANCEL_KEY.equals(optionKey))
 				throw new TaskCancelledException();
 			ConflictOption option = ConflictOption.get(optionKey);
 			if (option == ConflictOption.REPLACE)
@@ -1361,8 +1352,8 @@ class ArchiveDocument
 			// Encrypt data
 			StreamEncrypter encrypter = new StreamEncrypter(Utils.getCipher(getKey()));
 			encrypter.addProgressListener(progressView);
-			encrypter.encrypt(inStream, outStream, inFile.length(), App.INSTANCE.getRandomLong(),
-							  key, App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
+			encrypter.encrypt(inStream, outStream, inFile.length(), QanaApp.INSTANCE.getRandomLong(), key,
+							  QanaApp.INSTANCE.getRandomKey(), QanaApp.INSTANCE::generateKey);
 
 			// Close input file
 			try
@@ -1390,8 +1381,7 @@ class ArchiveDocument
 			byte[] hashValue = null;
 			while (hashValue == null)
 			{
-				System.arraycopy(App.INSTANCE.getRandomBytes(salt.length), 0, salt, 0,
-								 salt.length);
+				System.arraycopy(QanaApp.INSTANCE.getRandomBytes(salt.length), 0, salt, 0, salt.length);
 				hashValue = new HashGenerator().generate(encrypter, salt);
 				for (Element element : elements)
 				{
@@ -1582,7 +1572,7 @@ class ArchiveDocument
 			// Decrypt file
 			StreamEncrypter decrypter = new StreamEncrypter(null);
 			decrypter.addProgressListener(progressView);
-			decrypter.decrypt(inStream, outStream, inFile.length(), key, generator -> App.INSTANCE.generateKey(generator));
+			decrypter.decrypt(inStream, outStream, inFile.length(), key, QanaApp.INSTANCE::generateKey);
 
 			// Close input file
 			try
@@ -1742,8 +1732,7 @@ class ArchiveDocument
 			// Decrypt file
 			StreamEncrypter decrypter = new StreamEncrypter(null);
 			decrypter.addProgressListener(progressView);
-			decrypter.decrypt(inStream, new NullOutputStream(), inFile.length(), key,
-							  generator -> App.INSTANCE.generateKey(generator));
+			decrypter.decrypt(inStream, new NullOutputStream(), inFile.length(), key, QanaApp.INSTANCE::generateKey);
 
 			// Close input file
 			try
@@ -1784,7 +1773,7 @@ class ArchiveDocument
 
 	private void onChooseArchiveDirectory()
 	{
-		App.INSTANCE.chooseArchiveDirectory(archiveDirectory);
+		QanaApp.INSTANCE.chooseArchiveDirectory(archiveDirectory);
 	}
 
 	//------------------------------------------------------------------
@@ -1808,7 +1797,7 @@ class ArchiveDocument
 	{
 		// Select files
 		List<FileSelectionPanel.SelectedFile> selectedFiles =
-							FileSelectionDialog.showDialog(getWindow(), ADD_FILES_STR, MAX_NUM_ELEMENTS);
+				FileSelectionDialog.showDialog(getWindow(), ADD_FILES_STR, MAX_NUM_ELEMENTS);
 
 		// Add files to archive
 		if (selectedFiles != null)
@@ -1816,8 +1805,10 @@ class ArchiveDocument
 			// Test whether size of archive has been exceeded
 			int numFiles = selectedFiles.size();
 			if (elements.size() + numFiles > MAX_NUM_ELEMENTS)
+			{
 				throw new AppException(ErrorId.TOO_MANY_FILES, Integer.toString(numFiles),
 									   Integer.toString(MAX_NUM_ELEMENTS - elements.size()));
+			}
 
 			// Get key
 			KeyList.Key key = getKey(ADD_FILES_STR);
@@ -1832,8 +1823,7 @@ class ArchiveDocument
 				List<InputFile> files = new ArrayList<>();
 				for (FileSelectionPanel.SelectedFile selectedFile : selectedFiles)
 					files.add(new InputFile(selectedFile.file, selectedFile.relativePathname));
-				TaskProgressDialog.showDialog2(getWindow(), ADD_FILES_STR,
-											   new Task.EncryptFiles(this, files));
+				TaskProgressDialog.showDialog2(getWindow(), ADD_FILES_STR, new Task.EncryptFiles(this, files));
 			}
 		}
 	}
@@ -1848,8 +1838,10 @@ class ArchiveDocument
 		{
 			File outDirectory = OutputDirectoryDialog.showDialog(getWindow());
 			if (outDirectory != null)
+			{
 				TaskProgressDialog.showDialog2(getWindow(), EXTRACT_FILES_STR,
 											   new Task.DecryptFiles(this, indices, outDirectory));
+			}
 		}
 	}
 
@@ -1860,8 +1852,7 @@ class ArchiveDocument
 	{
 		int[] indices = getTable().getSelectedRows();
 		if (indices.length > 0)
-			TaskProgressDialog.showDialog2(getWindow(), VALIDATE_FILES_STR,
-										   new Task.ValidateFiles(this, indices));
+			TaskProgressDialog.showDialog2(getWindow(), VALIDATE_FILES_STR, new Task.ValidateFiles(this, indices));
 	}
 
 	//------------------------------------------------------------------
@@ -1874,11 +1865,10 @@ class ArchiveDocument
 		{
 			String messageStr = String.format(CONFIRM_DELETE_STR, indices.length);
 			String[] optionStrs = Utils.getOptionStrings(AppConstants.DELETE_STR);
-			if (JOptionPane.showOptionDialog(getWindow(), messageStr, DELETE_FILES_STR,
-											 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
-											 null, optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION)
-				TaskProgressDialog.showDialog(getWindow(), DELETE_FILES_STR,
-											  new Task.DeleteFiles(this, indices));
+			if (JOptionPane.showOptionDialog(getWindow(), messageStr, DELETE_FILES_STR, JOptionPane.OK_CANCEL_OPTION,
+											 JOptionPane.QUESTION_MESSAGE, null, optionStrs,
+											 optionStrs[1]) == JOptionPane.OK_OPTION)
+				TaskProgressDialog.showDialog(getWindow(), DELETE_FILES_STR, new Task.DeleteFiles(this, indices));
 		}
 	}
 
@@ -2135,7 +2125,7 @@ class ArchiveDocument
 		@Override
 		public void actionPerformed(ActionEvent event)
 		{
-			ArchiveDocument document = App.INSTANCE.getArchiveDocument();
+			ArchiveDocument document = QanaApp.INSTANCE.getArchiveDocument();
 			if (document != null)
 				document.executeCommand(this);
 		}
@@ -2311,9 +2301,9 @@ class ArchiveDocument
 		("The size of the extracted file does not match the stored size."),
 
 		TOO_MANY_FILES
-		("Adding all the selected files would exceed the maximum length of the archive.\n" +
-			"Number of selected files = %1\n" +
-			"Remaining capacity of archive = %2"),
+		("Adding all the selected files would exceed the maximum length of the archive.\n"
+			+ "Number of selected files = %1\n"
+			+ "Remaining capacity of archive = %2"),
 
 		NOT_ENOUGH_MEMORY_TO_PERFORM_COMMAND
 		("There was not enough memory to perform the command.");
@@ -2702,8 +2692,8 @@ class ArchiveDocument
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		private static final	int	NUM_COLUMNS	= 72;
-		private static final	int	NUM_ROWS	= 20;
+		private static final	int		NUM_COLUMNS	= 72;
+		private static final	int		NUM_ROWS	= 20;
 
 		private static final	String	KEY	= TextAreaDialog.class.getCanonicalName();
 
@@ -2712,10 +2702,10 @@ class ArchiveDocument
 	////////////////////////////////////////////////////////////////////
 
 		private TextAreaDialog(Window owner,
-							   String titleStr,
+							   String title,
 							   String text)
 		{
-			super(owner, titleStr, KEY, NUM_COLUMNS, NUM_ROWS, text);
+			super(owner, title, KEY, NUM_COLUMNS, NUM_ROWS, text);
 		}
 
 		//--------------------------------------------------------------
@@ -2725,10 +2715,10 @@ class ArchiveDocument
 	////////////////////////////////////////////////////////////////////
 
 		private static TextAreaDialog showDialog(Component parent,
-												 String titleStr,
+												 String    title,
 												 String    text)
 		{
-			return new TextAreaDialog(GuiUtils.getWindow(parent), titleStr, text);
+			return new TextAreaDialog(GuiUtils.getWindow(parent), title, text);
 		}
 
 		//--------------------------------------------------------------

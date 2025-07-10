@@ -2,7 +2,7 @@
 
 FileKind.java
 
-File kind enumeration.
+Enumeration: kind of file.
 
 \*====================================================================*/
 
@@ -26,7 +26,7 @@ import uk.blankaspect.common.platform.windows.FileAssociations;
 //----------------------------------------------------------------------
 
 
-// FILE KIND ENUMERATION
+// ENUMERATION: KIND OF FILE
 
 
 enum FileKind
@@ -42,7 +42,7 @@ enum FileKind
 		"encrypted",
 		".qana",
 		"Encrypted files",
-		"BlankAspect." + App.SHORT_NAME + ".encryptedFile",
+		"BlankAspect." + QanaApp.SHORT_NAME + ".encryptedFile",
 		"Qana-encrypted file",
 		"&Decrypt with Qana"
 	),
@@ -51,22 +51,34 @@ enum FileKind
 	(
 		"archive",
 		".qarc",
-		"Archive database files",
-		"BlankAspect." + App.SHORT_NAME + ".archive",
+		"Encrypted archives",
+		"BlankAspect." + QanaApp.SHORT_NAME + ".archive",
 		"Qana archive",
 		"&Open with Qana"
 	);
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String	key;
+	private	String	defaultFilenameSuffix;
+	private	String	description;
+	private	String	fileAssocFileKindKey;
+	private	String	fileAssocFileKindText;
+	private	String	fileAssocFileOpenText;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private FileKind(String key,
-					 String defaultFilenameSuffix,
-					 String description,
-					 String fileAssocFileKindKey,
-					 String fileAssocFileKindText,
-					 String fileAssocFileOpenText)
+	private FileKind(
+		String	key,
+		String	defaultFilenameSuffix,
+		String	description,
+		String	fileAssocFileKindKey,
+		String	fileAssocFileKindText,
+		String	fileAssocFileOpenText)
 	{
 		this.key = key;
 		this.defaultFilenameSuffix = defaultFilenameSuffix;
@@ -82,6 +94,7 @@ enum FileKind
 //  Instance methods : IStringKeyed interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public String getKey()
 	{
 		return key;
@@ -121,24 +134,14 @@ enum FileKind
 
 	//------------------------------------------------------------------
 
-	public void addFileAssocParams(FileAssociations fileAssociations)
+	public void addFileAssocParams(
+		FileAssociations	fileAssociations)
 	{
 		fileAssociations.addParams(fileAssocFileKindKey, fileAssocFileKindText, fileAssocFileOpenText,
 								   getFilenameSuffix());
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	String	key;
-	private	String	defaultFilenameSuffix;
-	private	String	description;
-	private	String	fileAssocFileKindKey;
-	private	String	fileAssocFileKindText;
-	private	String	fileAssocFileOpenText;
 
 }
 

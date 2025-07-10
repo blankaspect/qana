@@ -2,7 +2,7 @@
 
 EntropyAccumulator.java
 
-Entropy accumulator class.
+Class: entropy accumulator.
 
 \*====================================================================*/
 
@@ -41,7 +41,7 @@ import uk.blankaspect.common.string.StringUtils;
 //----------------------------------------------------------------------
 
 
-// ENTROPY ACCUMULATOR CLASS
+// CLASS: ENTROPY ACCUMULATOR
 
 
 /**
@@ -105,387 +105,31 @@ public class EntropyAccumulator
 ////////////////////////////////////////////////////////////////////////
 
 	/** The minimum value of the divisor that is applied to values from the high-resolution time source. */
-	public static final		int	MIN_TIMER_DIVISOR	= 1;
+	public static final		int		MIN_TIMER_DIVISOR	= 1;
 
 	/** The maximum value of the divisor that is applied to values from the high-resolution time source. */
-	public static final		int	MAX_TIMER_DIVISOR	= 1000000;
+	public static final		int		MAX_TIMER_DIVISOR	= 1000000;
 
+	/** The name of the timer thread. */
 	private static final	String	TIMER_THREAD_NAME	= "EntropyAccumulator.Timer";
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// ENTROPY SOURCE KIND
-
-
-	/**
-	 * This is an enumeration of the kinds of entropy source: keyboard, mouse and timer.
-	 */
-
-	public enum SourceKind
-		implements IStringKeyed
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		KEYBOARD
-		(
-			"keyboard",
-			false
-		),
-
-		MOUSE
-		(
-			"mouse",
-			true
-		),
-
-		TIMER
-		(
-			"timer",
-			true
-		);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private SourceKind(String  key,
-						   boolean hasInterval)
-		{
-			this.key = key;
-			this.hasInterval = hasInterval;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : IStringKeyed interface
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Returns the key for this enum constant.
-		 *
-		 * @return the key for this enum constant.
-		 */
-
-		public String getKey()
-		{
-			return key;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Returns a string representation of this enum constant.
-		 *
-		 * @return a string representation of this enum constant.
-		 */
-
-		@Override
-		public String toString()
-		{
-			return StringUtils.firstCharToUpperCase(key);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Returns {@code true} if the kind of source has a configurable interval.
-		 *
-		 * @return {@code true} if the kind of source has a configurable interval, {@code false} otherwise.
-		 */
-
-		public boolean hasInterval()
-		{
-			return hasInterval;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	key;
-		private	boolean	hasInterval;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// ENTROPY SOURCE PARAMETERS CLASS
-
-
-	/**
-	 * This class encapsulates the configurable parameters of an entropy source: a bit mask and millisecond
-	 * interval.
-	 */
-
-	public static class SourceParams
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		/** The number of low-order bits in the bit mask. */
-		public static final	int	BIT_MASK_LENGTH	= 16;
-
-		/** The default bit mask. */
-		public static final	int	DEFAULT_BIT_MASK	= 0b1111;
-
-		/** The minimum interval (in milliseconds) between samples. */
-		public static final	int	MIN_INTERVAL	= 2;
-
-		/** The maximum interval (in milliseconds) between samples. */
-		public static final	int	MAX_INTERVAL	= 1000;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Creates a set of parameters for an entropy source.
-		 *
-		 * @param  bitMask   the bit mask that will be applied to the sample value.
-		 * @param  interval  the interval (in milliseconds) between successive samples.
-		 */
-
-		public SourceParams(int bitMask,
-							int interval)
-		{
-			this.bitMask = bitMask;
-			this.interval = interval;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Returns {@code true} if the specified object is an instance of {@link SourceParams} and its bit mask and
-		 * interval are equal to the bit mask and interval of this set of parameters.
-		 *
-		 * @return {@code true} if {@code obj} is an instance of {@link SourceParams} and its bit mask and interval are
-		 *         equal to the bit mask and interval of this set of parameters; otherwise, {@code false}.
-		 */
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (obj instanceof SourceParams)
-			{
-				SourceParams params = (SourceParams)obj;
-				return ((bitMask == params.bitMask) && (interval == params.interval));
-			}
-			return false;
-		}
-
-		//--------------------------------------------------------------
-
-		/**
-		 * Returns a hash code for this set of parameters.
-		 *
-		 * @return a hash code for this set of parameters.
-		 */
-
-		@Override
-		public int hashCode()
-		{
-			return ((bitMask << 16) | interval);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int	bitMask;
-		private	int	interval;
-
-	}
-
-	//==================================================================
-
-
-	// ENTROPY METRICS CLASS
-
-
-	/**
-	 * This class encapsulates some metrics of an entropy source.
-	 * <p>
-	 * There are two metrics for each masked bit of the entropy source: the relative frequency of 1-bits and the
-	 * relative frequencies of 8-bit sequences.
-	 * </p>
-	 */
-
-	public static class Metrics
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		/** The number of bits in a bit sequence. */
-		public static final	int	BIT_SEQUENCE_LENGTH	= 8;
-
-		/** The number of bit sequences. */
-		public static final	int	NUM_BIT_SEQUENCES	= 1 << BIT_SEQUENCE_LENGTH;
-
-		/** The mask for extracting bit sequences from a buffer of accumulated bits. */
-		public static final	int	BIT_SEQUENCE_MASK	= NUM_BIT_SEQUENCES - 1;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Metrics(int        bitMask,
-						double[]   oneBitFrequencies,
-						double[][] bitSequenceFrequencies)
-		{
-			this.bitMask = bitMask;
-			this.oneBitFrequencies = oneBitFrequencies;
-			this.bitSequenceFrequencies = bitSequenceFrequencies;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		/** The bit mask that applies to both metrics. */
-		public	int			bitMask;
-
-		/** The relative frequency of 1-bits, for each bit in {@code bitMask}. */
-		public	double[]	oneBitFrequencies;
-
-		/** The relative frequencies of 8-bit sequences, for each bit in {@code bitMask}. */
-		public	double[][]	bitSequenceFrequencies;
-
-	}
-
-	//==================================================================
-
-
-	// ENTROPY SOURCE METRICS CLASS
-
-
-	/**
-	 * This class encapsulates some metrics of an entropy source.  The class is used only within {@link
-	 * EntropyAccumulator}.
-	 */
-
-	private static class SourceMetrics
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Member classes : non-inner classes
-	////////////////////////////////////////////////////////////////////
-
-
-		// BIT METRICS CLASS
-
-
-		private static class Bit
-		{
-
-		////////////////////////////////////////////////////////////////
-		//  Constructors
-		////////////////////////////////////////////////////////////////
-
-			private Bit(int index)
-			{
-				this.index = index;
-				bitSequenceCounts = new int[Metrics.NUM_BIT_SEQUENCES];
-			}
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Instance variables
-		////////////////////////////////////////////////////////////////
-
-			private	int		index;
-			private	int		buffer;
-			private	int		oneBitCount;
-			private	int[]	bitSequenceCounts;
-
-		}
-
-		//==============================================================
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private SourceMetrics(int bitMask)
-		{
-			this.bitMask = bitMask & (1 << SourceParams.BIT_MASK_LENGTH) - 1;
-			bits = new ArrayList<>();
-			for (int i = 0; i < SourceParams.BIT_MASK_LENGTH; i++)
-			{
-				if ((bitMask & 1 << i) != 0)
-					bits.add(new Bit(i));
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private void update(int data)
-		{
-			++sampleCount;
-			for (Bit bit : bits)
-			{
-				bit.buffer <<= 1;
-				if ((data & 1 << bit.index) != 0)
-				{
-					++bit.buffer;
-					++bit.oneBitCount;
-				}
-				if (sampleCount >= Metrics.BIT_SEQUENCE_LENGTH)
-					++bit.bitSequenceCounts[bit.buffer & Metrics.BIT_SEQUENCE_MASK];
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int			bitMask;
-		private	int			sampleCount;
-		private	List<Bit>	bits;
-
-	}
-
-	//==================================================================
+	private	Map<SourceKind, SourceParams>	sourceParams;
+	private	Map<SourceKind, Long>			lastEventTime;
+	private	long							timerDivisor;
+	private	int								bitBuffer;
+	private	int								bitDataLength;
+	private	Object							lock;
+	private	boolean							timerRunning;
+	private	Thread							timerThread;
+	private	List<IEntropyConsumer>			entropyConsumers;
+	private	int								entropyConsumerIndex;
+	private	Map<SourceKind, SourceMetrics>	metrics;
+
+	private volatile	boolean				timerSuspended;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -495,8 +139,10 @@ public class EntropyAccumulator
 	 * Creates a new instance of an entropy accumulator with the specified intervals for the mouse and timer entropy
 	 * sources, and with a timer divisor of 1.
 	 *
-	 * @param  mouseInterval  the interval (in milliseconds) between successive samples of the mouse source.
-	 * @param  timerInterval  the interval (in milliseconds) between successive samples of the timer source.
+	 * @param  mouseInterval
+	 *           the interval (in milliseconds) between successive samples of the mouse source.
+	 * @param  timerInterval
+	 *           the interval (in milliseconds) between successive samples of the timer source.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
@@ -505,8 +151,9 @@ public class EntropyAccumulator
 	 *           </ul>
 	 */
 
-	public EntropyAccumulator(int mouseInterval,
-							  int timerInterval)
+	public EntropyAccumulator(
+		int	mouseInterval,
+		int	timerInterval)
 	{
 		this(getSourceParams(mouseInterval, timerInterval), MIN_TIMER_DIVISOR);
 	}
@@ -517,10 +164,13 @@ public class EntropyAccumulator
 	 * Creates a new instance of an entropy accumulator with the specified intervals for the mouse and timer entropy
 	 * sources, and with a specified timer divisor.
 	 *
-	 * @param  mouseInterval  the interval (in milliseconds) between successive samples of the mouse source.
-	 * @param  timerInterval  the interval (in milliseconds) between successive samples of the timer source.
-	 * @param  timerDivisor   the value that will divide values from the system high-resolution timer that
-	 *                        are used by the keyboard and timer entropy sources.
+	 * @param  mouseInterval
+	 *           the interval (in milliseconds) between successive samples of the mouse source.
+	 * @param  timerInterval
+	 *           the interval (in milliseconds) between successive samples of the timer source.
+	 * @param  timerDivisor
+	 *           the value that will divide values from the system high-resolution timer that are used by the keyboard
+	 *           and timer entropy sources.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
@@ -530,9 +180,10 @@ public class EntropyAccumulator
 	 *           </ul>
 	 */
 
-	public EntropyAccumulator(int mouseInterval,
-							  int timerInterval,
-							  int timerDivisor)
+	public EntropyAccumulator(
+		int	mouseInterval,
+		int	timerInterval,
+		int	timerDivisor)
 	{
 		this(getSourceParams(mouseInterval, timerInterval), timerDivisor);
 	}
@@ -543,13 +194,14 @@ public class EntropyAccumulator
 	 * Creates a new instance of an entropy accumulator with the specified parameters of the entropy sources, and with a
 	 * timer divisor of 1.
 	 *
-	 * @param  sourceParams  a map of the parameters of the entropy sources.  A source that does not have a map entry is
-	 *                       disabled.
+	 * @param  sourceParams
+	 *           a map of the parameters of the entropy sources.  A source that does not have a map entry is disabled.
 	 * @throws IllegalArgumentException
 	 *           if any of the parameter values of {@code sourceParams} are invalid.
 	 */
 
-	public EntropyAccumulator(Map<SourceKind, SourceParams> sourceParams)
+	public EntropyAccumulator(
+		Map<SourceKind, SourceParams>	sourceParams)
 	{
 		this(sourceParams, MIN_TIMER_DIVISOR);
 	}
@@ -560,10 +212,11 @@ public class EntropyAccumulator
 	 * Creates a new instance of an entropy accumulator with the specified parameters of the entropy sources, and with
 	 * the specified timer divisor.
 	 *
-	 * @param  sourceParams  a map of the parameters of the entropy sources.  A source that does not have a map entry is
-	 *                       disabled.
-	 * @param  timerDivisor  the value that will divide values from the system high-resolution timer that are used by
-	 *                       the keyboard and timer entropy sources.
+	 * @param  sourceParams
+	 *           a map of the parameters of the entropy sources.  A source that does not have a map entry is disabled.
+	 * @param  timerDivisor
+	 *           the value that will divide values from the system high-resolution timer that are used by the keyboard
+	 *           and timer entropy sources.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
@@ -572,8 +225,9 @@ public class EntropyAccumulator
 	 *           </ul>
 	 */
 
-	public EntropyAccumulator(Map<SourceKind, SourceParams> sourceParams,
-							  int                           timerDivisor)
+	public EntropyAccumulator(
+		Map<SourceKind, SourceParams>	sourceParams,
+		int								timerDivisor)
 	{
 		// Validate arguments
 		if ((timerDivisor < MIN_TIMER_DIVISOR) || (timerDivisor > MAX_TIMER_DIVISOR))
@@ -598,8 +252,10 @@ public class EntropyAccumulator
 	 * Creates and returns a map of parameters for three entropy sources, with a default bit mask for each source and
 	 * the specified sample intervals for the mouse and timer sources.
 	 *
-	 * @param  mouseInterval  the interval (in milliseconds) between successive samples of the mouse source.
-	 * @param  timerInterval  the interval (in milliseconds) between successive samples of the timer source.
+	 * @param  mouseInterval
+	 *           the interval (in milliseconds) between successive samples of the mouse source.
+	 * @param  timerInterval
+	 *           the interval (in milliseconds) between successive samples of the timer source.
 	 * @return a map of parameters for three entropy sources, with a default bit mask for each source.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -609,8 +265,9 @@ public class EntropyAccumulator
 	 *           </ul>
 	 */
 
-	public static Map<SourceKind, SourceParams> getSourceParams(int mouseInterval,
-																int timerInterval)
+	public static Map<SourceKind, SourceParams> getSourceParams(
+		int	mouseInterval,
+		int	timerInterval)
 	{
 		if ((mouseInterval < SourceParams.MIN_INTERVAL) || (mouseInterval > SourceParams.MAX_INTERVAL)
 			|| (timerInterval < SourceParams.MIN_INTERVAL) || (timerInterval > SourceParams.MAX_INTERVAL))
@@ -634,7 +291,8 @@ public class EntropyAccumulator
 	 */
 
 	@Override
-	public void eventDispatched(AWTEvent event)
+	public void eventDispatched(
+		AWTEvent	event)
 	{
 		// Key event
 		if (event instanceof KeyEvent)
@@ -664,7 +322,8 @@ public class EntropyAccumulator
 	 */
 
 	@Override
-	public void keyPressed(KeyEvent event)
+	public void keyPressed(
+		KeyEvent	event)
 	{
 		processKeyEvent();
 	}
@@ -676,7 +335,8 @@ public class EntropyAccumulator
 	 */
 
 	@Override
-	public void keyReleased(KeyEvent event)
+	public void keyReleased(
+		KeyEvent	event)
 	{
 		processKeyEvent();
 	}
@@ -688,7 +348,8 @@ public class EntropyAccumulator
 	 */
 
 	@Override
-	public void keyTyped(KeyEvent event)
+	public void keyTyped(
+		KeyEvent	event)
 	{
 		// do nothing
 	}
@@ -704,7 +365,8 @@ public class EntropyAccumulator
 	 */
 
 	@Override
-	public void mouseDragged(MouseEvent event)
+	public void mouseDragged(
+		MouseEvent	event)
 	{
 		processMouseEvent(event);
 	}
@@ -716,7 +378,8 @@ public class EntropyAccumulator
 	 */
 
 	@Override
-	public void mouseMoved(MouseEvent event)
+	public void mouseMoved(
+		MouseEvent	event)
 	{
 		processMouseEvent(event);
 	}
@@ -743,11 +406,13 @@ public class EntropyAccumulator
 	/**
 	 * Returns the bit mask for the specified entropy source.
 	 *
-	 * @param  sourceKind  the kind of entropy source whose bit mask will be returned.
+	 * @param  sourceKind
+	 *           the kind of entropy source whose bit mask will be returned.
 	 * @return the bit mask of {@code sourceKind}, or zero if the kind of source is not enabled.
 	 */
 
-	public int getSourceBitMask(SourceKind sourceKind)
+	public int getSourceBitMask(
+		SourceKind	sourceKind)
 	{
 		SourceParams params = sourceParams.get(sourceKind);
 		return ((params == null) ? 0 : params.bitMask);
@@ -758,11 +423,13 @@ public class EntropyAccumulator
 	/**
 	 * Returns the sample interval for the specified entropy source.
 	 *
-	 * @param  sourceKind  the kind of entropy source whose sample interval will be returned.
+	 * @param  sourceKind
+	 *           the kind of entropy source whose sample interval will be returned.
 	 * @return the sample interval of the specified entropy source, or zero if the kind of source is not enabled.
 	 */
 
-	public int getSourceInterval(SourceKind sourceKind)
+	public int getSourceInterval(
+		SourceKind	sourceKind)
 	{
 		SourceParams params = sourceParams.get(sourceKind);
 		return ((params == null) ? 0 : params.interval);
@@ -851,13 +518,14 @@ public class EntropyAccumulator
 	/**
 	 * Enables or disables the metrics of the entropy sources of this entropy accumulator.
 	 *
-	 * @param enabled  if {@code true}, the metrics of the entropy sources will be enabled; otherwise, they will be
-	 *                 disabled.
+	 * @param enabled
+	 *          if {@code true}, the metrics of the entropy sources will be enabled; otherwise, they will be disabled.
 	 * @see   #getMetrics()
 	 * @see   #clearMetrics()
 	 */
 
-	public void setMetricsEnabled(boolean enabled)
+	public void setMetricsEnabled(
+		boolean	enabled)
 	{
 		synchronized (lock)
 		{
@@ -913,11 +581,13 @@ public class EntropyAccumulator
 	/**
 	 * Adds a specified entropy consumer to this accumulator's list of entropy consumers.
 	 *
-	 * @param entropyConsumer  the entropy consumer that will be added to this accumulator's list of entropy consumers.
+	 * @param entropyConsumer
+	 *          the entropy consumer that will be added to this accumulator's list of entropy consumers.
 	 * @see   #removeEntropyConsumer(IEntropyConsumer)
 	 */
 
-	public void addEntropyConsumer(IEntropyConsumer entropyConsumer)
+	public void addEntropyConsumer(
+		IEntropyConsumer	entropyConsumer)
 	{
 		entropyConsumers.add(entropyConsumer);
 	}
@@ -928,14 +598,15 @@ public class EntropyAccumulator
 	 * Removes a specified entropy consumer from this accumulator's list of entropy consumers, and returns the consumer
 	 * that is removed.
 	 *
-	 * @param  entropyConsumer  the entropy consumer that will be removed from this accumulator's list of entropy
-	 *                          consumers.
+	 * @param  entropyConsumer
+	 *           the entropy consumer that will be removed from this accumulator's list of entropy consumers.
 	 * @return the element that is removed from the list of entropy consumers, or {@code null} if {@code
 	 *         entropyConsumer} is not in the list.
 	 * @see    #addEntropyConsumer(IEntropyConsumer)
 	 */
 
-	public boolean removeEntropyConsumer(IEntropyConsumer entropyConsumer)
+	public boolean removeEntropyConsumer(
+		IEntropyConsumer	entropyConsumer)
 	{
 		return entropyConsumers.remove(entropyConsumer);
 	}
@@ -948,12 +619,14 @@ public class EntropyAccumulator
 	 * If metrics are enabled, they are reset by this method.
 	 * </p>
 	 *
-	 * @param  timerDivisor  the value of the divisor that will be set.
+	 * @param  timerDivisor
+	 *           the value of the divisor that will be set.
 	 * @throws IllegalArgumentException
 	 *           if {@code timerDivisor} is less than 1 or greater than 1000000.
 	 */
 
-	public void setTimerDivisor(int timerDivisor)
+	public void setTimerDivisor(
+		int	timerDivisor)
 	{
 		// Validate arguments
 		if ((timerDivisor < MIN_TIMER_DIVISOR) || (timerDivisor > MAX_TIMER_DIVISOR))
@@ -986,13 +659,14 @@ public class EntropyAccumulator
 	 * If metrics are enabled, they are reset by this method.
 	 * </p>
 	 *
-	 * @param  sourceParams  a map of the parameters of the entropy sources.  A source that does not have a map entry is
-	 *                       disabled.
+	 * @param  sourceParams
+	 *           a map of the parameters of the entropy sources.  A source that does not have a map entry is disabled.
 	 * @throws IllegalArgumentException
 	 *           if any of the parameter values of {@code sourceParams} are invalid.
 	 */
 
-	public void setSources(Map<SourceKind, SourceParams> sourceParams)
+	public void setSources(
+		Map<SourceKind, SourceParams>	sourceParams)
 	{
 		boolean changed = false;
 		if (sourceParams.keySet().equals(this.sourceParams.keySet()))
@@ -1034,13 +708,14 @@ public class EntropyAccumulator
 	 * If metrics are enabled, they are reset by this method.
 	 * </p>
 	 *
-	 * @param  sourceParams  a map of the parameters of the entropy sources.  A source that does not have a map entry is
-	 *                       disabled.
+	 * @param  sourceParams
+	 *           a map of the parameters of the entropy sources.  A source that does not have a map entry is disabled.
 	 * @throws IllegalArgumentException
 	 *           if any of the parameter values of {@code sourceParams} are invalid.
 	 */
 
-	private void init(Map<SourceKind, SourceParams> sourceParams)
+	private void init(
+		Map<SourceKind, SourceParams>	sourceParams)
 	{
 		// Validate arguments
 		for (SourceKind sourceKind : sourceParams.keySet())
@@ -1114,7 +789,9 @@ public class EntropyAccumulator
 		{
 			timerRunning = false;
 			while (timerThread.isAlive())
-				Thread.yield();
+			{
+				// do nothing
+			}
 			timerThread = null;
 		}
 	}
@@ -1145,10 +822,12 @@ public class EntropyAccumulator
 	/**
 	 * Extracts entropy from the specified mouse motion event.
 	 *
-	 * @param event  the mouse event.
+	 * @param event
+	 *          the mouse event.
 	 */
 
-	private void processMouseEvent(MouseEvent event)
+	private void processMouseEvent(
+		MouseEvent	event)
 	{
 		final	SourceKind	SOURCE_KIND	= SourceKind.MOUSE;
 
@@ -1177,14 +856,18 @@ public class EntropyAccumulator
 	 * The entropy metrics are updated with the bits of entropy that are passed to this method.
 	 * </p>
 	 *
-	 * @param sourceKind  the kind of source from which the entropy originated.
-	 * @param data        the bits of entropy.
-	 * @param mask        the bit mask that will be applied to {@code data}.
+	 * @param sourceKind
+	 *          the kind of source from which the entropy originated.
+	 * @param data
+	 *          the bits of entropy.
+	 * @param mask
+	 *          the bit mask that will be applied to {@code data}.
 	 */
 
-	private void addBits(SourceKind sourceKind,
-						 int        data,
-						 int        mask)
+	private void addBits(
+		SourceKind	sourceKind,
+		int			data,
+		int			mask)
 	{
 		synchronized (lock)
 		{
@@ -1221,22 +904,365 @@ public class EntropyAccumulator
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	Map<SourceKind, SourceParams>	sourceParams;
-	private	Map<SourceKind, Long>			lastEventTime;
-	private	long							timerDivisor;
-	private	int								bitBuffer;
-	private	int								bitDataLength;
-	private	Object							lock;
-	private	boolean							timerRunning;
-	private	Thread							timerThread;
-	private	List<IEntropyConsumer>			entropyConsumers;
-	private	int								entropyConsumerIndex;
-	private	Map<SourceKind, SourceMetrics>	metrics;
 
-	private volatile	boolean				timerSuspended;
+	// ENUMERATION: KIND OF ENTROPY SOURCE
+
+
+	/**
+	 * This is an enumeration of the kinds of entropy source: keyboard, mouse and timer.
+	 */
+
+	public enum SourceKind
+		implements IStringKeyed
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		KEYBOARD
+		(
+			"keyboard",
+			false
+		),
+
+		MOUSE
+		(
+			"mouse",
+			true
+		),
+
+		TIMER
+		(
+			"timer",
+			true
+		);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	key;
+		private	boolean	hasInterval;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private SourceKind(
+			String	key,
+			boolean	hasInterval)
+		{
+			this.key = key;
+			this.hasInterval = hasInterval;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : IStringKeyed interface
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Returns the key for this enum constant.
+		 *
+		 * @return the key for this enum constant.
+		 */
+
+		@Override
+		public String getKey()
+		{
+			return key;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Returns a string representation of this enum constant.
+		 *
+		 * @return a string representation of this enum constant.
+		 */
+
+		@Override
+		public String toString()
+		{
+			return StringUtils.firstCharToUpperCase(key);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Returns {@code true} if the kind of source has a configurable interval.
+		 *
+		 * @return {@code true} if the kind of source has a configurable interval, {@code false} otherwise.
+		 */
+
+		public boolean hasInterval()
+		{
+			return hasInterval;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member records
+////////////////////////////////////////////////////////////////////////
+
+
+	// RECORD: ENTROPY METRICS
+
+
+	/**
+	 * This class encapsulates some metrics of an entropy source.
+	 * <p>
+	 * There are two metrics for each masked bit of the entropy source: the relative frequency of 1-bits and the
+	 * relative frequencies of 8-bit sequences.
+	 * </p>
+	 */
+
+	public record Metrics(
+		int			bitMask,
+		double[]	oneBitFrequencies,
+		double[][]	bitSequenceFrequencies)
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		/** The number of bits in a bit sequence. */
+		public static final	int	BIT_SEQUENCE_LENGTH	= 8;
+
+		/** The number of bit sequences. */
+		public static final	int	NUM_BIT_SEQUENCES	= 1 << BIT_SEQUENCE_LENGTH;
+
+		/** The mask for extracting bit sequences from a buffer of accumulated bits. */
+		public static final	int	BIT_SEQUENCE_MASK	= NUM_BIT_SEQUENCES - 1;
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: ENTROPY SOURCE PARAMETERS
+
+
+	/**
+	 * This class encapsulates the configurable parameters of an entropy source: a bit mask and millisecond
+	 * interval.
+	 */
+
+	public static class SourceParams
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		/** The number of low-order bits in the bit mask. */
+		public static final	int	BIT_MASK_LENGTH	= 16;
+
+		/** The default bit mask. */
+		public static final	int	DEFAULT_BIT_MASK	= 0b1111;
+
+		/** The minimum interval (in milliseconds) between samples. */
+		public static final	int	MIN_INTERVAL	= 2;
+
+		/** The maximum interval (in milliseconds) between samples. */
+		public static final	int	MAX_INTERVAL	= 1000;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int	bitMask;
+		private	int	interval;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Creates a set of parameters for an entropy source.
+		 *
+		 * @param bitMask
+		 *          the bit mask that will be applied to the sample value.
+		 * @param interval
+		 *          the interval (in milliseconds) between successive samples.
+		 */
+
+		public SourceParams(
+			int	bitMask,
+			int	interval)
+		{
+			this.bitMask = bitMask;
+			this.interval = interval;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Returns {@code true} if the specified object is an instance of {@link SourceParams} and its bit mask and
+		 * interval are equal to the bit mask and interval of this set of parameters.
+		 *
+		 * @return {@code true} if {@code obj} is an instance of {@link SourceParams} and its bit mask and interval are
+		 *         equal to the bit mask and interval of this set of parameters; otherwise, {@code false}.
+		 */
+
+		@Override
+		public boolean equals(
+			Object	obj)
+		{
+			if (this == obj)
+				return true;
+
+			return (obj instanceof SourceParams other) && (bitMask == other.bitMask) && (interval == other.interval);
+		}
+
+		//--------------------------------------------------------------
+
+		/**
+		 * Returns a hash code for this set of parameters.
+		 *
+		 * @return a hash code for this set of parameters.
+		 */
+
+		@Override
+		public int hashCode()
+		{
+			return (bitMask << 16) | interval;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: ENTROPY-SOURCE METRICS
+
+
+	/**
+	 * This class encapsulates some metrics of an entropy source.  The class is used only within {@link
+	 * EntropyAccumulator}.
+	 */
+
+	private static class SourceMetrics
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int			bitMask;
+		private	int			sampleCount;
+		private	List<Bit>	bits;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private SourceMetrics(
+			int	bitMask)
+		{
+			this.bitMask = bitMask & (1 << SourceParams.BIT_MASK_LENGTH) - 1;
+			bits = new ArrayList<>();
+			for (int i = 0; i < SourceParams.BIT_MASK_LENGTH; i++)
+			{
+				if ((bitMask & 1 << i) != 0)
+					bits.add(new Bit(i));
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private void update(
+			int	data)
+		{
+			++sampleCount;
+			for (Bit bit : bits)
+			{
+				bit.buffer <<= 1;
+				if ((data & 1 << bit.index) != 0)
+				{
+					++bit.buffer;
+					++bit.oneBitCount;
+				}
+				if (sampleCount >= Metrics.BIT_SEQUENCE_LENGTH)
+					++bit.bitSequenceCounts[bit.buffer & Metrics.BIT_SEQUENCE_MASK];
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Member classes : non-inner classes
+	////////////////////////////////////////////////////////////////////
+
+
+		// CLASS: BIT METRICS
+
+
+		private static class Bit
+		{
+
+		////////////////////////////////////////////////////////////////
+		//  Instance variables
+		////////////////////////////////////////////////////////////////
+
+			private	int		index;
+			private	int		buffer;
+			private	int		oneBitCount;
+			private	int[]	bitSequenceCounts;
+
+		////////////////////////////////////////////////////////////////
+		//  Constructors
+		////////////////////////////////////////////////////////////////
+
+			private Bit(
+				int	index)
+			{
+				this.index = index;
+				bitSequenceCounts = new int[Metrics.NUM_BIT_SEQUENCES];
+			}
+
+			//----------------------------------------------------------
+
+		}
+
+		//==============================================================
+
+	}
+
+	//==================================================================
 
 }
 

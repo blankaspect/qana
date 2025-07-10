@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.nio.channels.OverlappingFileLockException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import uk.blankaspect.common.crypto.Fortuna;
@@ -132,10 +131,10 @@ class FileSplitter
 		FILE_IS_TOO_SHORT
 		("The file is too short to be part of a split file."),
 
-		FAILED_TO_GET_TIMESTAMP
+		FAILED_TO_GET_FILE_TIMESTAMP
 		("Failed to get the timestamp of the file."),
 
-		FAILED_TO_SET_TIMESTAMP
+		FAILED_TO_SET_FILE_TIMESTAMP
 		("Failed to set the timestamp of the file."),
 
 		FAILED_TO_LIST_DIRECTORY_ENTRIES
@@ -310,7 +309,7 @@ class FileSplitter
 
 		private FilenameGenerator()
 		{
-			this(createFilename(new FortunaAes256(App.INSTANCE.getRandomKey())));
+			this(createFilename(new FortunaAes256(QanaApp.INSTANCE.getRandomKey())));
 		}
 
 		//--------------------------------------------------------------
@@ -393,7 +392,7 @@ class FileSplitter
 		File[] files = directory.listFiles(new FilePartFilter());
 		if (files == null)
 			throw new FileException(ErrorId.FAILED_TO_LIST_DIRECTORY_ENTRIES, directory);
-		return Arrays.asList(files);
+		return List.of(files);
 	}
 
 	//------------------------------------------------------------------
@@ -531,7 +530,7 @@ class FileSplitter
 			// Get timestamp
 			long timestamp = inFile.lastModified();
 			if (timestamp == 0)
-				throw new FileException(ErrorId.FAILED_TO_GET_TIMESTAMP, inFile);
+				throw new FileException(ErrorId.FAILED_TO_GET_FILE_TIMESTAMP, inFile);
 
 			// Write file parts
 			long inOffset = 0;
@@ -592,13 +591,13 @@ class FileSplitter
 				// Encrypt file
 				try
 				{
-					long tstamp = (i == 0) ? timestamp : App.INSTANCE.getRandomLong();
-					StreamEncrypter encrypter = key.getStreamEncrypter(Utils.getCipher(key),
-																	   createHeader(filePart.name, i,
-																					fileParts.size()));
+					long tstamp = (i == 0) ? timestamp : QanaApp.INSTANCE.getRandomLong();
+					StreamEncrypter encrypter =
+							key.getStreamEncrypter(Utils.getCipher(key),
+												   createHeader(filePart.name, i, fileParts.size()));
 					encrypter.addProgressListener(progressView);
 					encrypter.encrypt(inStream, outStream, filePart.length, tstamp, key.getKey(),
-									  App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
+									  QanaApp.INSTANCE.getRandomKey(), QanaApp.INSTANCE::generateKey);
 				}
 				catch (StreamEncrypter.InputException e)
 				{
@@ -927,7 +926,7 @@ class FileSplitter
 																					fileParts.size()));
 					encrypter.addProgressListener(progressView);
 					long tstamp = encrypter.decrypt(inStream, outStream, filePart.length, key.getKey(),
-													generator -> App.INSTANCE.generateKey(generator));
+													QanaApp.INSTANCE::generateKey);
 					if (i == 0)
 						timestamp = tstamp;
 				}
@@ -993,7 +992,7 @@ class FileSplitter
 
 			// Set timestamp of file
 			if (!outFile.setLastModified(timestamp))
-				throw new FileException(ErrorId.FAILED_TO_SET_TIMESTAMP, outFile);
+				throw new FileException(ErrorId.FAILED_TO_SET_FILE_TIMESTAMP, outFile);
 		}
 		catch (AppException e)
 		{
@@ -1039,7 +1038,7 @@ class FileSplitter
 
 	private int getRandomInt(int range)
 	{
-		long value = (long)(App.INSTANCE.getRandomInt() & 0x7FFFFFFF) * (long)range;
+		long value = (long)(QanaApp.INSTANCE.getRandomInt() & 0x7FFFFFFF) * (long)range;
 		return (int)(value >>> 31);
 	}
 

@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import java.util.stream.Stream;
 
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.misc.IStringKeyed;
 
@@ -678,9 +678,9 @@ public class Scrypt
 			int	numRounds)
 		{
 			return Stream.of(values())
-							.filter(value -> value.value == numRounds)
-							.findFirst()
-							.orElse(null);
+					.filter(value -> value.value == numRounds)
+					.findFirst()
+					.orElse(null);
 		}
 
 		//--------------------------------------------------------------
@@ -876,7 +876,7 @@ public class Scrypt
 			}
 			catch (CloneNotSupportedException e)
 			{
-				throw new UnexpectedRuntimeException();
+				throw new UnexpectedRuntimeException(e);
 			}
 		}
 

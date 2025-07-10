@@ -270,12 +270,10 @@ public class ByteUnitIntegerSpinnerPanel
 		@Override
 		public boolean equals(Object obj)
 		{
-			if (obj instanceof Value)
-			{
-				Value other = (Value)obj;
-				return ((unit == other.unit) && (value == other.value));
-			}
-			return false;
+			if (this == obj)
+				return true;
+
+			return (obj instanceof Value other) && (unit == other.unit) && (value == other.value);
 		}
 
 		//--------------------------------------------------------------
@@ -283,7 +281,7 @@ public class ByteUnitIntegerSpinnerPanel
 		@Override
 		public int hashCode()
 		{
-			return (unit.ordinal() * 31 + value);
+			return 31 * unit.ordinal() + value;
 		}
 
 		//--------------------------------------------------------------
@@ -291,7 +289,7 @@ public class ByteUnitIntegerSpinnerPanel
 		@Override
 		public String toString()
 		{
-			return (Integer.toString(value >>> unit.exponent) + " " + unit.text);
+			return Integer.toString(value >>> unit.exponent) + " " + unit.text;
 		}
 
 		//--------------------------------------------------------------
@@ -412,7 +410,7 @@ public class ByteUnitIntegerSpinnerPanel
 					maxStrWidth = width;
 			}
 
-			// Set attributes
+			// Set properties
 			setPreferredSize(new Dimension(2 * HORIZONTAL_MARGIN + maxStrWidth,
 										   2 * VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent()));
 			setBorder(null);

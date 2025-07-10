@@ -144,7 +144,7 @@ class TextView
 						if (!files.isEmpty())
 						{
 							GuiUtils.getWindow(support.getComponent()).toFront();
-							App.INSTANCE.addImport(null, files);
+							QanaApp.INSTANCE.addImport(null, files);
 							return true;
 						}
 					}
@@ -181,7 +181,7 @@ class TextView
 			// Call superclass constructor
 			super(numRows, numColumns);
 
-			// Set attributes
+			// Set properties
 			AppFont.TEXT_VIEW.apply(this);
 			setBorder(null);
 			setTabSize(TAB_WIDTH);
@@ -238,7 +238,7 @@ class TextView
 			super(textArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				  JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
-			// Set component attributes
+			// Set properties
 			setCorner(JScrollPane.LOWER_RIGHT_CORNER, new JPanel());
 			GuiUtils.setViewportBorder(this, TextArea.VERTICAL_MARGIN, TextArea.HORIZONTAL_MARGIN);
 			getViewport().setFocusable(true);
@@ -412,8 +412,8 @@ class TextView
 			}
 
 			// Update commands for menu items
-			App.INSTANCE.updateCommands();
-			App.INSTANCE.getTextDocument().updateCommands();
+			QanaApp.INSTANCE.updateCommands();
+			QanaApp.INSTANCE.getTextDocument().updateCommands();
 
 			// Display menu
 			contextMenu.show(event.getComponent(), event.getX(), event.getY());

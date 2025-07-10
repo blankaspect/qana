@@ -334,7 +334,7 @@ enum AppCommand
 
 	public void actionPerformed(ActionEvent event)
 	{
-		App.INSTANCE.executeCommand(this);
+		QanaApp.INSTANCE.executeCommand(this);
 	}
 
 	//------------------------------------------------------------------

@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -181,7 +180,7 @@ class EntropyMetricsDialog
 			height = TOP_MARGIN + PLOT_HEIGHT + INDEX_MARKER_HEIGHT + fontMetrics.getAscent() +
 																fontMetrics.getDescent() + BOTTOM_MARGIN;
 
-			// Set component attributes
+			// Set properties
 			setOpaque(true);
 			setFocusable(false);
 			setBorder(BorderFactory.createLineBorder(BORDER_COLOUR));
@@ -408,7 +407,7 @@ class EntropyMetricsDialog
 			String str = BIT_STR + Integer.toString(bitIndices.get(bitIndices.size() - 1));
 			labelWidth = getFontMetrics(getFont()).stringWidth(str);
 
-			// Set component attributes
+			// Set properties
 			setOpaque(true);
 			setFocusable(false);
 			setBorder(BorderFactory.createLineBorder(BORDER_COLOUR));
@@ -664,7 +663,7 @@ class EntropyMetricsDialog
 			height = TOP_MARGIN + PLOT_HEIGHT + INDEX_MARKER_HEIGHT + fontMetrics.getAscent() +
 																fontMetrics.getDescent() + BOTTOM_MARGIN;
 
-			// Set component attributes
+			// Set properties
 			setOpaque(true);
 			setFocusable(false);
 			setBorder(BorderFactory.createLineBorder(BORDER_COLOUR));
@@ -886,9 +885,8 @@ class EntropyMetricsDialog
 								 Fortuna            prng,
 								 EntropyAccumulator entropyAccumulator)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -1091,7 +1089,7 @@ class EntropyMetricsDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -1101,7 +1099,6 @@ class EntropyMetricsDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -1164,8 +1161,8 @@ class EntropyMetricsDialog
 			for (EntropyAccumulator.SourceKind sourceKind : allMetrics.keySet())
 			{
 				EntropyAccumulator.Metrics metrics = allMetrics.get(sourceKind);
-				oneBitPanels.get(sourceKind).setFrequencies(metrics.oneBitFrequencies);
-				bitSequencePanels.get(sourceKind).setFrequencies(metrics.bitSequenceFrequencies);
+				oneBitPanels.get(sourceKind).setFrequencies(metrics.oneBitFrequencies());
+				bitSequencePanels.get(sourceKind).setFrequencies(metrics.bitSequenceFrequencies());
 			}
 		}
 	}

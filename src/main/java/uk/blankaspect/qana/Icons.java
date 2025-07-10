@@ -33,13 +33,31 @@ public class Icons
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final	ImageIcon	ARROW_UP			= new ImageIcon(ImageData.ARROW_UP);
-	public static final	ImageIcon	ARROW_DOWN			= new ImageIcon(ImageData.ARROW_DOWN);
-	public static final	ImageIcon	LONG_ARROW_DOWN		= new ImageIcon(ImageData.LONG_ARROW_DOWN);
-	public static final	ImageIcon	ANGLE_DOUBLE_LEFT	= new ImageIcon(ImageData.ANGLE_DOUBLE_LEFT);
-	public static final	ImageIcon	DIRECTORY			= new ImageIcon(ImageData.DIRECTORY);
+	public static final	ImageIcon	ARROW_UP			= new ImageIcon(ImgData.ARROW_UP);
+	public static final	ImageIcon	ARROW_DOWN			= new ImageIcon(ImgData.ARROW_DOWN);
+	public static final	ImageIcon	LONG_ARROW_DOWN		= new ImageIcon(ImgData.LONG_ARROW_DOWN);
+	public static final	ImageIcon	ANGLE_DOUBLE_LEFT	= new ImageIcon(ImgData.ANGLE_DOUBLE_LEFT);
+	public static final	ImageIcon	DIRECTORY			= new ImageIcon(ImgData.DIRECTORY);
 
-	private interface ImageData
+////////////////////////////////////////////////////////////////////////
+//  Constructors
+////////////////////////////////////////////////////////////////////////
+
+	private Icons()
+	{
+	}
+
+	//------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////
+//  Image data
+////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * PNG image data.
+	 */
+
+	private interface ImgData
 	{
 		byte[]	ARROW_UP	=
 		{
@@ -155,15 +173,7 @@ public class Icons
 		};
 	}
 
-////////////////////////////////////////////////////////////////////////
-//  Constructors
-////////////////////////////////////////////////////////////////////////
-
-	private Icons()
-	{
-	}
-
-	//------------------------------------------------------------------
+	//==================================================================
 
 }
 

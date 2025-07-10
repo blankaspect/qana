@@ -21,7 +21,7 @@ package uk.blankaspect.common.crypto;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 //----------------------------------------------------------------------
 

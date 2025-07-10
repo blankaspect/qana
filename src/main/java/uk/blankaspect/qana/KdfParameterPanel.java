@@ -247,7 +247,7 @@ class KdfParameterPanel
 			int height = 2 * VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
 			setPreferredSize(new Dimension(width, height));
 
-			// Set attributes
+			// Set properties
 			setOpaque(true);
 			setFocusable(false);
 		}
@@ -369,7 +369,7 @@ class KdfParameterPanel
 	////////////////////////////////////////////////////////////////////
 
 		private static	byte[]	key		= Fortuna.keyStringToBytes(PASSPHRASE_STR);
-		private static	byte[]	salt	= App.INSTANCE.getRandomBytes(KeyList.SALT_SIZE);
+		private static	byte[]	salt	= QanaApp.INSTANCE.getRandomBytes(KeyList.SALT_SIZE);
 
 	////////////////////////////////////////////////////////////////////
 	//  Instance variables
@@ -814,7 +814,7 @@ class KdfParameterPanel
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

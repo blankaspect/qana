@@ -106,10 +106,10 @@ public class FileEncrypter
 		FAILED_TO_RENAME_FILE
 		("Failed to rename the temporary file to the specified filename."),
 
-		FAILED_TO_GET_TIMESTAMP
+		FAILED_TO_GET_FILE_TIMESTAMP
 		("Failed to get the timestamp of the file."),
 
-		FAILED_TO_SET_TIMESTAMP
+		FAILED_TO_SET_FILE_TIMESTAMP
 		("Failed to set the timestamp of the file."),
 
 		FILE_IS_TOO_SHORT
@@ -389,7 +389,7 @@ public class FileEncrypter
 			// Get timestamp
 			long timestamp = inFile.lastModified();
 			if (timestamp == 0)
-				throw new FileException(ErrorId.FAILED_TO_GET_TIMESTAMP, inFile);
+				throw new FileException(ErrorId.FAILED_TO_GET_FILE_TIMESTAMP, inFile);
 
 			// Encrypt file
 			try
@@ -695,7 +695,7 @@ public class FileEncrypter
 
 			// Set timestamp of file
 			if (!outFile.setLastModified(timestamp))
-				throw new FileException(ErrorId.FAILED_TO_SET_TIMESTAMP, outFile);
+				throw new FileException(ErrorId.FAILED_TO_SET_FILE_TIMESTAMP, outFile);
 		}
 		catch (AppException e)
 		{

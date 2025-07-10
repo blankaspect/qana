@@ -116,7 +116,7 @@ class StatusPanel
 				preferredHeight = fontMetrics.getAscent() + fontMetrics.getDescent();
 			preferredHeight += 2 * VERTICAL_MARGIN;
 
-			// Set attributes
+			// Set properties
 			setOpaque(true);
 			setFocusable(false);
 		}
@@ -269,7 +269,7 @@ class StatusPanel
 			if (index >= FortunaCipher.values().length)
 				index = 0;
 			config.setPrngDefaultCipher(FortunaCipher.values()[index]);
-			App.INSTANCE.getMainWindow().updateCipher();
+			QanaApp.INSTANCE.getMainWindow().updateCipher();
 		}
 	}
 

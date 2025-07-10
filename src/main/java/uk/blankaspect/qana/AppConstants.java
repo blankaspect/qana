@@ -55,17 +55,17 @@ interface AppConstants
 	String	DELETE_STR			= "Delete";
 	String	ALREADY_EXISTS_STR	= "\nThe file already exists.\nDo you want to replace it?";
 
-	// Filename suffixes
-	String	BMP_FILE_SUFFIX		= ".bmp";
-	String	EXE_FILE_SUFFIX		= ".exe";
-	String	GIF_FILE_SUFFIX		= ".gif";
-	String	ICON_FILE_SUFFIX	= ".ico";
-	String	JAR_FILE_SUFFIX		= ".jar";
-	String	JPEG_FILE_SUFFIX1	= ".jpg";
-	String	JPEG_FILE_SUFFIX2	= ".jpeg";
-	String	KEY_FILE_SUFFIX		= ".keys";
-	String	PNG_FILE_SUFFIX		= ".png";
-	String	XML_FILE_SUFFIX		= ".xml";
+	// Filename extensions
+	String	BMP_FILENAME_EXTENSION		= ".bmp";
+	String	EXE_FILENAME_EXTENSION		= ".exe";
+	String	GIF_FILENAME_EXTENSION		= ".gif";
+	String	ICON_FILENAME_EXTENSION		= ".ico";
+	String	JAR_FILENAME_EXTENSION		= ".jar";
+	String	JPEG_FILENAME_EXTENSION1	= ".jpg";
+	String	JPEG_FILENAME_EXTENSION2	= ".jpeg";
+	String	KEY_FILENAME_EXTENSION		= ".keys";
+	String	PNG_FILENAME_EXTENSION		= ".png";
+	String	XML_FILENAME_EXTENSION		= ".xml";
 
 	// File-filter descriptions
 	String	BMP_FILES_STR	= "Bitmap files";
@@ -74,7 +74,7 @@ interface AppConstants
 	String	GIF_FILES_STR	= "GIF files";
 	String	JAR_FILES_STR	= "JAR files";
 	String	JPEG_FILES_STR	= "JPEG files";
-	String	KEY_FILES_STR	= App.SHORT_NAME + " key database files";
+	String	KEY_FILES_STR	= QanaApp.SHORT_NAME + " key database files";
 	String	PNG_FILES_STR	= "PNG files";
 	String	XML_FILES_STR	= "XML files";
 

@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -402,10 +401,9 @@ class ConcealDialog
 	private ConcealDialog(Window  owner,
 						  boolean inputFromFile)
 	{
-
 		// Call superclass constructor
 		super(owner, CONCEAL_STR + " " + (inputFromFile ? FILE_STR : TEXT_STR),
-			  Dialog.ModalityType.APPLICATION_MODAL);
+			  ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -703,7 +701,7 @@ class ConcealDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -713,7 +711,6 @@ class ConcealDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -1002,7 +999,7 @@ class ConcealDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -1054,16 +1051,16 @@ class ConcealDialog
 		carrierFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		carrierFileChooser.
 					addChoosableFileFilter(new FilenameSuffixFilter(AppConstants.BMP_FILES_STR,
-																	AppConstants.BMP_FILE_SUFFIX));
+																	AppConstants.BMP_FILENAME_EXTENSION));
 		carrierFileChooser.
 					addChoosableFileFilter(new FilenameSuffixFilter(AppConstants.GIF_FILES_STR,
-																	AppConstants.GIF_FILE_SUFFIX));
+																	AppConstants.GIF_FILENAME_EXTENSION));
 		carrierFileChooser.
 					addChoosableFileFilter(new FilenameSuffixFilter(AppConstants.JPEG_FILES_STR,
-																	AppConstants.JPEG_FILE_SUFFIX1,
-																	AppConstants.JPEG_FILE_SUFFIX2));
+																	AppConstants.JPEG_FILENAME_EXTENSION1,
+																	AppConstants.JPEG_FILENAME_EXTENSION2));
 		carrierFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.PNG_FILES_STR,
-																  AppConstants.PNG_FILE_SUFFIX));
+																  AppConstants.PNG_FILENAME_EXTENSION));
 
 		outputFileChooser = new JFileChooser();
 		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
@@ -1071,7 +1068,7 @@ class ConcealDialog
 		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		outputFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.PNG_FILES_STR,
-																 AppConstants.PNG_FILE_SUFFIX));
+																 AppConstants.PNG_FILENAME_EXTENSION));
 	}
 
 ////////////////////////////////////////////////////////////////////////

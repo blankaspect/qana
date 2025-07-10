@@ -2,7 +2,7 @@
 
 RunnableMessageDialog.java
 
-Class: runnable message dialog box.
+Class: runnable message dialog.
 
 \*====================================================================*/
 
@@ -20,7 +20,6 @@ package uk.blankaspect.ui.swing.dialog;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Window;
 
 import java.awt.event.WindowAdapter;
@@ -35,7 +34,7 @@ import uk.blankaspect.ui.swing.misc.GuiUtils;
 //----------------------------------------------------------------------
 
 
-// CLASS: RUNNABLE MESSAGE DIALOG BOX
+// CLASS: RUNNABLE MESSAGE DIALOG
 
 
 public class RunnableMessageDialog
@@ -67,7 +66,7 @@ public class RunnableMessageDialog
 									Runnable runnable)
 	{
 		// Call superclass constructor
-		super(owner, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, ModalityType.APPLICATION_MODAL);
 
 
 		//----  Message label
@@ -83,7 +82,7 @@ public class RunnableMessageDialog
 		// Set content pane
 		setContentPane(messageLabel);
 
-		// Omit frame from dialog box
+		// Omit frame from dialog
 		setUndecorated(true);
 
 		// Dispose of window explicitly
@@ -116,7 +115,7 @@ public class RunnableMessageDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		setLocation(GuiUtils.getComponentLocation(this, owner));
 	}
 

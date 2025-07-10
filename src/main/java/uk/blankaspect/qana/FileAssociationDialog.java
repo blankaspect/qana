@@ -2,7 +2,7 @@
 
 FileAssociationDialog.java
 
-File association dialog class.
+Class: file-association dialog.
 
 \*====================================================================*/
 
@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -56,6 +55,9 @@ import javax.swing.KeyStroke;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
+import uk.blankaspect.common.filesystem.PathnameUtils;
+import uk.blankaspect.common.filesystem.PathUtils;
+
 import uk.blankaspect.common.misc.FilenameSuffixFilter;
 
 import uk.blankaspect.common.platform.windows.FileAssociations;
@@ -79,7 +81,7 @@ import uk.blankaspect.ui.swing.misc.GuiUtils;
 //----------------------------------------------------------------------
 
 
-// FILE ASSOCIATION DIALOG CLASS
+// CLASS: FILE-ASSOCIATION DIALOG
 
 
 class FileAssociationDialog
@@ -94,9 +96,6 @@ class FileAssociationDialog
 	private static final	Insets	BUTTON_MARGINS	= new Insets(2, 4, 2, 4);
 
 	private static final	String	KEY	= FileAssociationDialog.class.getCanonicalName();
-
-	private static final	String	JAVA_HOME_KEY	= "java.home";
-	private static final	String	USER_DIR_KEY	= "user.dir";
 
 	private static final	String	JAVA_LAUNCHER_PATHNAME	= "bin\\javaw.exe";
 
@@ -127,241 +126,120 @@ class FileAssociationDialog
 		String	CLOSE								= "close";
 	}
 
-////////////////////////////////////////////////////////////////////////
-//  Enumerated types
-////////////////////////////////////////////////////////////////////////
-
-
-	// ACTION
-
-
-	public enum Action
+	// Keys of system properties
+	private interface SystemPropertyKey
 	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		ADD
-		(
-			"Add"
-		),
-
-		REMOVE
-		(
-			"Remove"
-		);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Action(String text)
-		{
-			this.text = text;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public String toString()
-		{
-			return text;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	text;
-
+		String	JAVA_HOME_DIR	= "java.home";
+		String	WORKING_DIR		= "user.dir";
 	}
 
-
-	//==================================================================
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		NO_JAVA_LAUNCHER_FILE
-		("No Java launcher file was specified."),
-
-		NO_JAR_FILE
-		("No JAR file was specified."),
-
-		NO_ICON_FILE
-		("No icon file was specified."),
-
-		NOT_A_FILE
-		("The pathname does not denote a normal file."),
-
-		FILE_ACCESS_NOT_PERMITTED
-		("Access to the file was not permitted.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
-
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point								location;
+	private static	Action								action			= Action.ADD;
+	private static	String								javaLauncherPathname;
+	private static	String								jarPathname;
+	private static	String								iconPathname;
+	private static	boolean								filesMustExist	= true;
+	private static	FileAssociations.ScriptLifeCycle	scriptLifeCycle	=
+			FileAssociations.ScriptLifeCycle.WRITE_EXECUTE_DELETE;
+	private static	Path								defaultJavaLauncherLocation;
+	private static	Path								defaultJarLocation;
 
-	// RESULT CLASS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
+	private	boolean										accepted;
+	private	FComboBox<Action>							actionComboBox;
+	private	FPathnameField								javaLauncherPathnameField;
+	private	JButton										javaLauncherDefaultButton;
+	private	FPathnameField								jarPathnameField;
+	private	JButton										jarDefaultButton;
+	private	FPathnameField								iconPathnameField;
+	private	JCheckBox									filesMustExistCheckBox;
+	private	FComboBox<FileAssociations.ScriptLifeCycle>	scriptLifeCycleComboBox;
+	private	JFileChooser								javaLauncherFileChooser;
+	private	JFileChooser								jarFileChooser;
+	private	JFileChooser								iconFileChooser;
+	private	List<Component>								actionComponents;
 
-	public static class Result
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
 	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	char	ENV_VAR_PREFIX	= '%';
-		private static final	char	ENV_VAR_SUFFIX	= '%';
-
-		private static final	char	UNIX_FILE_SEPARATOR		= '/';
-		private static final	char	WINDOWS_FILE_SEPARATOR	= '\\';
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Result(String                           javaLauncherPathname,
-					   String                           jarPathname,
-					   String                           iconPathname,
-					   boolean                          removeEntries,
-					   FileAssociations.ScriptLifeCycle scriptLifeCycle)
+		// Location of Java launcher
+		String pathname = System.getProperty(SystemPropertyKey.JAVA_HOME_DIR);
+		if (pathname != null)
 		{
-			this.javaLauncherPathname = processPathname(javaLauncherPathname);
-			this.jarPathname = processPathname(jarPathname);
-			this.iconPathname = processPathname(iconPathname);
-			this.removeEntries = removeEntries;
-			this.scriptLifeCycle = scriptLifeCycle;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static String processPathname(String pathname)
-		{
-			StringBuilder buffer = new StringBuilder(256);
-			for (PropertyString.Span span : PropertyString.getSpans(pathname))
+			try
 			{
-				if (span.getValue() != null)
-				{
-					if (span.getKind() == PropertyString.Span.Kind.ENVIRONMENT)
-					{
-						buffer.append(ENV_VAR_PREFIX);
-						buffer.append(span.getKey());
-						buffer.append(ENV_VAR_SUFFIX);
-					}
-					else
-						buffer.append(span.getValue().replace(UNIX_FILE_SEPARATOR, WINDOWS_FILE_SEPARATOR));
-				}
+				Path location = Path.of(pathname, JAVA_LAUNCHER_PATHNAME);
+				if (Files.exists(location))
+					defaultJavaLauncherLocation = PathUtils.abs(location);
 			}
-			return buffer.toString();
+			catch (Exception e)
+			{
+				// ignore
+			}
 		}
 
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		String								javaLauncherPathname;
-		String								jarPathname;
-		String								iconPathname;
-		boolean								removeEntries;
-		FileAssociations.ScriptLifeCycle	scriptLifeCycle;
-
+		// Location of JAR
+		try
+		{
+			Path location =
+					Path.of(FileAssociationDialog.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			if (Files.isRegularFile(location, LinkOption.NOFOLLOW_LINKS)
+					&& PathnameUtils.suffixMatches(location, AppConstants.JAR_FILENAME_EXTENSION))
+				defaultJarLocation = PathUtils.abs(location);
+		}
+		catch (Exception e)
+		{
+			// ignore
+		}
 	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private FileAssociationDialog(Window owner)
+	private FileAssociationDialog(
+		Window	owner)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
 
 		// Initialise instance variables
-		javaLauncherFileChooser = new JFileChooser(System.getProperty(JAVA_HOME_KEY));
+		javaLauncherFileChooser = new JFileChooser(System.getProperty(SystemPropertyKey.JAVA_HOME_DIR));
 		javaLauncherFileChooser.setDialogTitle(JAVA_LAUNCHER_FILE_STR);
 		javaLauncherFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		javaLauncherFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		javaLauncherFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		javaLauncherFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.EXE_FILES_STR,
-																	   AppConstants.EXE_FILE_SUFFIX));
+																	   AppConstants.EXE_FILENAME_EXTENSION));
 
-		jarFileChooser = new JFileChooser(System.getProperty(USER_DIR_KEY));
+		jarFileChooser = new JFileChooser(System.getProperty(SystemPropertyKey.WORKING_DIR));
 		jarFileChooser.setDialogTitle(JAR_FILE_STR);
 		jarFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		jarFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		jarFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		jarFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.JAR_FILES_STR,
-															  AppConstants.JAR_FILE_SUFFIX));
+															  AppConstants.JAR_FILENAME_EXTENSION));
 
-		iconFileChooser = new JFileChooser(System.getProperty(USER_DIR_KEY));
+		iconFileChooser = new JFileChooser(System.getProperty(SystemPropertyKey.WORKING_DIR));
 		iconFileChooser.setDialogTitle(ICON_FILE_STR);
 		iconFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		iconFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		iconFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		iconFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.ICON_FILES_STR,
-															   AppConstants.ICON_FILE_SUFFIX));
+															   AppConstants.ICON_FILENAME_EXTENSION));
 
 		actionComponents = new ArrayList<>();
 
@@ -708,7 +586,7 @@ class FileAssociationDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -718,7 +596,6 @@ class FileAssociationDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -727,7 +604,8 @@ class FileAssociationDialog
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static Result showDialog(Component parent)
+	public static Result showDialog(
+		Component	parent)
 	{
 		return new FileAssociationDialog(GuiUtils.getWindow(parent)).getResult();
 	}
@@ -738,7 +616,9 @@ class FileAssociationDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void actionPerformed(ActionEvent event)
+	@Override
+	public void actionPerformed(
+		ActionEvent	event)
 	{
 		String command = event.getActionCommand();
 
@@ -775,9 +655,9 @@ class FileAssociationDialog
 
 	private Result getResult()
 	{
-		return (accepted ? new Result(javaLauncherPathname, jarPathname, iconPathname,
-									  action == Action.REMOVE, scriptLifeCycle)
-						 : null);
+		return accepted
+				? new Result(javaLauncherPathname, jarPathname, iconPathname, action == Action.REMOVE, scriptLifeCycle)
+				: null;
 	}
 
 	//------------------------------------------------------------------
@@ -789,8 +669,8 @@ class FileAssociationDialog
 			GuiUtils.setAllEnabled(component, enabled);
 		if (enabled)
 		{
-			javaLauncherDefaultButton.setEnabled(defaultJavaLauncherPath != null);
-			jarDefaultButton.setEnabled(defaultJarPath != null);
+			javaLauncherDefaultButton.setEnabled(defaultJavaLauncherLocation != null);
+			jarDefaultButton.setEnabled(defaultJarLocation != null);
 		}
 	}
 
@@ -924,14 +804,14 @@ class FileAssociationDialog
 
 	private void onSetDefaultJavaLauncherPathname()
 	{
-		javaLauncherPathnameField.setText(defaultJavaLauncherPath.toString());
+		javaLauncherPathnameField.setText(defaultJavaLauncherLocation.toString());
 	}
 
 	//------------------------------------------------------------------
 
 	private void onSetDefaultJarPathname()
 	{
-		jarPathnameField.setText(defaultJarPath.toString());
+		jarPathnameField.setText(defaultJarLocation.toString());
 	}
 
 	//------------------------------------------------------------------
@@ -970,72 +850,207 @@ class FileAssociationDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point								location;
-	private static	Action								action					= Action.ADD;
-	private static	String								javaLauncherPathname;
-	private static	String								jarPathname;
-	private static	String								iconPathname;
-	private static	boolean								filesMustExist			= true;
-	private static	FileAssociations.ScriptLifeCycle	scriptLifeCycle			=
-													FileAssociations.ScriptLifeCycle.WRITE_EXECUTE_DELETE;
-	private static	Path								defaultJavaLauncherPath;
-	private static	Path								defaultJarPath;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// ENUMERATION: ACTION
 
-	static
+
+	public enum Action
 	{
-		// Java launcher path
-		String pathname = System.getProperty(JAVA_HOME_KEY);
-		if (pathname != null)
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		ADD
+		(
+			"Add"
+		),
+
+		REMOVE
+		(
+			"Remove"
+		);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	text;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Action(
+			String	text)
 		{
-			try
-			{
-				Path path = Path.of(pathname, JAVA_LAUNCHER_PATHNAME);
-				if (Files.exists(path))
-					defaultJavaLauncherPath = path.toAbsolutePath();
-			}
-			catch (Exception e)
-			{
-				// ignore
-			}
+			this.text = text;
 		}
 
-		// JAR path
-		try
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String toString()
 		{
-			Path path = Path.of(FileAssociationDialog.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) && path.toString().endsWith(AppConstants.JAR_FILE_SUFFIX))
-				defaultJarPath = path.toAbsolutePath();
+			return text;
 		}
-		catch (Exception e)
-		{
-			// ignore
-		}
+
+		//--------------------------------------------------------------
+
 	}
 
+
+	//==================================================================
+
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		NO_JAVA_LAUNCHER_FILE
+		("No Java launcher file was specified."),
+
+		NO_JAR_FILE
+		("No JAR file was specified."),
+
+		NO_ICON_FILE
+		("No icon file was specified."),
+
+		NOT_A_FILE
+		("The pathname does not denote a normal file."),
+
+		FILE_ACCESS_NOT_PERMITTED
+		("Access to the file was not permitted.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(
+			String	message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean										accepted;
-	private	FComboBox<Action>							actionComboBox;
-	private	FPathnameField								javaLauncherPathnameField;
-	private	JButton										javaLauncherDefaultButton;
-	private	FPathnameField								jarPathnameField;
-	private	JButton										jarDefaultButton;
-	private	FPathnameField								iconPathnameField;
-	private	JCheckBox									filesMustExistCheckBox;
-	private	FComboBox<FileAssociations.ScriptLifeCycle>	scriptLifeCycleComboBox;
-	private	JFileChooser								javaLauncherFileChooser;
-	private	JFileChooser								jarFileChooser;
-	private	JFileChooser								iconFileChooser;
-	private	List<Component>								actionComponents;
+
+	// CLASS: RESULT
+
+
+	public static class Result
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	char	ENV_VAR_PREFIX	= '%';
+		private static final	char	ENV_VAR_SUFFIX	= '%';
+
+		private static final	char	UNIX_FILE_SEPARATOR		= '/';
+		private static final	char	WINDOWS_FILE_SEPARATOR	= '\\';
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		String								javaLauncherPathname;
+		String								jarPathname;
+		String								iconPathname;
+		boolean								removeEntries;
+		FileAssociations.ScriptLifeCycle	scriptLifeCycle;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Result(
+			String								javaLauncherPathname,
+			String								jarPathname,
+			String								iconPathname,
+			boolean								removeEntries,
+			FileAssociations.ScriptLifeCycle	scriptLifeCycle)
+		{
+			this.javaLauncherPathname = processPathname(javaLauncherPathname);
+			this.jarPathname = processPathname(jarPathname);
+			this.iconPathname = processPathname(iconPathname);
+			this.removeEntries = removeEntries;
+			this.scriptLifeCycle = scriptLifeCycle;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static String processPathname(
+			String	pathname)
+		{
+			StringBuilder buffer = new StringBuilder(256);
+			for (PropertyString.Span span : PropertyString.getSpans(pathname))
+			{
+				if (span.text() != null)
+				{
+					if (span.kind() == PropertyString.SpanKind.ENVIRONMENT)
+					{
+						buffer.append(ENV_VAR_PREFIX);
+						buffer.append(span.key());
+						buffer.append(ENV_VAR_SUFFIX);
+					}
+					else
+						buffer.append(span.text().replace(UNIX_FILE_SEPARATOR, WINDOWS_FILE_SEPARATOR));
+				}
+			}
+			return buffer.toString();
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

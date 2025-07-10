@@ -38,17 +38,17 @@ public class CalendarTime
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		String	UTC_TIME_ZONE_STR	= "UTC";
-
-	private static final	int	NUM_YEAR_DIGITS			= 4;
-	private static final	int	NUM_MONTH_DIGITS		= 2;
-	private static final	int	NUM_DAY_DIGITS			= 2;
-	private static final	int	NUM_HOUR_DIGITS			= 2;
-	private static final	int	NUM_MINUTE_DIGITS		= 2;
-	private static final	int	NUM_SECOND_DIGITS		= 2;
-	private static final	int	NUM_MILLISECOND_DIGITS	= 3;
+	private static final	int		NUM_YEAR_DIGITS			= 4;
+	private static final	int		NUM_MONTH_DIGITS		= 2;
+	private static final	int		NUM_DAY_DIGITS			= 2;
+	private static final	int		NUM_HOUR_DIGITS			= 2;
+	private static final	int		NUM_MINUTE_DIGITS		= 2;
+	private static final	int		NUM_SECOND_DIGITS		= 2;
+	private static final	int		NUM_MILLISECOND_DIGITS	= 3;
 
 	private static final	String	DEFAULT_SEPARATOR	= " ";
+
+	private static final	String	TIME_ZONE_ID_UTC	= "UTC";
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -201,7 +201,7 @@ public class CalendarTime
 	{
 		Calendar calendar = new ModernCalendar();
 		if (utc)
-			calendar.setTimeZone(TimeZone.getTimeZone(UTC_TIME_ZONE_STR));
+			calendar.setTimeZone(TimeZone.getTimeZone(TIME_ZONE_ID_UTC));
 		if (time >= 0)
 			calendar.setTimeInMillis(time);
 

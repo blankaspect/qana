@@ -168,7 +168,7 @@ abstract class Document
 
 	protected static MainWindow getWindow()
 	{
-		return App.INSTANCE.getMainWindow();
+		return QanaApp.INSTANCE.getMainWindow();
 	}
 
 	//------------------------------------------------------------------
@@ -230,7 +230,7 @@ abstract class Document
 	{
 		if (key == null)
 		{
-			KeyList.Key key = App.INSTANCE.getKey(operationStr, getName());
+			KeyList.Key key = QanaApp.INSTANCE.getKey(operationStr, getName());
 			if (key != null)
 				setKey(key);
 		}
@@ -257,7 +257,7 @@ abstract class Document
 
 	protected void setKey()
 	{
-		KeyList.Key key = App.INSTANCE.selectKey(SET_KEY_STR + getName());
+		KeyList.Key key = QanaApp.INSTANCE.selectKey(SET_KEY_STR + getName());
 		if (key != null)
 			setKey(key);
 	}

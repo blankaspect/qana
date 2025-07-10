@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -203,9 +202,8 @@ class DecryptDialog
 	private DecryptDialog(Window owner,
 						  File   inFile)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -395,7 +393,7 @@ class DecryptDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -409,7 +407,6 @@ class DecryptDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -615,7 +612,7 @@ class DecryptDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

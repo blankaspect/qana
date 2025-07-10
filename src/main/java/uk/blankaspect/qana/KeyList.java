@@ -37,7 +37,8 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.misc.BinaryFile;
 import uk.blankaspect.common.misc.FileWritingMode;
@@ -600,7 +601,7 @@ class KeyList
 								FortunaCipher             preferredCipher)
 	{
 		byte[] key = Fortuna.keyStringToBytes(passphrase);
-		byte[] salt = App.INSTANCE.getRandomBytes(SALT_SIZE);
+		byte[] salt = QanaApp.INSTANCE.getRandomBytes(SALT_SIZE);
 		return new Key(name, kdfParamsVer.getEncodedValue(), kdfParamsGen.getEncodedValue(),
 					   allowedCiphers, preferredCipher, key, salt, deriveKey(key, salt, kdfParamsVer));
 	}

@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
@@ -70,6 +69,8 @@ import uk.blankaspect.common.misc.FilenameSuffixFilter;
 import uk.blankaspect.common.misc.MaxValueMap;
 
 import uk.blankaspect.common.regex.RegexUtils;
+
+import uk.blankaspect.common.tuple.StringPair;
 
 import uk.blankaspect.ui.swing.action.KeyAction;
 
@@ -193,8 +194,7 @@ class PreferencesDialog
 	private static final	String	FILENAME_SUFFIX_STR					= "Filename suffix";
 	private static final	String	SELECT_OUTPUT_FILE_STR				= "Select encrypt/decrypt output file";
 	private static final	String	FILE_ERASURE_NUM_PASSES_STR			= "Number of passes when erasing a file";
-	private static final	String	SAVE_FILE_SELECTION_PATHNAMES_STR	= "Save pathnames from file-selection " +
-																			"dialogs";
+	private static final	String	SAVE_FILE_SELECTION_PATHNAMES_STR	= "Save pathnames from file-selection dialogs";
 
 	// Keys panel
 	private static final	String	KEY_DATABASE_STR			= "Key database";
@@ -1269,7 +1269,7 @@ class PreferencesDialog
 	private PreferencesDialog(Window owner)
 	{
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -1406,7 +1406,7 @@ class PreferencesDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -1480,7 +1480,7 @@ class PreferencesDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -1524,7 +1524,7 @@ class PreferencesDialog
 
 	private void onSetArchiveViewColumnWidthsToCurrent()
 	{
-		ArchiveView view = App.INSTANCE.getArchiveView();
+		ArchiveView view = QanaApp.INSTANCE.getArchiveView();
 		if (view != null)
 		{
 			for (int i = 0; i < view.getTable().getColumnCount(); i++)
@@ -1599,7 +1599,7 @@ class PreferencesDialog
 			keyDatabaseFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 			keyDatabaseFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 			keyDatabaseFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.KEY_FILES_STR,
-																		  AppConstants.KEY_FILE_SUFFIX));
+																		  AppConstants.KEY_FILENAME_EXTENSION));
 		}
 		keyDatabaseFileChooser.setSelectedFile(keyDatabaseField.getCanonicalFile());
 		keyDatabaseFileChooser.rescanCurrentDirectory();
@@ -1651,7 +1651,7 @@ class PreferencesDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 		if (accepted)
 			onClose();
@@ -2260,7 +2260,7 @@ class PreferencesDialog
 		// Button: set widths from current view
 		JButton setWidthsButton = new FButton(SET_FROM_CURRENT_VIEW_STR);
 		setWidthsButton.setToolTipText(SET_WIDTHS_TOOLTIP_STR);
-		if (App.INSTANCE.getArchiveView() == null)
+		if (QanaApp.INSTANCE.getArchiveView() == null)
 			setWidthsButton.setEnabled(false);
 		else
 		{
@@ -2354,13 +2354,11 @@ class PreferencesDialog
 		sizePanel.add(sizeLabel);
 
 		// Panel: text-view size
-		textViewSizePanel = new DimensionsSpinnerPanel(config.getTextViewSize().width,
-													   TextView.MIN_NUM_COLUMNS, TextView.MAX_NUM_COLUMNS,
-													   TEXT_VIEW_COLUMNS_FIELD_LENGTH,
-													   config.getTextViewSize().height,
-													   TextView.MIN_NUM_ROWS, TextView.MAX_NUM_ROWS,
-													   TEXT_VIEW_ROWS_FIELD_LENGTH,
-													   new String[] { COLUMNS_STR, ROWS_STR });
+		textViewSizePanel = new DimensionsSpinnerPanel(config.getTextViewSize().width, TextView.MIN_NUM_COLUMNS,
+													   TextView.MAX_NUM_COLUMNS,  TEXT_VIEW_COLUMNS_FIELD_LENGTH,
+													   config.getTextViewSize().height, TextView.MIN_NUM_ROWS,
+													   TextView.MAX_NUM_ROWS, TEXT_VIEW_ROWS_FIELD_LENGTH,
+													   StringPair.of(COLUMNS_STR, ROWS_STR));
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -2722,7 +2720,7 @@ class PreferencesDialog
 		FilesPanel.reset();
 
 
-		//----  Filename suffix panel
+		//----  Filename-suffix panel
 
 		GridBagLayout gridBag = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -3597,7 +3595,7 @@ class PreferencesDialog
 	private void validatePreferencesFiles()
 		throws AppException
 	{
-		// Filename suffixes
+		// Filename extensions
 		for (FileKind key : filenameSuffixFields.keySet())
 		{
 			if (filenameSuffixFields.get(key).isEmpty())

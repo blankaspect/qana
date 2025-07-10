@@ -20,7 +20,7 @@ package uk.blankaspect.common.date;
 
 import java.util.Calendar;
 
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.misc.ModernCalendar;
 
@@ -46,17 +46,17 @@ public class Date
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	/** The number of digits in the year. */
-	public static final	int	NUM_YEAR_DIGITS		= 4;
+	/** The number of digits in the <i>year</i> component of the string representation of a date. */
+	public static final		int		NUM_YEAR_DIGITS		= 4;
 
-	/** The number of digits in the month. */
-	public static final	int	NUM_MONTH_DIGITS	= 2;
+	/** The number of digits in the <i>month</i> component of the string representation of a date. */
+	public static final		int		NUM_MONTH_DIGITS	= 2;
 
-	/** The number of digits in the day of the month. */
-	public static final	int	NUM_DAY_DIGITS		= 2;
+	/** The number of digits in the <i>day of the month</i> component of the string representation of a date. */
+	public static final		int		NUM_DAY_DIGITS		= 2;
 
 	/** The character that separates the components of the string representation of a date. */
-	public static final	char	SEPARATOR_CHAR	= '-';
+	public static final		char	SEPARATOR_CHAR	= '-';
 
 	/** Miscellaneous strings. */
 	private static final	String	MALFORMED_DATE_STR	= "Malformed date";
@@ -89,9 +89,10 @@ public class Date
 	 *          the day of the month, zero-based.
 	 */
 
-	public Date(int year,
-				int month,
-				int day)
+	public Date(
+		int	year,
+		int	month,
+		int	day)
 	{
 		// Initialise instance variables
 		this.year = year;
@@ -108,7 +109,8 @@ public class Date
 	 *          the date for which a copy will be created.
 	 */
 
-	public Date(Date date)
+	public Date(
+		Date	date)
 	{
 		// Call alternative constructor
 		this(date.year, date.month, date.day);
@@ -123,7 +125,8 @@ public class Date
 	 *          the date from which the new instance of {@code Date} will be initialised.
 	 */
 
-	public Date(Calendar date)
+	public Date(
+		Calendar	date)
 	{
 		// Call alternative constructor
 		this(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH) - 1);
@@ -136,44 +139,45 @@ public class Date
 	 * <i>yyyymmdd</i> or <i>yyyy</i>-<i>mm</i>-<i>dd</i>, where <i>y</i>, <i>m</i> and <i>d</i> are decimal digits that
 	 * denote the year, month and day of the month respectively.
 	 *
-	 * @param  str
+	 * @param  text
 	 *           a string representation of the date.
-	 * @throws NumberFormatException
-	 *           if one of the date components of {@code str} is not a valid number.
 	 * @throws IllegalArgumentException
-	 *           if {@code str} is malformed.
+	 *           if {@code text} is malformed.
+	 * @throws NumberFormatException
+	 *           if one of the date components of {@code text} is not a valid number.
 	 */
 
-	public Date(String str)
+	public Date(
+		String	text)
 	{
 		// Test length of input string
-		int inLength = str.length();
-		if ((inLength != 8) && (inLength != 10))
+		int inLength = text.length();
+		int expectedLength = NUM_YEAR_DIGITS + NUM_MONTH_DIGITS + NUM_DAY_DIGITS;
+		if ((inLength != expectedLength) && (inLength != expectedLength + 2))
 			throw new IllegalArgumentException(MALFORMED_DATE_STR);
 
 		// Parse year
 		int offset = 0;
 		int length = NUM_YEAR_DIGITS;
-		year = Integer.parseInt(str.substring(offset, offset + length));
+		year = Integer.parseInt(text.substring(offset, offset + length));
 		offset += length;
 
-		// Skip optional hyphen between year and month
-		if ((inLength == 10) && (str.charAt(offset++) != SEPARATOR_CHAR))
+		// Skip optional separator between year and month
+		if ((inLength > expectedLength) && (text.charAt(offset++) != SEPARATOR_CHAR))
 			throw new IllegalArgumentException(MALFORMED_DATE_STR);
 
 		// Parse month
 		length = NUM_MONTH_DIGITS;
-		month = Integer.parseInt(str.substring(offset, offset + length)) - 1;
+		month = Integer.parseInt(text.substring(offset, offset + length)) - 1;
 		offset += length;
 
-		// Skip optional hyphen between month and day of month
-		if ((inLength == 10) && (str.charAt(offset++) != SEPARATOR_CHAR))
+		// Skip optional separator between month and day of month
+		if ((inLength > expectedLength) && (text.charAt(offset++) != SEPARATOR_CHAR))
 			throw new IllegalArgumentException(MALFORMED_DATE_STR);
 
 		// Parse day of month
 		length = NUM_DAY_DIGITS;
-		day = Integer.parseInt(str.substring(offset)) - 1;
-		offset += length;
+		day = Integer.parseInt(text.substring(offset)) - 1;
 	}
 
 	//------------------------------------------------------------------
@@ -204,17 +208,13 @@ public class Date
 	 */
 
 	@Override
-	public boolean equals(Object obj)
+	public boolean equals(
+		Object	obj)
 	{
 		if (this == obj)
 			return true;
 
-		if (obj instanceof Date)
-		{
-			Date other = (Date)obj;
-			return ((year == other.year) && (month == other.month) && (day == other.day));
-		}
-		return false;
+		return (obj instanceof Date other) && (year == other.year) && (month == other.month) && (day == other.day);
 	}
 
 	//------------------------------------------------------------------
@@ -226,7 +226,7 @@ public class Date
 	@Override
 	public int hashCode()
 	{
-		return ((year << 9) | (month << 5) | day);
+		return (year << 9) | (month << 5) | day;
 	}
 
 	//------------------------------------------------------------------
@@ -240,9 +240,9 @@ public class Date
 	@Override
 	public String toString()
 	{
-		return (NumberUtils.uIntToDecString(year, NUM_YEAR_DIGITS, '0') + SEPARATOR_CHAR
-										+ NumberUtils.uIntToDecString(month + 1, NUM_MONTH_DIGITS, '0') + SEPARATOR_CHAR
-										+ NumberUtils.uIntToDecString(day + 1, NUM_DAY_DIGITS, '0'));
+		return NumberUtils.uIntToDecString(year, NUM_YEAR_DIGITS, '0') + SEPARATOR_CHAR
+				+ NumberUtils.uIntToDecString(month + 1, NUM_MONTH_DIGITS, '0') + SEPARATOR_CHAR
+				+ NumberUtils.uIntToDecString(day + 1, NUM_DAY_DIGITS, '0');
 	}
 
 	//------------------------------------------------------------------
@@ -321,8 +321,9 @@ public class Date
 	 *         month and day of the month denote an actual day of the year of this date.
 	 */
 
-	public boolean isValid(int minYear,
-						   int maxYear)
+	public boolean isValid(
+		int	minYear,
+		int	maxYear)
 	{
 		if ((year < minYear) || (year > maxYear))
 			return false;
@@ -333,8 +334,8 @@ public class Date
 
 		calendar = new ModernCalendar(year, month, 1);
 		int calendarDay = day + 1;
-		return ((calendarDay >= calendar.getActualMinimum(Calendar.DAY_OF_MONTH))
-				&& (calendarDay <= calendar.getActualMaximum(Calendar.DAY_OF_MONTH)));
+		return (calendarDay >= calendar.getActualMinimum(Calendar.DAY_OF_MONTH))
+				&& (calendarDay <= calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
 	}
 
 	//------------------------------------------------------------------
@@ -348,9 +349,9 @@ public class Date
 
 	public String toShortString()
 	{
-		return (NumberUtils.uIntToDecString(year, NUM_YEAR_DIGITS, '0')
-														+ NumberUtils.uIntToDecString(month + 1, NUM_MONTH_DIGITS, '0')
-														+ NumberUtils.uIntToDecString(day + 1, NUM_DAY_DIGITS, '0'));
+		return NumberUtils.uIntToDecString(year, NUM_YEAR_DIGITS, '0')
+				+ NumberUtils.uIntToDecString(month + 1, NUM_MONTH_DIGITS, '0')
+				+ NumberUtils.uIntToDecString(day + 1, NUM_DAY_DIGITS, '0');
 	}
 
 	//------------------------------------------------------------------
@@ -374,9 +375,10 @@ public class Date
 	 * @return a new instance of {@link ModernCalendar} that has been initialised with this date and the specified time.
 	 */
 
-	public ModernCalendar toCalendar(Time time)
+	public ModernCalendar toCalendar(
+		Time	time)
 	{
-		return new ModernCalendar(year, month, day + 1, time.hour, time.minute, time.second);
+		return new ModernCalendar(year, month, day + 1, time.getHour(), time.getMinute(), time.getSecond());
 	}
 
 	//------------------------------------------------------------------

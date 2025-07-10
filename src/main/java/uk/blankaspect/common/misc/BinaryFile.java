@@ -280,9 +280,9 @@ public class BinaryFile
 						   IByteDataInputStream inStream)
 		throws AppException
 	{
-		final	int	BUFFER_SIZE	= 1 << 13;  // 8192
+		final	int	BUFFER_LENGTH	= 1 << 13;  // 8192
 
-		byte[] buffer = new byte[BUFFER_SIZE];
+		byte[] buffer = new byte[BUFFER_LENGTH];
 		long inLength = inStream.getLength();
 		int blockLength = 0;
 		long offset = 0;
@@ -296,7 +296,7 @@ public class BinaryFile
 			}
 
 			// Read data from input stream
-			blockLength = (int)Math.min(inLength - offset, BUFFER_SIZE);
+			blockLength = (int)Math.min(inLength - offset, BUFFER_LENGTH);
 			blockLength = inStream.read(buffer, 0, blockLength);
 			if (blockLength < 0)
 				throw new AppException(ErrorId.ERROR_READING_DATA);

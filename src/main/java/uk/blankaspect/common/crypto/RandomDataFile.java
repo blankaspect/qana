@@ -29,7 +29,8 @@ import uk.blankaspect.common.bytedata.ByteDataList;
 
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 import uk.blankaspect.common.misc.BinaryFile;
 import uk.blankaspect.common.misc.FileWritingMode;
@@ -71,8 +72,7 @@ public class RandomDataFile
 	private static final	int		VERSION_FIELD_SIZE		= 2;
 	private static final	int		HASH_VALUE_FIELD_SIZE	= 32;
 
-	private static final	int	HEADER_SIZE		= ID_FIELD_SIZE + VERSION_FIELD_SIZE +
-																					HASH_VALUE_FIELD_SIZE;
+	private static final	int		HEADER_SIZE		= ID_FIELD_SIZE + VERSION_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
 
 	private static final	String	HASH_NAME	= "SHA-256";
 
@@ -159,7 +159,7 @@ public class RandomDataFile
 		}
 		catch (NoSuchAlgorithmException e)
 		{
-			throw new UnexpectedRuntimeException();
+			throw new UnexpectedRuntimeException(e);
 		}
 	}
 
@@ -249,7 +249,7 @@ public class RandomDataFile
 	 *
 	 * @param  file  the file that will be written.
 	 * @throws AppException
-	 *           if an error occurred when writing the file.
+	 *           if an error occurs when writing the file.
 	 */
 
 	public void write(File file)

@@ -20,7 +20,7 @@ package uk.blankaspect.common.crypto;
 
 import java.nio.charset.StandardCharsets;
 
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 //----------------------------------------------------------------------
 

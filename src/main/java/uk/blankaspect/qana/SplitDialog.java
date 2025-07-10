@@ -2,7 +2,7 @@
 
 SplitDialog.java
 
-Split dialog class.
+Class: split dialog.
 
 \*====================================================================*/
 
@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -58,7 +57,7 @@ import uk.blankaspect.common.misc.IFileImporter;
 import uk.blankaspect.ui.swing.action.KeyAction;
 
 import uk.blankaspect.ui.swing.button.FButton;
-import uk.blankaspect.ui.swing.button.LinkedPairButton;
+import uk.blankaspect.ui.swing.button.LinkUnlinkButton;
 
 import uk.blankaspect.ui.swing.container.ByteUnitIntegerSpinnerPanel;
 import uk.blankaspect.ui.swing.container.PathnamePanel;
@@ -70,7 +69,7 @@ import uk.blankaspect.ui.swing.misc.GuiUtils;
 //----------------------------------------------------------------------
 
 
-// SPLIT DIALOG CLASS
+// CLASS: SPLIT DIALOG
 
 
 class SplitDialog
@@ -82,7 +81,7 @@ class SplitDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	FILE_PART_LENGTH_FIELD_LENGTH	= 10;
+	private static final	int		FILE_PART_LENGTH_FIELD_LENGTH	= 10;
 
 	private static final	String	KEY	= SplitDialog.class.getCanonicalName();
 
@@ -110,118 +109,63 @@ class SplitDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point								location;
+	private static	File								inputFile;
+	private static	File								outputDirectory;
+	private static	ByteUnitIntegerSpinnerPanel.Value	filePartLengthLowerBound;
+	private static	ByteUnitIntegerSpinnerPanel.Value	filePartLengthUpperBound;
+	private static	boolean								filePartLengthBoundsLinked;
+	private static	JFileChooser						inputFileChooser;
+	private static	JFileChooser						outputDirectoryChooser;
 
-	// ERROR IDENTIFIERS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
+	private	boolean						accepted;
+	private	FPathnameField				inputFileField;
+	private	FPathnameField				outputDirectoryField;
+	private	ByteUnitIntegerSpinnerPanel	filePartLengthLowerBoundSpinner;
+	private	ByteUnitIntegerSpinnerPanel	filePartLengthUpperBoundSpinner;
+	private	LinkUnlinkButton			linkButton;
+	private	JButton						splitButton;
 
-	private enum ErrorId
-		implements AppException.IId
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
 	{
+		inputFileChooser = new JFileChooser();
+		inputFileChooser.setDialogTitle(INPUT_FILE_TITLE_STR);
+		inputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
+		outputDirectoryChooser = new JFileChooser();
+		outputDirectoryChooser.setDialogTitle(OUTPUT_DIRECTORY_TITLE_STR);
+		outputDirectoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		outputDirectoryChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		outputDirectoryChooser.setApproveButtonToolTipText(SELECT_DIRECTORY_STR);
 
-		FILE_DOES_NOT_EXIST
-		("The file does not exist."),
-
-		NOT_A_FILE
-		("The input pathname does not denote a normal file."),
-
-		NOT_A_DIRECTORY
-		("The output pathname does not denote a directory."),
-
-		NO_INPUT_FILE
-		("No input file was specified."),
-
-		FILE_PART_LENGTH_BOUNDS_OUT_OF_ORDER
-		("The upper bound of the file-part length is less than the lower bound.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
+		AppConfig config = AppConfig.INSTANCE;
+		filePartLengthLowerBound = config.getSplitFilePartLengthLowerBound();
+		filePartLengthUpperBound = config.getSplitFilePartLengthUpperBound();
+		filePartLengthBoundsLinked = (filePartLengthLowerBound.value == filePartLengthUpperBound.value);
 	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// RESULT CLASS
-
-
-	public static class Result
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public Result(File inFile,
-					  File outDirectory,
-					  int  filePartLengthLowerBound,
-					  int  filePartLengthUpperBound)
-		{
-			this.inFile = inFile;
-			this.outDirectory = outDirectory;
-			this.filePartLengthLowerBound = filePartLengthLowerBound;
-			this.filePartLengthUpperBound = filePartLengthUpperBound;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		File	inFile;
-		File	outDirectory;
-		int		filePartLengthLowerBound;
-		int		filePartLengthUpperBound;
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private SplitDialog(Window owner)
+	private SplitDialog(
+		Window	owner)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -288,8 +232,8 @@ class SplitDialog
 		// Panel: output directory
 		outputDirectoryField = new FPathnameField(outputDirectory);
 		FPathnameField.addObserver(KEY, outputDirectoryField);
-		PathnamePanel outputDirectoryPanel = new PathnamePanel(outputDirectoryField, Command.CHOOSE_OUTPUT_DIRECTORY,
-															   this);
+		PathnamePanel outputDirectoryPanel =
+				new PathnamePanel(outputDirectoryField, Command.CHOOSE_OUTPUT_DIRECTORY, this);
 
 		gbc.gridx = 1;
 		gbc.gridy = gridY++;
@@ -337,9 +281,9 @@ class SplitDialog
 
 		// Spinner: file-part length lower bound
 		int maxValue = filePartLengthBoundsLinked ? FileSplitter.MAX_FILE_PART_LENGTH : filePartLengthUpperBound.value;
-		filePartLengthLowerBoundSpinner = new ByteUnitIntegerSpinnerPanel(filePartLengthLowerBound,
-																		  FileSplitter.MIN_FILE_PART_LENGTH, maxValue,
-																		  FILE_PART_LENGTH_FIELD_LENGTH);
+		filePartLengthLowerBoundSpinner =
+				new ByteUnitIntegerSpinnerPanel(filePartLengthLowerBound, FileSplitter.MIN_FILE_PART_LENGTH, maxValue,
+												FILE_PART_LENGTH_FIELD_LENGTH);
 		filePartLengthLowerBoundSpinner.addObserver(this);
 
 		gbc.gridx = gridX++;
@@ -371,9 +315,9 @@ class SplitDialog
 
 		// Spinner: file-part length upper bound
 		int minValue = filePartLengthBoundsLinked ? FileSplitter.MIN_FILE_PART_LENGTH : filePartLengthLowerBound.value;
-		filePartLengthUpperBoundSpinner = new ByteUnitIntegerSpinnerPanel(filePartLengthUpperBound, minValue,
-																		  FileSplitter.MAX_FILE_PART_LENGTH,
-																		  FILE_PART_LENGTH_FIELD_LENGTH);
+		filePartLengthUpperBoundSpinner =
+				new ByteUnitIntegerSpinnerPanel(filePartLengthUpperBound, minValue, FileSplitter.MAX_FILE_PART_LENGTH,
+												FILE_PART_LENGTH_FIELD_LENGTH);
 		filePartLengthUpperBoundSpinner.addObserver(this);
 
 		gbc.gridx = gridX++;
@@ -389,7 +333,8 @@ class SplitDialog
 		filePartLengthPanel.add(filePartLengthUpperBoundSpinner);
 
 		// Button: link lower bound and upper bound
-		linkButton = new LinkedPairButton(LINK_TOOLTIP_STR);
+		linkButton = LinkUnlinkButton.horizontal();
+		linkButton.setToolTipText(LINK_TOOLTIP_STR);
 		linkButton.setSelected(filePartLengthBoundsLinked);
 		linkButton.setActionCommand(Command.TOGGLE_LENGTH_BOUNDS_LINKED);
 		linkButton.addActionListener(this);
@@ -479,7 +424,8 @@ class SplitDialog
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -491,7 +437,7 @@ class SplitDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -501,7 +447,6 @@ class SplitDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -524,7 +469,8 @@ class SplitDialog
 
 	//------------------------------------------------------------------
 
-	public static Result showDialog(Component parent)
+	public static Result showDialog(
+		Component	parent)
 	{
 		return new SplitDialog(GuiUtils.getWindow(parent)).getResult();
 	}
@@ -535,7 +481,9 @@ class SplitDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void actionPerformed(ActionEvent event)
+	@Override
+	public void actionPerformed(
+		ActionEvent	event)
 	{
 		String command = event.getActionCommand();
 
@@ -561,8 +509,10 @@ class SplitDialog
 //  Instance methods : ByteUnitIntegerSpinnerPanel.IObserver interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void notifyChanged(ByteUnitIntegerSpinnerPanel          source,
-							  ByteUnitIntegerSpinnerPanel.Property changedProperty)
+	@Override
+	public void notifyChanged(
+		ByteUnitIntegerSpinnerPanel				source,
+		ByteUnitIntegerSpinnerPanel.Property	changedProperty)
 	{
 		// Spinner, file-part length lower bound
 		if (source == filePartLengthLowerBoundSpinner)
@@ -575,11 +525,9 @@ class SplitDialog
 
 				case VALUE:
 					if (linkButton.isSelected())
-						filePartLengthUpperBoundSpinner.
-											setValue(filePartLengthLowerBoundSpinner.getValue());
+						filePartLengthUpperBoundSpinner.setValue(filePartLengthLowerBoundSpinner.getValue());
 					else
-						filePartLengthUpperBoundSpinner.
-											setMinimum(filePartLengthLowerBoundSpinner.getIntValue());
+						filePartLengthUpperBoundSpinner.setMinimum(filePartLengthLowerBoundSpinner.getIntValue());
 					break;
 
 				default:
@@ -599,11 +547,9 @@ class SplitDialog
 
 				case VALUE:
 					if (linkButton.isSelected())
-						filePartLengthLowerBoundSpinner.
-											setValue(filePartLengthUpperBoundSpinner.getValue());
+						filePartLengthLowerBoundSpinner.setValue(filePartLengthUpperBoundSpinner.getValue());
 					else
-						filePartLengthLowerBoundSpinner.
-											setMaximum(filePartLengthUpperBoundSpinner.getIntValue());
+						filePartLengthLowerBoundSpinner.setMaximum(filePartLengthUpperBoundSpinner.getIntValue());
 					break;
 
 				default:
@@ -619,21 +565,27 @@ class SplitDialog
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void changedUpdate(DocumentEvent event)
+	@Override
+	public void changedUpdate(
+		DocumentEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void insertUpdate(DocumentEvent event)
+	@Override
+	public void insertUpdate(
+		DocumentEvent	event)
 	{
 		updateAcceptButton();
 	}
 
 	//------------------------------------------------------------------
 
-	public void removeUpdate(DocumentEvent event)
+	@Override
+	public void removeUpdate(
+		DocumentEvent	event)
 	{
 		updateAcceptButton();
 	}
@@ -661,7 +613,8 @@ class SplitDialog
 	//------------------------------------------------------------------
 
 	@Override
-	public void importFiles(List<File> files)
+	public void importFiles(
+		List<File>	files)
 	{
 		File file = files.get(0);
 		if (file.isDirectory())
@@ -678,9 +631,9 @@ class SplitDialog
 
 	private Result getResult()
 	{
-		return (accepted ? new Result(inputFile, outputDirectory, filePartLengthLowerBound.value,
-									  filePartLengthUpperBound.value)
-						 : null);
+		return accepted
+				? new Result(inputFile, outputDirectory, filePartLengthLowerBound.value, filePartLengthUpperBound.value)
+				: null;
 	}
 
 	//------------------------------------------------------------------
@@ -731,8 +684,7 @@ class SplitDialog
 		// File-part length bounds
 		try
 		{
-			if (filePartLengthUpperBoundSpinner.getIntValue() <
-															filePartLengthLowerBoundSpinner.getIntValue())
+			if (filePartLengthUpperBoundSpinner.getIntValue() < filePartLengthLowerBoundSpinner.getIntValue())
 				throw new AppException(ErrorId.FILE_PART_LENGTH_BOUNDS_OUT_OF_ORDER);
 		}
 		catch (AppException e)
@@ -803,7 +755,7 @@ class SplitDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -821,53 +773,86 @@ class SplitDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point								location;
-	private static	File								inputFile;
-	private static	File								outputDirectory;
-	private static	ByteUnitIntegerSpinnerPanel.Value	filePartLengthLowerBound;
-	private static	ByteUnitIntegerSpinnerPanel.Value	filePartLengthUpperBound;
-	private static	boolean								filePartLengthBoundsLinked;
-	private static	JFileChooser						inputFileChooser;
-	private static	JFileChooser						outputDirectoryChooser;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// ENUMERATION: ERROR IDENTIFIERS
 
-	static
+
+	private enum ErrorId
+		implements AppException.IId
 	{
-		inputFileChooser = new JFileChooser();
-		inputFileChooser.setDialogTitle(INPUT_FILE_TITLE_STR);
-		inputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 
-		outputDirectoryChooser = new JFileChooser();
-		outputDirectoryChooser.setDialogTitle(OUTPUT_DIRECTORY_TITLE_STR);
-		outputDirectoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		outputDirectoryChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		outputDirectoryChooser.setApproveButtonToolTipText(SELECT_DIRECTORY_STR);
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
 
-		AppConfig config = AppConfig.INSTANCE;
-		filePartLengthLowerBound = config.getSplitFilePartLengthLowerBound();
-		filePartLengthUpperBound = config.getSplitFilePartLengthUpperBound();
-		filePartLengthBoundsLinked = (filePartLengthLowerBound.value == filePartLengthUpperBound.value);
+		FILE_DOES_NOT_EXIST
+		("The file does not exist."),
+
+		NOT_A_FILE
+		("The input pathname does not denote a normal file."),
+
+		NOT_A_DIRECTORY
+		("The output pathname does not denote a directory."),
+
+		NO_INPUT_FILE
+		("No input file was specified."),
+
+		FILE_PART_LENGTH_BOUNDS_OUT_OF_ORDER
+		("The upper bound of the file-part length is less than the lower bound.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(
+			String	message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
 	}
 
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member records
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean						accepted;
-	private	FPathnameField				inputFileField;
-	private	FPathnameField				outputDirectoryField;
-	private	ByteUnitIntegerSpinnerPanel	filePartLengthLowerBoundSpinner;
-	private	ByteUnitIntegerSpinnerPanel	filePartLengthUpperBoundSpinner;
-	private	LinkedPairButton			linkButton;
-	private	JButton						splitButton;
+
+	// RECORD: RESULT
+
+
+	public record Result(
+		File	inFile,
+		File	outDirectory,
+		int		filePartLengthLowerBound,
+		int		filePartLengthUpperBound)
+	{ }
+
+	//==================================================================
 
 }
 

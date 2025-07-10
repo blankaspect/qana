@@ -135,11 +135,11 @@ enum FileSelectionKind
 ////////////////////////////////////////////////////////////////////////
 
 	private FileSelectionKind(String   key,
-							  String   titleStr,
+							  String   title,
 							  FileKind fileKind)
 	{
 		this.key = key;
-		this.titleStr = titleStr;
+		this.title = title;
 		this.fileKind = fileKind;
 	}
 
@@ -193,7 +193,7 @@ enum FileSelectionKind
 																? config.getFileSelectionDirectory(this)
 																: null;
 			fileChooser = new JFileChooser(directory);
-			fileChooser.setDialogTitle(titleStr);
+			fileChooser.setDialogTitle(title);
 			initFileChooser(fileChooser);
 		}
 		if (fileKind != null)
@@ -219,7 +219,7 @@ enum FileSelectionKind
 ////////////////////////////////////////////////////////////////////////
 
 	private	String			key;
-	private	String			titleStr;
+	private	String			title;
 	private	FileKind		fileKind;
 	private	JFileChooser	fileChooser;
 

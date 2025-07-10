@@ -6,108 +6,155 @@ Styles for Qana manual
 
 @import url("blankaspect-manual.css");
 
-div.highlighted
-{
-  background-color: #F8F6E0;
-  border: 1px solid #E2E0C8;
+div.highlighted {
+  border: 1px solid;
   padding: 0.4em 1.0em;
 }
 
-dl.fileAssoc
-{
+dl.fileAssoc {
   margin: 0.5em 1.0em;
 }
-dl.fileAssoc dt
-{
+dl.fileAssoc dt {
   font-weight: bold;
   padding: 0.3em 0.5em 0 0;
 }
-dl.fileAssoc dd
-{
+dl.fileAssoc dd {
   margin: 0 1.6em;
   padding: 0 0.5em 0.3em 0;
 }
 
-dl.terminology
-{
-  background-color: #FCFAE8;
-  border: 1px solid #E8E6CC;
+dl.terminology {
+  border: 1px solid;
   margin-top: 1.0em;
   margin-bottom: 1.0em;
   padding: 0.3em 1.2em;
 }
-dl.terminology dt
-{
-  color: #804018;
+dl.terminology dt {
   font-weight: bold;
   padding: 0.3em 0.5em 0 0;
 }
-dl.terminology dd
-{
+dl.terminology dd {
   margin: 0 2.0em;
   padding: 0 0.5em 0.3em 0;
 }
 
-p.quotation
-{
+p.quotation {
   font-size: 90%;
   margin-top: 0.6em;
   margin-left: 2.0em;
   margin-right: 2.0em;
 }
 
-table.dataStructure span.literal
-{
-  color: #C04000;
+table.dataStructure span.literal {
   font-weight: bold;
 }
 
-table.dataStructure span.variable
-{
-  color: #006080;
+table.dataStructure span.variable {
   font-weight: bold;
   font-style: italic;
 }
 
-table.dataStructure td.subheader
-{
-  background-color: #ECF0F8;
+table.dataStructure td.subheader {
   color: #404040;
   font-size: 83%;
 }
 
-table.dataStructure td.description
-{
+table.dataStructure td.description {
   width: 85%;
 }
 
-table.dataStructure td.key
-{
+table.dataStructure td.key {
   width: 15%;
 }
 
-table.basic td.definitionTerm
-{
-  color: #004040;
+table.basic td.definitionTerm {
   font-weight: bold;
 }
 
-table.basic td.command
-{
-  color: #8C4818;
+table.basic td.command {
   font-weight: bold;
   white-space: nowrap;
 }
 
-ul.paddedItems li
-{
+ul.paddedItems li {
   padding-top: 0.2em;
   padding-bottom: 0.2em;
 }
 
-ul#p1Attributes li div img
-{
+ul#p1Attributes li div img {
   padding-top: 0.3em;
+}
+
+@media (prefers-color-scheme: light) {
+  div.highlighted {
+    background-color: #F8F6E0;
+    border-color: #E2E0C8;
+  }
+
+  dl.terminology {
+    background-color: #FCFAE8;
+    border-color: #E8E6CC;
+  }
+  dl.terminology dt {
+    color: #804018;
+  }
+
+  table.dataStructure span.literal {
+    color: #C04000;
+  }
+
+  table.dataStructure span.variable {
+    color: #006080;
+  }
+
+  table.dataStructure td.subheader {
+    background-color: #ECF0F8;
+    color: #404040;
+  }
+
+  table.basic td.definitionTerm {
+    color: #004040;
+  }
+
+  table.basic td.command {
+    color: #8C4818;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  div.highlighted {
+    background-color: #382420;
+    border-color: #604840;
+  }
+
+  dl.terminology {
+    background-color: #20242C;
+    border-color: #404850;
+  }
+  dl.terminology dt {
+    color: #D890A0;
+  }
+
+  table.dataStructure span.literal {
+    color: #80CCC8;
+  }
+
+  table.dataStructure span.variable {
+    color: #E06000;
+  }
+
+  table.dataStructure td.subheader {
+    background-color: #383838;
+    color: #F0F0D0;
+  }
+
+  table.basic td.definitionTerm {
+    color: #80CCC8;
+  }
+
+  table.basic td.command {
+    color: #D09040;
+  }
 }
 
 /*--------------------------------------------------------------------*/

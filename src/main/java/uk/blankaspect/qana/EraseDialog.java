@@ -55,8 +55,8 @@ class EraseDialog
 
 	private static final	String	ERASE_FILES_STR		= "Erase files";
 	private static final	String	ERASE_STR			= "Erase";
-	private static final	String	NUM_DIRECTORIES_STR	= "Number of directories = ";
-	private static final	String	NUM_FILES_STR		= "Number of files = ";
+	private static final	String	NUM_DIRECTORIES_STR	= "Number of directories : ";
+	private static final	String	NUM_FILES_STR		= "Number of files : ";
 	private static final	String	ERASE_ITEMS_STR		= "Do you want to erase these items?";
 
 	private static final	String	KEY	= EraseDialog.class.getCanonicalName();
@@ -97,7 +97,7 @@ class EraseDialog
 		{
 			try
 			{
-				String userHome = SystemUtils.getUserHomePathname();
+				String userHome = SystemUtils.userHomeDirectoryPathname();
 				if ((userHome != null) && pathname.startsWith(userHome))
 					pathname = PathnameUtils.USER_HOME_PREFIX + pathname.substring(userHome.length());
 			}

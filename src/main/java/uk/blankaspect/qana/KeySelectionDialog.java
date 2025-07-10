@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -81,7 +80,7 @@ class KeySelectionDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	KEY_LIST_NUM_ROWS	= 16;
+	private static final	int		KEY_LIST_NUM_ROWS	= 16;
 
 	private static final	String	KEY_STR		= "Key ";
 	private static final	String	NEW_KEY_STR	= "New key";
@@ -94,16 +93,33 @@ class KeySelectionDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	Point									location;
+	private static	Map<KdfUse, StreamEncrypter.KdfParams>	kdfParamMap		= KdfUse.getKdfParameterMap();
+	private static	Set<FortunaCipher>						allowedCiphers	= EnumSet.allOf(FortunaCipher.class);
+	private static	FortunaCipher							preferredCipher	= FortunaCipher.AES256;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	KeySelectionList	selectionList;
+	private	KeyList.Key			selectedKey;
+	private	JButton				okButton;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private KeySelectionDialog(Window            owner,
-							   String            titleStr,
-							   List<KeyList.Key> keys)
+	private KeySelectionDialog(
+		Window				owner,
+		String				title,
+		List<KeyList.Key>	keys)
 	{
-
 		// Call superclass constructor
-		super(owner, titleStr, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, title, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -196,7 +212,8 @@ class KeySelectionDialog
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -208,7 +225,7 @@ class KeySelectionDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -218,7 +235,6 @@ class KeySelectionDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -227,11 +243,12 @@ class KeySelectionDialog
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static KeyList.Key showDialog(Component         parent,
-										 String            titleStr,
-										 List<KeyList.Key> keys)
+	public static KeyList.Key showDialog(
+		Component			parent,
+		String				title,
+		List<KeyList.Key>	keys)
 	{
-		return new KeySelectionDialog(GuiUtils.getWindow(parent), titleStr, keys).getSelectedKey();
+		return new KeySelectionDialog(GuiUtils.getWindow(parent), title, keys).getSelectedKey();
 	}
 
 	//------------------------------------------------------------------
@@ -240,7 +257,9 @@ class KeySelectionDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void actionPerformed(ActionEvent event)
+	@Override
+	public void actionPerformed(
+		ActionEvent	event)
 	{
 		String command = event.getActionCommand();
 
@@ -257,7 +276,9 @@ class KeySelectionDialog
 //  Instance methods : ListSelectionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void valueChanged(ListSelectionEvent event)
+	@Override
+	public void valueChanged(
+		ListSelectionEvent	event)
 	{
 		if (!event.getValueIsAdjusting())
 			updateComponents();
@@ -269,7 +290,9 @@ class KeySelectionDialog
 //  Instance methods : MouseListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void mouseClicked(MouseEvent event)
+	@Override
+	public void mouseClicked(
+		MouseEvent	event)
 	{
 		if (SwingUtilities.isLeftMouseButton(event) && (event.getClickCount() > 1))
 		{
@@ -282,28 +305,32 @@ class KeySelectionDialog
 
 	//------------------------------------------------------------------
 
-	public void mouseEntered(MouseEvent event)
+	public void mouseEntered(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void mouseExited(MouseEvent event)
+	public void mouseExited(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void mousePressed(MouseEvent event)
+	public void mousePressed(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void mouseReleased(MouseEvent event)
+	public void mouseReleased(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
@@ -349,19 +376,19 @@ class KeySelectionDialog
 					throw new CancelledException();
 
 				// Get key properties
-				KeyPropertiesDialog.Result result = KeyPropertiesDialog.showDialog(this, NEW_KEY_STR, kdfParamMap,
-																				   allowedCiphers, preferredCipher);
+				KeyPropertiesDialog.Result result =
+						KeyPropertiesDialog.showDialog(this, NEW_KEY_STR, kdfParamMap, allowedCiphers, preferredCipher);
 				if (result == null)
 					throw new CancelledException();
 
 				// Set key properties
-				kdfParamMap = result.kdfParameterMap;
-				allowedCiphers = result.allowedCiphers;
-				preferredCipher = result.preferredCipher;
+				kdfParamMap = result.kdfParameterMap();
+				allowedCiphers = result.allowedCiphers();
+				preferredCipher = result.preferredCipher();
 
 				// Create temporary key
 				key = new KeyCreator(null, passphrase, kdfParamMap, allowedCiphers, preferredCipher).create(this);
-				App.INSTANCE.addTemporaryKey(key);
+				QanaApp.INSTANCE.addTemporaryKey(key);
 				break;
 			}
 
@@ -402,7 +429,7 @@ class KeySelectionDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -416,24 +443,6 @@ class KeySelectionDialog
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class variables
-////////////////////////////////////////////////////////////////////////
-
-	private static	Point									location;
-	private static	Map<KdfUse, StreamEncrypter.KdfParams>	kdfParamMap	= KdfUse.getKdfParameterMap();
-	private static	Set<FortunaCipher>						allowedCiphers	=
-																	EnumSet.allOf(FortunaCipher.class);
-	private static	FortunaCipher							preferredCipher	= FortunaCipher.AES256;
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	KeySelectionList	selectionList;
-	private	KeyList.Key			selectedKey;
-	private	JButton				okButton;
 
 }
 

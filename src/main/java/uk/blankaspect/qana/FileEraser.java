@@ -54,7 +54,7 @@ class FileEraser
 	public static final		int		MAX_NUM_PASSES		= 20;
 	public static final		int		DEFAULT_NUM_PASSES	= 4;
 
-	private static final	int		BUFFER_SIZE	= 1 << 13;  // 8192
+	private static final	int		BUFFER_LENGTH	= 1 << 13;  // 8192
 
 	private static final	int		MAX_FILENAME_LENGTH	= 224;
 
@@ -99,7 +99,7 @@ class FileEraser
 
 	public FileEraser()
 	{
-		buffer = new byte[BUFFER_SIZE];
+		buffer = new byte[BUFFER_LENGTH];
 		prng = new Prng01();
 	}
 
@@ -198,8 +198,7 @@ class FileEraser
 			catch (AppException e)
 			{
 				String[] optionStrs = Utils.getOptionStrings(RETRY_STR, SKIP_STR);
-				int result = JOptionPane.showOptionDialog(App.INSTANCE.getMainWindow(), e,
-														  ERASE_FILES_STR,
+				int result = JOptionPane.showOptionDialog(QanaApp.INSTANCE.getMainWindow(), e, ERASE_FILES_STR,
 														  JOptionPane.YES_NO_CANCEL_OPTION,
 														  JOptionPane.QUESTION_MESSAGE, null, optionStrs,
 														  optionStrs[0]);
@@ -393,7 +392,7 @@ class FileEraser
 				prng.nextBytes(buffer);
 
 				// Write file
-				int blockLength = (int)Math.min(length - offset, BUFFER_SIZE);
+				int blockLength = (int)Math.min(length - offset, BUFFER_LENGTH);
 				file.write(buffer, 0, blockLength);
 				offset += blockLength;
 

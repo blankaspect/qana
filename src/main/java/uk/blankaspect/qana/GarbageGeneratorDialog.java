@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -551,9 +550,8 @@ class GarbageGeneratorDialog
 	private GarbageGeneratorDialog(Window  owner,
 								   boolean canGenerateText)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -572,7 +570,7 @@ class GarbageGeneratorDialog
 		imageFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		imageFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		imageFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.PNG_FILES_STR,
-																AppConstants.PNG_FILE_SUFFIX));
+																AppConstants.PNG_FILENAME_EXTENSION));
 
 
 		//----  Control panel
@@ -860,14 +858,13 @@ class GarbageGeneratorDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -1036,7 +1033,7 @@ class GarbageGeneratorDialog
 		imageFileChooser.rescanCurrentDirectory();
 		if (imageFileChooser.showDialog(this, SELECT_STR) == JFileChooser.APPROVE_OPTION)
 			imagePathnameField.setFile(Utils.appendSuffix(imageFileChooser.getSelectedFile(),
-														  AppConstants.PNG_FILE_SUFFIX));
+														  AppConstants.PNG_FILENAME_EXTENSION));
 	}
 
 	//------------------------------------------------------------------
@@ -1076,7 +1073,7 @@ class GarbageGeneratorDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

@@ -19,7 +19,6 @@ package uk.blankaspect.ui.swing.dialog;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -43,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -113,10 +111,11 @@ public class FileMultipleSelectionDialog
 		REMOVE
 	}
 
-	private static final	int	LIST_CELL_VERTICAL_MARGIN	= 1;
-	private static final	int	LIST_CELL_HORIZONTAL_MARGIN	= 4;
+	private static final	int		LIST_CELL_VERTICAL_MARGIN	= 1;
+	private static final	int		LIST_CELL_HORIZONTAL_MARGIN	= 4;
 
-	private static final	String	DEFAULT_TITLE_STR				= "Select files";
+	private static final	String	DEFAULT_TITLE	= "Select files";
+
 	private static final	String	ADD_STR							= "Add";
 	private static final	String	REMOVE_STR						= "Remove";
 	private static final	String	PASTE_STR						= "Paste";
@@ -149,312 +148,39 @@ public class FileMultipleSelectionDialog
 	};
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Map<String, Point>	locations	= new HashMap<>();
+	private static	JFileChooser		fileChooser;
 
-	// SELECTION MODE
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
+	private	String					key;
+	private	SelectionMode			selectionMode;
+	private	Set<Capability>			capabilities;
+	private	boolean					accepted;
+	private	FileListModel			fileListModel;
+	private	SelectionList<String>	fileList;
+	private	JScrollPane				fileListScrollPane;
+	private	JPanel					mainPanel;
+	private	JButton					removeButton;
+	private	JPopupMenu				contextMenu;
 
-	public enum SelectionMode
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
 	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILES_ONLY              (JFileChooser.FILES_ONLY),
-		FILES_AND_DIRECTORIES   (JFileChooser.FILES_AND_DIRECTORIES);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private SelectionMode(int chooserSelectionMode)
-		{
-			this.chooserSelectionMode = chooserSelectionMode;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int	chooserSelectionMode;
-
+		fileChooser = new JFileChooser();
+		fileChooser.setDialogTitle(SELECT_FILE_OR_DIRECTORY_STR);
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		fileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		fileChooser.setApproveButtonToolTipText(SELECT_FILE_OR_DIRECTORY_STR);
 	}
-
-	//==================================================================
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILE_TRANSFER_NOT_SUPPORTED
-		("File transfer is not supported."),
-
-		ERROR_TRANSFERRING_DATA
-		("An error occurred while transferring data."),
-
-		FAILED_TO_LIST_DIRECTORY_ENTRIES
-		("Failed to get a list of directory entries."),
-
-		CLIPBOARD_IS_UNAVAILABLE
-		("The clipboard is currently unavailable."),
-
-		NO_TEXT_ON_CLIPBOARD
-		("There is no text on the clipboard."),
-
-		FAILED_TO_GET_CLIPBOARD_DATA
-		("Failed to get data from the clipboard.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// FILE LIST MODEL
-
-
-	private static class FileListModel
-		implements ListModel<String>
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private FileListModel()
-		{
-			pathnames = new ArrayList<>();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ListModel interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getElementAt(int index)
-		{
-			return pathnames.get(index);
-		}
-
-		//--------------------------------------------------------------
-
-		public int getSize()
-		{
-			return pathnames.size();
-		}
-
-		//--------------------------------------------------------------
-
-		public void addListDataListener(ListDataListener listener)
-		{
-			if (listeners == null)
-				listeners = new ArrayList<>();
-			listeners.add(listener);
-		}
-
-		//--------------------------------------------------------------
-
-		public void removeListDataListener(ListDataListener listener)
-		{
-			if (listeners != null)
-				listeners.remove(listener);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private void add(String pathname)
-		{
-			if (!pathnames.contains(pathname))
-			{
-				pathnames.add(pathname);
-				changed = true;
-			}
-		}
-
-		//--------------------------------------------------------------
-
-		private void remove(int index)
-		{
-			pathnames.remove(index);
-			changed = true;
-		}
-
-		//--------------------------------------------------------------
-
-		private void update()
-		{
-			if (changed)
-			{
-				pathnames.sort(null);
-				ListDataEvent event = new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, 0, pathnames.size() - 1);
-				for (int i = listeners.size() - 1; i >= 0; i--)
-					listeners.get(i).contentsChanged(event);
-				changed = false;
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	List<String>			pathnames;
-		private	List<ListDataListener>	listeners;
-		private	boolean					changed;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// FILE TRANSFER HANDLER CLASS
-
-
-	private class FileTransferHandler
-		extends TransferHandler
-		implements Runnable
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private FileTransferHandler()
-		{
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Runnable interface
-	////////////////////////////////////////////////////////////////////
-
-		public void run()
-		{
-			addFiles(files);
-			fileListModel.update();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public boolean canImport(TransferHandler.TransferSupport support)
-		{
-			boolean supported = !support.isDrop() || ((support.getSourceDropActions() & COPY) == COPY);
-			if (supported)
-				supported = capabilities.contains(Capability.ADD) && DataImporter.isFileList(support.getDataFlavors());
-			if (support.isDrop() && supported)
-				support.setDropAction(COPY);
-			return supported;
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public boolean importData(TransferHandler.TransferSupport support)
-		{
-			if (canImport(support))
-			{
-				try
-				{
-					try
-					{
-						List<File> files = DataImporter.getFiles(support.getTransferable());
-						if (files != null)
-						{
-							this.files = files;
-							SwingUtilities.getWindowAncestor(support.getComponent()).toFront();
-							SwingUtilities.invokeLater(this);
-							return true;
-						}
-					}
-					catch (UnsupportedFlavorException e)
-					{
-						throw new AppException(ErrorId.FILE_TRANSFER_NOT_SUPPORTED);
-					}
-					catch (IOException e)
-					{
-						throw new AppException(ErrorId.ERROR_TRANSFERRING_DATA);
-					}
-				}
-				catch (AppException e)
-				{
-					JOptionPane.showMessageDialog(support.getComponent(), e, getTitle(),
-												  JOptionPane.ERROR_MESSAGE);
-				}
-			}
-			return false;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	List<File>	files;
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -463,7 +189,7 @@ public class FileMultipleSelectionDialog
 	protected FileMultipleSelectionDialog(Window          owner,
 										  int             listNumViewableColumns,
 										  int             listNumViewableRows,
-										  String          titleStr,
+										  String          title,
 										  String          acceptStr,
 										  String          key,
 										  SelectionMode   selectionMode,
@@ -471,10 +197,8 @@ public class FileMultipleSelectionDialog
 										  List<String>    pathnames,
 										  boolean         show)
 	{
-
 		// Call superclass constructor
-		super(owner, (titleStr == null) ? DEFAULT_TITLE_STR : titleStr,
-			  Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, (title == null) ? DEFAULT_TITLE : title, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		if (owner != null)
@@ -626,7 +350,7 @@ public class FileMultipleSelectionDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		Point location = locations.get(key);
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
@@ -638,7 +362,6 @@ public class FileMultipleSelectionDialog
 		// Show dialog
 		if (show)
 			setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -650,17 +373,16 @@ public class FileMultipleSelectionDialog
 	public static List<String> showDialog(Component       parent,
 										  int             listNumViewableColumns,
 										  int             listNumViewableRows,
-										  String          titleStr,
+										  String          title,
 										  String          acceptStr,
 										  String          key,
 										  SelectionMode   selectionMode,
 										  Set<Capability> capabilities,
 										  List<String>    pathnames)
 	{
-		return new FileMultipleSelectionDialog(GuiUtils.getWindow(parent), listNumViewableColumns,
-											   listNumViewableRows, titleStr, acceptStr, key,
-											   selectionMode, capabilities, pathnames, true).
-																							getPathnames();
+		return new FileMultipleSelectionDialog(GuiUtils.getWindow(parent), listNumViewableColumns, listNumViewableRows,
+											   title, acceptStr, key, selectionMode, capabilities, pathnames, true)
+				.getPathnames();
 	}
 
 	//------------------------------------------------------------------
@@ -828,7 +550,7 @@ public class FileMultipleSelectionDialog
 					}
 				}
 				else
-					addFiles(Arrays.asList(entries));
+					addFiles(List.of(entries));
 			}
 		}
 	}
@@ -964,39 +686,312 @@ public class FileMultipleSelectionDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Map<String, Point>	locations	= new HashMap<>();
-	private static	JFileChooser		fileChooser;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// SELECTION MODE
 
-	static
+
+	public enum SelectionMode
 	{
-		fileChooser = new JFileChooser();
-		fileChooser.setDialogTitle(SELECT_FILE_OR_DIRECTORY_STR);
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		fileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		fileChooser.setApproveButtonToolTipText(SELECT_FILE_OR_DIRECTORY_STR);
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILES_ONLY              (JFileChooser.FILES_ONLY),
+		FILES_AND_DIRECTORIES   (JFileChooser.FILES_AND_DIRECTORIES);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int	chooserSelectionMode;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private SelectionMode(int chooserSelectionMode)
+		{
+			this.chooserSelectionMode = chooserSelectionMode;
+		}
+
+		//--------------------------------------------------------------
+
 	}
 
+	//==================================================================
+
+
+	// ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILE_TRANSFER_NOT_SUPPORTED
+		("File transfer is not supported."),
+
+		ERROR_TRANSFERRING_DATA
+		("An error occurred while transferring data."),
+
+		FAILED_TO_LIST_DIRECTORY_ENTRIES
+		("Failed to get a list of directory entries."),
+
+		CLIPBOARD_IS_UNAVAILABLE
+		("The clipboard is currently unavailable."),
+
+		NO_TEXT_ON_CLIPBOARD
+		("There is no text on the clipboard."),
+
+		FAILED_TO_GET_CLIPBOARD_DATA
+		("Failed to get data from the clipboard.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private	String					key;
-	private	SelectionMode			selectionMode;
-	private	Set<Capability>			capabilities;
-	private	boolean					accepted;
-	private	FileListModel			fileListModel;
-	private	SelectionList<String>	fileList;
-	private	JScrollPane				fileListScrollPane;
-	private	JPanel					mainPanel;
-	private	JButton					removeButton;
-	private	JPopupMenu				contextMenu;
+
+	// FILE LIST MODEL
+
+
+	private static class FileListModel
+		implements ListModel<String>
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	List<String>			pathnames;
+		private	List<ListDataListener>	listeners;
+		private	boolean					changed;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private FileListModel()
+		{
+			pathnames = new ArrayList<>();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ListModel interface
+	////////////////////////////////////////////////////////////////////
+
+		public String getElementAt(int index)
+		{
+			return pathnames.get(index);
+		}
+
+		//--------------------------------------------------------------
+
+		public int getSize()
+		{
+			return pathnames.size();
+		}
+
+		//--------------------------------------------------------------
+
+		public void addListDataListener(ListDataListener listener)
+		{
+			if (listeners == null)
+				listeners = new ArrayList<>();
+			listeners.add(listener);
+		}
+
+		//--------------------------------------------------------------
+
+		public void removeListDataListener(ListDataListener listener)
+		{
+			if (listeners != null)
+				listeners.remove(listener);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private void add(String pathname)
+		{
+			if (!pathnames.contains(pathname))
+			{
+				pathnames.add(pathname);
+				changed = true;
+			}
+		}
+
+		//--------------------------------------------------------------
+
+		private void remove(int index)
+		{
+			pathnames.remove(index);
+			changed = true;
+		}
+
+		//--------------------------------------------------------------
+
+		private void update()
+		{
+			if (changed)
+			{
+				pathnames.sort(null);
+				ListDataEvent event = new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED, 0, pathnames.size() - 1);
+				for (int i = listeners.size() - 1; i >= 0; i--)
+					listeners.get(i).contentsChanged(event);
+				changed = false;
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// FILE TRANSFER HANDLER CLASS
+
+
+	private class FileTransferHandler
+		extends TransferHandler
+		implements Runnable
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	List<File>	files;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private FileTransferHandler()
+		{
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Runnable interface
+	////////////////////////////////////////////////////////////////////
+
+		public void run()
+		{
+			addFiles(files);
+			fileListModel.update();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public boolean canImport(TransferHandler.TransferSupport support)
+		{
+			boolean supported = !support.isDrop() || ((support.getSourceDropActions() & COPY) == COPY);
+			if (supported)
+				supported = capabilities.contains(Capability.ADD) && DataImporter.isFileList(support.getDataFlavors());
+			if (support.isDrop() && supported)
+				support.setDropAction(COPY);
+			return supported;
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public boolean importData(TransferHandler.TransferSupport support)
+		{
+			if (canImport(support))
+			{
+				try
+				{
+					try
+					{
+						List<File> files = DataImporter.getFiles(support.getTransferable());
+						if (files != null)
+						{
+							this.files = files;
+							SwingUtilities.getWindowAncestor(support.getComponent()).toFront();
+							SwingUtilities.invokeLater(this);
+							return true;
+						}
+					}
+					catch (UnsupportedFlavorException e)
+					{
+						throw new AppException(ErrorId.FILE_TRANSFER_NOT_SUPPORTED);
+					}
+					catch (IOException e)
+					{
+						throw new AppException(ErrorId.ERROR_TRANSFERRING_DATA);
+					}
+				}
+				catch (AppException e)
+				{
+					JOptionPane.showMessageDialog(support.getComponent(), e, getTitle(),
+												  JOptionPane.ERROR_MESSAGE);
+				}
+			}
+			return false;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

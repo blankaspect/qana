@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -69,7 +68,8 @@ class KeyPropertiesDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	TITLE_STR					= "Key properties";
+	private static final	String	DEFAULT_TITLE	= "Key properties";
+
 	private static final	String	KEY_DERIVATION_FUNCTION_STR	= "Key derivation function";
 	private static final	String	CIPHERS_STR					= "Ciphers";
 
@@ -81,57 +81,34 @@ class KeyPropertiesDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point	location;
+	private static	KdfUse	kdfUse		= KdfUse.VERIFICATION;
 
-	// RESULT CLASS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
-
-	public static class Result
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public Result(Map<KdfUse, StreamEncrypter.KdfParams> kdfParameterMap,
-					  Set<FortunaCipher>                     allowedCiphers,
-					  FortunaCipher                          preferredCipher)
-		{
-			this.kdfParameterMap = kdfParameterMap;
-			this.allowedCiphers = allowedCiphers;
-			this.preferredCipher = preferredCipher;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		Map<KdfUse, StreamEncrypter.KdfParams>	kdfParameterMap;
-		Set<FortunaCipher>						allowedCiphers;
-		FortunaCipher							preferredCipher;
-
-	}
-
-	//==================================================================
+	private	boolean				accepted;
+	private	KdfParameterPanel	kdfParameterPanel;
+	private	CipherTable			cipherTable;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private KeyPropertiesDialog(Window                                 owner,
-								String                                 titleStr,
-								 Map<KdfUse, StreamEncrypter.KdfParams> kdfParameterMap,
-								 Set<FortunaCipher>                     allowedCiphers,
-								 FortunaCipher                          preferredCipher)
+	private KeyPropertiesDialog(
+		Window									owner,
+		String									title,
+		Map<KdfUse, StreamEncrypter.KdfParams>	kdfParameterMap,
+		Set<FortunaCipher>						allowedCiphers,
+		FortunaCipher							preferredCipher)
 	{
-
 		// Call superclass constructor
-		super(owner, (titleStr == null) ? TITLE_STR : TITLE_STR + " : " + titleStr,
-			  Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, (title == null) ? DEFAULT_TITLE : DEFAULT_TITLE + " : " + title,
+			  ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -256,7 +233,7 @@ class KeyPropertiesDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -266,7 +243,6 @@ class KeyPropertiesDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -275,14 +251,15 @@ class KeyPropertiesDialog
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static Result showDialog(Component                              parent,
-									String                                 titleStr,
-									 Map<KdfUse, StreamEncrypter.KdfParams> kdfParameterMap,
-									 Set<FortunaCipher>                     allowedCiphers,
-									 FortunaCipher                          preferredCipher)
+	public static Result showDialog(
+		Component								parent,
+		String									title,
+		Map<KdfUse, StreamEncrypter.KdfParams>	kdfParameterMap,
+		Set<FortunaCipher>						allowedCiphers,
+		FortunaCipher							preferredCipher)
 	{
-		return new KeyPropertiesDialog(GuiUtils.getWindow(parent), titleStr, kdfParameterMap,
-									   allowedCiphers, preferredCipher).getResult();
+		return new KeyPropertiesDialog(GuiUtils.getWindow(parent), title, kdfParameterMap, allowedCiphers,
+				preferredCipher).getResult();
 	}
 
 	//------------------------------------------------------------------
@@ -337,19 +314,20 @@ class KeyPropertiesDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Member records
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point	location;
-	private static	KdfUse	kdfUse		= KdfUse.VERIFICATION;
 
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
+	// RECORD: RESULT
 
-	private	boolean				accepted;
-	private	KdfParameterPanel	kdfParameterPanel;
-	private	CipherTable			cipherTable;
+
+	public record Result(
+		Map<KdfUse, StreamEncrypter.KdfParams>	kdfParameterMap,
+		Set<FortunaCipher>						allowedCiphers,
+		FortunaCipher							preferredCipher)
+	{ }
+
+	//==================================================================
 
 }
 

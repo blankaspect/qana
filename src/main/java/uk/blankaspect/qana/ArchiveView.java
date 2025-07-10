@@ -315,7 +315,7 @@ class ArchiveView
 			// Call superclass constructor
 			super(document.getTableModel());
 
-			// Set attributes
+			// Set properties
 			setGridColor(Colours.Table.GRID.getColour());
 			setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 			setIntercellSpacing(new Dimension());
@@ -368,7 +368,7 @@ class ArchiveView
 			addFocusListener(this);
 			addMouseListener(this);
 			getTableHeader().addMouseListener(this);
-			getSelectionModel().addListSelectionListener(App.INSTANCE.getMainWindow());
+			getSelectionModel().addListSelectionListener(QanaApp.INSTANCE.getMainWindow());
 		}
 
 		//--------------------------------------------------------------
@@ -428,7 +428,7 @@ class ArchiveView
 					ArchiveDocument.SortingOrder sortingOrder = ArchiveDocument.getSortingOrder();
 					SortingDirection direction = (sortingOrder.key == id) ? sortingOrder.direction.getOpposite()
 																		  : SortingDirection.ASCENDING;
-					App.INSTANCE.getArchiveDocument().setSortingOrder(id, direction);
+					QanaApp.INSTANCE.getArchiveDocument().setSortingOrder(id, direction);
 				}
 			}
 		}
@@ -482,9 +482,8 @@ class ArchiveView
 		@Override
 		public TransferHandler getTransferHandler()
 		{
-			MainWindow window = App.INSTANCE.getMainWindow();
-			return ((window == null) ? null
-									 : ((JComponent)window.getContentPane()).getTransferHandler());
+			MainWindow window = QanaApp.INSTANCE.getMainWindow();
+			return (window == null) ? null : ((JComponent)window.getContentPane()).getTransferHandler();
 		}
 
 		//--------------------------------------------------------------
@@ -561,7 +560,7 @@ class ArchiveView
 				}
 
 				// Update commands for menu items
-				App.INSTANCE.getArchiveDocument().updateCommands();
+				QanaApp.INSTANCE.getArchiveDocument().updateCommands();
 
 				// Display menu
 				if (event == null)
@@ -937,7 +936,7 @@ class ArchiveView
 			// Call superclass constructor
 			super(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
-			// Set component attributes
+			// Set properties
 			setBorder(null);
 
 			// Create table and set it as view
@@ -1119,7 +1118,7 @@ class ArchiveView
 															 fontMetrics.getAscent() + fontMetrics.getDescent());
 			pasteAction = new CommandAction(Command.PASTE, PASTE_STR);
 
-			// Set attributes
+			// Set properties
 			setOpaque(true);
 			setFocusable(false);
 			setTransferHandler(FileTransferHandler.INSTANCE);
@@ -1151,7 +1150,7 @@ class ArchiveView
 		@Override
 		public boolean canImportFiles()
 		{
-			return App.INSTANCE.getArchiveDocument().isEmpty();
+			return QanaApp.INSTANCE.getArchiveDocument().isEmpty();
 		}
 
 		//--------------------------------------------------------------
@@ -1167,7 +1166,7 @@ class ArchiveView
 		@Override
 		public void importFiles(List<File> files)
 		{
-			App.INSTANCE.setArchiveDirectory(files.get(0));
+			QanaApp.INSTANCE.setArchiveDirectory(files.get(0));
 		}
 
 		//--------------------------------------------------------------
@@ -1181,7 +1180,7 @@ class ArchiveView
 		{
 			if (SwingUtilities.isLeftMouseButton(event))
 			{
-				ArchiveDocument document = App.INSTANCE.getArchiveDocument();
+				ArchiveDocument document = QanaApp.INSTANCE.getArchiveDocument();
 				if ((document != null) && document.isEmpty())
 					document.executeCommand(ArchiveDocument.Command.CHOOSE_ARCHIVE_DIRECTORY);
 			}

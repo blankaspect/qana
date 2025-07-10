@@ -2,7 +2,7 @@
 
 IntegerPair.java
 
-Class: pair of integers.
+Record: pair of integers.
 
 \*====================================================================*/
 
@@ -15,14 +15,16 @@ package uk.blankaspect.common.tuple;
 //----------------------------------------------------------------------
 
 
-// CLASS: PAIR OF INTEGERS
+// RECORD: PAIR OF INTEGERS
 
 
 /**
- * This class implements an immutable ordered pair of integers.
+ * This record implements an immutable ordered pair of integers.
  */
 
-public class IntegerPair
+public record IntegerPair(
+	int	first,
+	int	second)
 	implements Cloneable
 {
 
@@ -32,40 +34,6 @@ public class IntegerPair
 
 	/** A pair of integers whose elements are both zero. */
 	public static final	IntegerPair	ZEROS	= new IntegerPair(0, 0);
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	/** The first element of this pair. */
-	private	int	first;
-
-	/** The second element of this pair. */
-	private	int	second;
-
-////////////////////////////////////////////////////////////////////////
-//  Constructors
-////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Creates a new instance of a pair of integers with the specified elements.
-	 *
-	 * @param first
-	 *          the first element of the pair.
-	 * @param second
-	 *          the second element of the pair.
-	 */
-
-	public IntegerPair(
-		int	first,
-		int	second)
-	{
-		// Initialise instance variables
-		this.first = first;
-		this.second = second;
-	}
-
-	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
 //  Class methods
@@ -151,12 +119,7 @@ public class IntegerPair
 		if (this == obj)
 			return true;
 
-		if (obj instanceof IntegerPair)
-		{
-			IntegerPair pair = (IntegerPair)obj;
-			return ((first == pair.first) && (second == pair.second));
-		}
-		return false;
+		return (obj instanceof IntegerPair other) && (first == other.first) && (second == other.second);
 	}
 
 	//------------------------------------------------------------------
@@ -169,7 +132,7 @@ public class IntegerPair
 	public int hashCode()
 	{
 		int sum = first + second;
-		return (sum * (sum + 1) / 2 + first);
+		return sum * (sum + 1) / 2 + first;
 	}
 
 	//------------------------------------------------------------------
@@ -182,36 +145,6 @@ public class IntegerPair
 	public String toString()
 	{
 		return new String(Integer.toString(first) + ", " + Integer.toString(second));
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance methods
-////////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Returns the first element of this pair.
-	 *
-	 * @return the first element of this pair.
-	 */
-
-	public int getFirst()
-	{
-		return first;
-	}
-
-	//------------------------------------------------------------------
-
-	/**
-	 * Returns the second element of this pair.
-	 *
-	 * @return the second element of this pair.
-	 */
-
-	public int getSecond()
-	{
-		return second;
 	}
 
 	//------------------------------------------------------------------

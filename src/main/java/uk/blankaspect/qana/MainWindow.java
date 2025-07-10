@@ -363,7 +363,7 @@ class MainWindow
 	@Override
 	public boolean canImportFiles()
 	{
-		return !App.INSTANCE.isDocumentsFull();
+		return !QanaApp.INSTANCE.isDocumentsFull();
 	}
 
 	//------------------------------------------------------------------
@@ -379,7 +379,7 @@ class MainWindow
 	@Override
 	public void importFiles(List<File> files)
 	{
-		App.INSTANCE.importFiles(files);
+		QanaApp.INSTANCE.importFiles(files);
 	}
 
 	//------------------------------------------------------------------
@@ -545,7 +545,7 @@ class MainWindow
 
 	public void updatePrngCanReseed()
 	{
-		statusPanel.setPrngCanReseed(App.INSTANCE.canPrngReseed());
+		statusPanel.setPrngCanReseed(QanaApp.INSTANCE.canPrngReseed());
 	}
 
 	//------------------------------------------------------------------
@@ -570,10 +570,10 @@ class MainWindow
 
 	public void updateTitle()
 	{
-		Document document = App.INSTANCE.getDocument();
+		Document document = QanaApp.INSTANCE.getDocument();
 		boolean fullPathname = AppConfig.INSTANCE.isShowFullPathnames();
-		setTitle((document == null) ? App.LONG_NAME + " " + App.INSTANCE.getVersionString()
-									: App.SHORT_NAME + " - " + document.getTitleString(fullPathname));
+		setTitle((document == null) ? QanaApp.LONG_NAME + " " + QanaApp.INSTANCE.getVersionString()
+									: QanaApp.SHORT_NAME + " - " + document.getTitleString(fullPathname));
 	}
 
 	//------------------------------------------------------------------
@@ -597,16 +597,15 @@ class MainWindow
 	private void updateKey()
 	{
 		String documentKeyText = null;
-		Document document = App.INSTANCE.getDocument();
+		Document document = QanaApp.INSTANCE.getDocument();
 		if (document != null)
 		{
 			KeyList.Key key = document.getKey();
 			if (key != null)
 				documentKeyText = DOCUMENT_STR + key.getQuotedName();
 		}
-		KeyList.Key globalKey = App.INSTANCE.getGlobalKey();
-		statusPanel.setGlobalKeyText((globalKey == null) ? null
-														 : GLOBAL_STR + globalKey.getQuotedName());
+		KeyList.Key globalKey = QanaApp.INSTANCE.getGlobalKey();
+		statusPanel.setGlobalKeyText((globalKey == null) ? null : GLOBAL_STR + globalKey.getQuotedName());
 		statusPanel.setDocumentKeyText(documentKeyText);
 	}
 
@@ -615,14 +614,14 @@ class MainWindow
 	private void updateDocumentInfo()
 	{
 		String str = null;
-		Document document = App.INSTANCE.getDocument();
+		Document document = QanaApp.INSTANCE.getDocument();
 		if (document != null)
 		{
 			switch (document.getKind())
 			{
 				case ARCHIVE:
 				{
-					ArchiveView view = App.INSTANCE.getArchiveView();
+					ArchiveView view = QanaApp.INSTANCE.getArchiveView();
 					if (view != null)
 					{
 						int numSelected = view.getTable().getSelectedRowCount();
@@ -688,7 +687,7 @@ class MainWindow
 			}
 
 			// Update commands for menu items
-			App.INSTANCE.updateCommands();
+			QanaApp.INSTANCE.updateCommands();
 
 			// Display menu
 			contextMenu.show(event.getComponent(), event.getX(), event.getY());
@@ -736,7 +735,7 @@ class MainWindow
 			{
 				JMenu menu = getMenu();
 				menu.removeAll();
-				Document document = App.INSTANCE.getDocument();
+				Document document = QanaApp.INSTANCE.getDocument();
 				if (document == null)
 					menu.setEnabled(false);
 				else
@@ -795,7 +794,7 @@ class MainWindow
 			@Override
 			protected void update()
 			{
-				getMenu().setEnabled(App.INSTANCE.getArchiveDocument() != null);
+				getMenu().setEnabled(QanaApp.INSTANCE.getArchiveDocument() != null);
 				updateArchiveDocumentCommands();
 			}
 		},
@@ -864,14 +863,14 @@ class MainWindow
 
 		private static void updateAppCommands()
 		{
-			App.INSTANCE.updateCommands();
+			QanaApp.INSTANCE.updateCommands();
 		}
 
 		//--------------------------------------------------------------
 
 		private static void updateArchiveDocumentCommands()
 		{
-			ArchiveDocument archiveDocument = App.INSTANCE.getArchiveDocument();
+			ArchiveDocument archiveDocument = QanaApp.INSTANCE.getArchiveDocument();
 			if (archiveDocument == null)
 				ArchiveDocument.Command.setAllEnabled(false);
 			else
@@ -882,7 +881,7 @@ class MainWindow
 
 		private static void updateTextDocumentCommands()
 		{
-			TextDocument textDocument = App.INSTANCE.getTextDocument();
+			TextDocument textDocument = QanaApp.INSTANCE.getTextDocument();
 			if (textDocument == null)
 				TextDocument.Command.setAllEnabled(false);
 			else
@@ -944,7 +943,7 @@ class MainWindow
 		@Override
 		public void actionPerformed(ActionEvent event)
 		{
-			App.INSTANCE.closeDocument(Integer.parseInt(event.getActionCommand()));
+			QanaApp.INSTANCE.closeDocument(Integer.parseInt(event.getActionCommand()));
 		}
 
 		//--------------------------------------------------------------
@@ -1000,7 +999,7 @@ class MainWindow
 		public void actionPerformed(ActionEvent event)
 		{
 			AppConfig.INSTANCE.setPrngDefaultCipher(cipher);
-			App.INSTANCE.getMainWindow().updateCipher();
+			QanaApp.INSTANCE.getMainWindow().updateCipher();
 		}
 
 		//--------------------------------------------------------------

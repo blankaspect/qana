@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -42,6 +41,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -111,15 +111,15 @@ class KeyEditorDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	KEY_LIST_NUM_ROWS	= 16;
+	private static final	int		KEY_LIST_NUM_ROWS	= 16;
 
 	private static final	Insets	BUTTON_MARGINS	= new Insets(2, 6, 2, 6);
 
+	private static final	String	EDIT_KEYS_STR				= "Edit keys";
 	private static final	String	NAME_STR					= "Name";
 	private static final	String	ADD_STR						= "Add";
 	private static final	String	RENAME_STR					= "Rename";
 	private static final	String	EDIT_PROPERTIES_STR			= "Edit properties";
-	private static final	String	TITLE_STR					= "Edit keys";
 	private static final	String	RENAME_TITLE_STR			= "Rename key";
 	private static final	String	DELETE_TITLE_STR			= "Delete key";
 	private static final	String	KEY1_STR					= "Key ";
@@ -148,344 +148,40 @@ class KeyEditorDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		CONFLICTING_NAME
-		("A key named '%1' already exists.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
+	private static	Point									location;
+	private static	Map<KdfUse, StreamEncrypter.KdfParams>	kdfParamMap		= KdfUse.getKdfParameterMap();
+	private static	Set<FortunaCipher>						allowedCiphers	= EnumSet.allOf(FortunaCipher.class);
+	private static	FortunaCipher							preferredCipher	= FortunaCipher.AES256;
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// PARAMETER FIELD CLASS
-
-
-	private static class ParameterField
-		extends JComponent
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	VERTICAL_MARGIN		= 2;
-		private static final	int	HORIZONTAL_MARGIN	= 6;
-
-		private static final	Color	TEXT_COLOUR			= Color.BLACK;
-		private static final	Color	BACKGROUND_COLOUR	= new Color(236, 244, 236);
-		private static final	Color	BORDER_COLOUR		= new Color(204, 212, 204);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ParameterField(String prototypeStr)
-		{
-			// Set font
-			AppFont.TEXT_FIELD.apply(this);
-
-			// Set preferred size
-			FontMetrics fontMetrics = getFontMetrics(getFont());
-			int width = 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(prototypeStr);
-			int height = 2 * VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
-			setPreferredSize(new Dimension(width, height));
-
-			// Set attributes
-			setEnabled(false);
-			setOpaque(true);
-			setFocusable(false);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected void paintComponent(Graphics gr)
-		{
-			// Create copy of graphics context
-			gr = gr.create();
-
-			// Get dimensions
-			int width = getWidth();
-			int height = getHeight();
-
-			// Draw background
-			gr.setColor(BACKGROUND_COLOUR);
-			gr.fillRect(0, 0, width, height);
-
-			// Draw text
-			if (text != null)
-			{
-				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints((Graphics2D)gr);
-
-				// Draw text
-				gr.setColor(TEXT_COLOUR);
-				gr.drawString(text, HORIZONTAL_MARGIN, VERTICAL_MARGIN + gr.getFontMetrics().getAscent());
-			}
-
-			// Draw border
-			gr.setColor(BORDER_COLOUR);
-			gr.drawRect(0, 0, width - 1, height - 1);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private void setText(String text)
-		{
-			if (!Objects.equals(text, this.text))
-			{
-				this.text = text;
-				repaint();
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	text;
-
-	}
-
-	//==================================================================
-
-
-	// NAME FIELD CLASS
-
-
-	private static class NameField
-		extends ConstrainedTextField
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	MAX_LENGTH	= 1024;
-		private static final	int	NUM_COLUMNS	= 32;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private NameField()
-		{
-			super(MAX_LENGTH, NUM_COLUMNS);
-			AppFont.TEXT_FIELD.apply(this);
-			GuiUtils.setTextComponentMargins(this);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected int getColumnWidth()
-		{
-			return FontUtils.getCharWidth('0', getFontMetrics(getFont()));
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		protected boolean acceptCharacter(char ch,
-										  int  index)
-		{
-			return (ch != KeyList.Key.TEMPORARY_PREFIX_CHAR);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// PANEL CLASS
-
-
-	private static class Panel
-		extends FixedWidthPanel
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	KEY	= Panel.class.getCanonicalName();
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Panel(LayoutManager layout)
-		{
-			super(layout);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static void reset()
-		{
-			MaxValueMap.removeAll(KEY);
-		}
-
-		//--------------------------------------------------------------
-
-		private static void update()
-		{
-			MaxValueMap.update(KEY);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected String getKey()
-		{
-			return KEY;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// LABEL CLASS
-
-
-	private static class Label
-		extends FixedWidthLabel
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	KEY	= Label.class.getCanonicalName();
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Label(String text)
-		{
-			super(text);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static void reset()
-		{
-			MaxValueMap.removeAll(KEY);
-		}
-
-		//--------------------------------------------------------------
-
-		private static void update()
-		{
-			MaxValueMap.update(KEY);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected String getKey()
-		{
-			return KEY;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
+	private	boolean							accepted;
+	private	Map<KeyList.Key, KeyList.Key>	keyMap;
+	private	KeySelectionList				selectionList;
+	private	Map<KdfUse, ParameterField>		kdfParamFields;
+	private	ParameterField					allowedCiphersField;
+	private	ParameterField					preferredCipherField;
+	private	NameField						nameField;
+	private	JButton							addButton;
+	private	JButton							renameButton;
+	private	JButton							editPropertiesButton;
+	private	JButton							deleteButton;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private KeyEditorDialog(Window            owner,
-							List<KeyList.Key> keys)
+	private KeyEditorDialog(
+		Window				owner,
+		List<KeyList.Key>	keys)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, EDIT_KEYS_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -897,7 +593,8 @@ class KeyEditorDialog
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -909,7 +606,7 @@ class KeyEditorDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -922,7 +619,6 @@ class KeyEditorDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -931,8 +627,9 @@ class KeyEditorDialog
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static KeyEditorDialog showDialog(Component         parent,
-											 List<KeyList.Key> keys)
+	public static KeyEditorDialog showDialog(
+		Component			parent,
+		List<KeyList.Key>	keys)
 	{
 		return new KeyEditorDialog(GuiUtils.getWindow(parent), keys);
 	}
@@ -943,7 +640,9 @@ class KeyEditorDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void actionPerformed(ActionEvent event)
+	@Override
+	public void actionPerformed(
+		ActionEvent	event)
 	{
 		// Execute command
 		try
@@ -974,7 +673,7 @@ class KeyEditorDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 
 		// Update components
@@ -988,21 +687,27 @@ class KeyEditorDialog
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void changedUpdate(DocumentEvent event)
+	@Override
+	public void changedUpdate(
+		DocumentEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void insertUpdate(DocumentEvent event)
+	@Override
+	public void insertUpdate(
+		DocumentEvent	event)
 	{
 		updateEditButtons();
 	}
 
 	//------------------------------------------------------------------
 
-	public void removeUpdate(DocumentEvent event)
+	@Override
+	public void removeUpdate(
+		DocumentEvent	event)
 	{
 		updateEditButtons();
 	}
@@ -1013,7 +718,9 @@ class KeyEditorDialog
 //  Instance methods : ListSelectionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void valueChanged(ListSelectionEvent event)
+	@Override
+	public void valueChanged(
+		ListSelectionEvent	event)
 	{
 		if (!event.getValueIsAdjusting())
 			updateComponents();
@@ -1025,7 +732,9 @@ class KeyEditorDialog
 //  Instance methods : MouseListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void mouseClicked(MouseEvent event)
+	@Override
+	public void mouseClicked(
+		MouseEvent	event)
 	{
 		if (SwingUtilities.isLeftMouseButton(event) && (event.getClickCount() > 1))
 		{
@@ -1038,28 +747,36 @@ class KeyEditorDialog
 
 	//------------------------------------------------------------------
 
-	public void mouseEntered(MouseEvent event)
+	@Override
+	public void mouseEntered(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void mouseExited(MouseEvent event)
+	@Override
+	public void mouseExited(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void mousePressed(MouseEvent event)
+	@Override
+	public void mousePressed(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void mouseReleased(MouseEvent event)
+	@Override
+	public void mouseReleased(
+		MouseEvent	event)
 	{
 		// do nothing
 	}
@@ -1072,7 +789,7 @@ class KeyEditorDialog
 
 	public boolean hasEdits()
 	{
-		return (accepted && selectionList.isChanged());
+		return accepted && selectionList.isChanged();
 	}
 
 	//------------------------------------------------------------------
@@ -1098,7 +815,8 @@ class KeyEditorDialog
 
 	//------------------------------------------------------------------
 
-	public String getAllowedCiphersString(Set<FortunaCipher> ciphers)
+	public String getAllowedCiphersString(
+		Collection<FortunaCipher>	ciphers)
 	{
 		StringBuilder buffer = new StringBuilder(64);
 		for (FortunaCipher cipher : ciphers)
@@ -1159,8 +877,9 @@ class KeyEditorDialog
 
 	//------------------------------------------------------------------
 
-	private void updateMap(KeyList.Key source,
-						   KeyList.Key target)
+	private void updateMap(
+		KeyList.Key	source,
+		KeyList.Key	target)
 	{
 		for (KeyList.Key key : keyMap.keySet())
 		{
@@ -1177,7 +896,8 @@ class KeyEditorDialog
 
 	//------------------------------------------------------------------
 
-	private void verifyKey(KeyList.Key key)
+	private void verifyKey(
+		KeyList.Key	key)
 		throws AppException
 	{
 		if (key.getKey() == null)
@@ -1219,13 +939,13 @@ class KeyEditorDialog
 				if (result != null)
 				{
 					// Set properties
-					kdfParamMap = result.kdfParameterMap;
-					allowedCiphers = result.allowedCiphers;
-					preferredCipher = result.preferredCipher;
+					kdfParamMap = result.kdfParameterMap();
+					allowedCiphers = result.allowedCiphers();
+					preferredCipher = result.preferredCipher();
 
 					// Create key
-					KeyList.Key key = new KeyCreator(name, passphrase, kdfParamMap, allowedCiphers,
-													 preferredCipher).create(this);
+					KeyList.Key key =
+							new KeyCreator(name, passphrase, kdfParamMap, allowedCiphers, preferredCipher).create(this);
 
 					// Add key to list
 					List<KeyList.Key> keys = selectionList.getKeys();
@@ -1298,17 +1018,16 @@ class KeyEditorDialog
 			paramMap.put(KdfUse.VERIFICATION, key.getKdfParamsVer());
 			paramMap.put(KdfUse.GENERATION, key.getKdfParamsGen());
 			KeyPropertiesDialog.Result result =
-							KeyPropertiesDialog.showDialog(this, KEY1_STR + key.getQuotedName(), paramMap,
-														   key.getAllowedCiphers(),
-														   key.getPreferredCipher());
+					KeyPropertiesDialog.showDialog(this, KEY1_STR + key.getQuotedName(), paramMap,
+												   key.getAllowedCiphers(), key.getPreferredCipher());
 
 			// Set properties of key
 			if (result != null)
 			{
-				key.setKdfParamsVer(result.kdfParameterMap.get(KdfUse.VERIFICATION));
-				key.setKdfParamsGen(result.kdfParameterMap.get(KdfUse.GENERATION));
-				key.setAllowedCiphers(result.allowedCiphers);
-				key.setPreferredCipher(result.preferredCipher);
+				key.setKdfParamsVer(result.kdfParameterMap().get(KdfUse.VERIFICATION));
+				key.setKdfParamsGen(result.kdfParameterMap().get(KdfUse.GENERATION));
+				key.setAllowedCiphers(result.allowedCiphers());
+				key.setPreferredCipher(result.preferredCipher());
 				selectionList.setChanged();
 			}
 		}
@@ -1331,11 +1050,10 @@ class KeyEditorDialog
 
 			// Delete key and update list
 			String[] optionStrs = Utils.getOptionStrings(AppConstants.DELETE_STR);
-			if (JOptionPane.showOptionDialog(this,
-											 KEY2_STR + key.getQuotedName() + "\n" + DELETE_MESSAGE_STR,
+			if (JOptionPane.showOptionDialog(this, KEY2_STR + key.getQuotedName() + "\n" + DELETE_MESSAGE_STR,
 											 DELETE_TITLE_STR, JOptionPane.OK_CANCEL_OPTION,
-											 JOptionPane.QUESTION_MESSAGE, null, optionStrs,
-											 optionStrs[1]) == JOptionPane.OK_OPTION)
+											 JOptionPane.QUESTION_MESSAGE, null, optionStrs, optionStrs[1])
+					== JOptionPane.OK_OPTION)
 			{
 				// Update key map
 				updateMap(key, null);
@@ -1367,29 +1085,341 @@ class KeyEditorDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point									location;
-	private static	Map<KdfUse, StreamEncrypter.KdfParams>	kdfParamMap		= KdfUse.getKdfParameterMap();
-	private static	Set<FortunaCipher>						allowedCiphers	= EnumSet.allOf(FortunaCipher.class);
-	private static	FortunaCipher							preferredCipher	= FortunaCipher.AES256;
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		CONFLICTING_NAME
+		("A key named '%1' already exists.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(
+			String	message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean							accepted;
-	private	Map<KeyList.Key, KeyList.Key>	keyMap;
-	private	KeySelectionList				selectionList;
-	private	Map<KdfUse, ParameterField>		kdfParamFields;
-	private	ParameterField					allowedCiphersField;
-	private	ParameterField					preferredCipherField;
-	private	NameField						nameField;
-	private	JButton							addButton;
-	private	JButton							renameButton;
-	private	JButton							editPropertiesButton;
-	private	JButton							deleteButton;
+
+	// CLASS: PARAMETER FIELD
+
+
+	private static class ParameterField
+		extends JComponent
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int		VERTICAL_MARGIN		= 2;
+		private static final	int		HORIZONTAL_MARGIN	= 6;
+
+		private static final	Color	TEXT_COLOUR			= Color.BLACK;
+		private static final	Color	BACKGROUND_COLOUR	= new Color(236, 244, 236);
+		private static final	Color	BORDER_COLOUR		= new Color(204, 212, 204);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	text;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ParameterField(
+			String	prototype)
+		{
+			// Set font
+			AppFont.TEXT_FIELD.apply(this);
+
+			// Set preferred size
+			FontMetrics fontMetrics = getFontMetrics(getFont());
+			int width = 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(prototype);
+			int height = 2 * VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
+			setPreferredSize(new Dimension(width, height));
+
+			// Set properties
+			setEnabled(false);
+			setOpaque(true);
+			setFocusable(false);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected void paintComponent(
+			Graphics	gr)
+		{
+			// Create copy of graphics context
+			gr = gr.create();
+
+			// Get dimensions
+			int width = getWidth();
+			int height = getHeight();
+
+			// Draw background
+			gr.setColor(BACKGROUND_COLOUR);
+			gr.fillRect(0, 0, width, height);
+
+			// Draw text
+			if (text != null)
+			{
+				// Set rendering hints for text antialiasing and fractional metrics
+				TextRendering.setHints((Graphics2D)gr);
+
+				// Draw text
+				gr.setColor(TEXT_COLOUR);
+				gr.drawString(text, HORIZONTAL_MARGIN, VERTICAL_MARGIN + gr.getFontMetrics().getAscent());
+			}
+
+			// Draw border
+			gr.setColor(BORDER_COLOUR);
+			gr.drawRect(0, 0, width - 1, height - 1);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private void setText(
+			String	text)
+		{
+			if (!Objects.equals(text, this.text))
+			{
+				this.text = text;
+				repaint();
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: NAME FIELD
+
+
+	private static class NameField
+		extends ConstrainedTextField
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	MAX_LENGTH	= 1024;
+		private static final	int	NUM_COLUMNS	= 32;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private NameField()
+		{
+			super(MAX_LENGTH, NUM_COLUMNS);
+			AppFont.TEXT_FIELD.apply(this);
+			GuiUtils.setTextComponentMargins(this);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected int getColumnWidth()
+		{
+			return FontUtils.getCharWidth('0', getFontMetrics(getFont()));
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		protected boolean acceptCharacter(
+			char	ch,
+			int		index)
+		{
+			return (ch != KeyList.Key.TEMPORARY_PREFIX_CHAR);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: PANEL
+
+
+	private static class Panel
+		extends FixedWidthPanel
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	KEY	= Panel.class.getCanonicalName();
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Panel(
+			LayoutManager	layout)
+		{
+			super(layout);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static void reset()
+		{
+			MaxValueMap.removeAll(KEY);
+		}
+
+		//--------------------------------------------------------------
+
+		private static void update()
+		{
+			MaxValueMap.update(KEY);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected String getKey()
+		{
+			return KEY;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: LABEL
+
+
+	private static class Label
+		extends FixedWidthLabel
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	KEY	= Label.class.getCanonicalName();
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Label(
+			String	text)
+		{
+			super(text);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static void reset()
+		{
+			MaxValueMap.removeAll(KEY);
+		}
+
+		//--------------------------------------------------------------
+
+		private static void update()
+		{
+			MaxValueMap.update(KEY);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected String getKey()
+		{
+			return KEY;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

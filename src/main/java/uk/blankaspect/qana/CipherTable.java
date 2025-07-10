@@ -86,7 +86,8 @@ class CipherTable
 	private static final	Color	TEXT_COLOUR	= Colours.Table.FOREGROUND.getColour();
 
 	private static final	Color	HEADER_BACKGROUND_COLOUR			= Colours.Table.HEADER_BACKGROUND1.getColour();
-	private static final	Color	FOCUSED_HEADER_BACKGROUND_COLOUR	= Colours.Table.FOCUSED_HEADER_BACKGROUND1.getColour();
+	private static final	Color	FOCUSED_HEADER_BACKGROUND_COLOUR	=
+			Colours.Table.FOCUSED_HEADER_BACKGROUND1.getColour();
 
 	private static final	Color	FOCUSED_BORDER_COLOUR1	= Color.WHITE;
 	private static final	Color	FOCUSED_BORDER_COLOUR2	= Color.BLACK;
@@ -100,7 +101,7 @@ class CipherTable
 		PRESSED
 	}
 
-	private static final	ImageIcon	TICK_ICON	= new ImageIcon(ImageData.TICK);
+	private static final	ImageIcon	TICK_ICON	= new ImageIcon(ImgData.TICK);
 
 	// Commands
 	private interface Command
@@ -165,170 +166,17 @@ class CipherTable
 		)
 	};
 
-	// Image data
-	private interface ImageData
-	{
-		byte[]	TICK	=
-		{
-			(byte)0x89, (byte)0x50, (byte)0x4E, (byte)0x47, (byte)0x0D, (byte)0x0A, (byte)0x1A, (byte)0x0A,
-			(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0D, (byte)0x49, (byte)0x48, (byte)0x44, (byte)0x52,
-			(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0A, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0A,
-			(byte)0x08, (byte)0x06, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x8D, (byte)0x32, (byte)0xCF,
-			(byte)0xBD, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0xB3, (byte)0x49, (byte)0x44, (byte)0x41,
-			(byte)0x54, (byte)0x78, (byte)0xDA, (byte)0x63, (byte)0xF8, (byte)0xFF, (byte)0xFF, (byte)0x3F,
-			(byte)0x03, (byte)0x2E, (byte)0x1C, (byte)0x5F, (byte)0xD0, (byte)0x6F, (byte)0x9D, (byte)0x50,
-			(byte)0x30, (byte)0xF1, (byte)0x26, (byte)0x10, (byte)0xF7, (byte)0xE2, (byte)0x54, (byte)0x14,
-			(byte)0xDA, (byte)0xD0, (byte)0xC0, (byte)0x96, (byte)0x90, (byte)0x3F, (byte)0xE1, (byte)0x7A,
-			(byte)0x42, (byte)0xC1, (byte)0x84, (byte)0xFF, (byte)0x40, (byte)0x7C, (byte)0x03, (byte)0xA7,
-			(byte)0xC2, (byte)0xC4, (byte)0x82, (byte)0xFE, (byte)0x4A, (byte)0xA8, (byte)0x22, (byte)0x20,
-			(byte)0xEE, (byte)0x2F, (byte)0xC2, (byte)0xAA, (byte)0x28, (byte)0xB9, (byte)0x78, (byte)0x8A,
-			(byte)0x3C, (byte)0x50, (byte)0xC1, (byte)0x57, (byte)0xA8, (byte)0xC2, (byte)0x8B, (byte)0x0D,
-			(byte)0x0D, (byte)0x0D, (byte)0x2C, (byte)0x0C, (byte)0x29, (byte)0xF9, (byte)0x13, (byte)0xC4,
-			(byte)0x93, (byte)0x0A, (byte)0xFB, (byte)0x5D, (byte)0x42, (byte)0x43, (byte)0x57, (byte)0x31,
-			(byte)0x23, (byte)0x4C, (byte)0x9B, (byte)0xB0, (byte)0x11, (byte)0xAA, (byte)0xE8, (byte)0x5F,
-			(byte)0x62, (byte)0xDE, (byte)0x44, (byte)0x2B, (byte)0x90, (byte)0x18, (byte)0x03, (byte)0xD0,
-			(byte)0xD8, (byte)0x0B, (byte)0x20, (byte)0xC1, (byte)0xF8, (byte)0x82, (byte)0x89, (byte)0xAB,
-			(byte)0x41, (byte)0x3A, (byte)0x13, (byte)0x0A, (byte)0xFB, (byte)0x7C, (byte)0xE1, (byte)0x56,
-			(byte)0x16, (byte)0x4E, (byte)0x98, (byte)0x03, (byte)0xD3, (byte)0x0C, (byte)0x52, (byte)0xB8,
-			(byte)0x13, (byte)0x49, (byte)0x62, (byte)0x0D, (byte)0x90, (byte)0xBE, (byte)0x0F, (byte)0xE5,
-			(byte)0xBF, (byte)0x89, (byte)0xCB, (byte)0x9E, (byte)0x22, (byte)0x0C, (byte)0x57, (byte)0x98,
-			(byte)0x56, (byte)0xDE, (byte)0xC1, (byte)0x0F, (byte)0x14, (byte)0x3C, (byte)0x81, (byte)0x70,
-			(byte)0x38, (byte)0xDC, (byte)0x03, (byte)0x49, (byte)0xC8, (byte)0xEE, (byte)0x06, (byte)0x13,
-			(byte)0x58, (byte)0x14, (byte)0x1F, (byte)0x01, (byte)0xCA, (byte)0x30, (byte)0x62, (byte)0x28,
-			(byte)0x44, (byte)0x52, (byte)0xBC, (byte)0x36, (byte)0xBE, (byte)0x60, (byte)0xC2, (byte)0xE5,
-			(byte)0xA4, (byte)0xFC, (byte)0x09, (byte)0xEA, (byte)0xE8, (byte)0x21, (byte)0x01, (byte)0x00,
-			(byte)0x8C, (byte)0xFC, (byte)0xF3, (byte)0xF3, (byte)0x1D, (byte)0xDF, (byte)0xB3, (byte)0xE7,
-			(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x49, (byte)0x45, (byte)0x4E, (byte)0x44,
-			(byte)0xAE, (byte)0x42, (byte)0x60, (byte)0x82
-		};
-	}
-
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// TABLE COLUMN
-
-
-	private enum Column
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		CIPHER
-		(
-			"Cipher"
-		),
-
-		ALLOWED
-		(
-			"Allowed"
-		),
-
-		PREFERRED
-		(
-			"Preferred"
-		);
-
-		//--------------------------------------------------------------
-
-		private static final	Set<Column>	BOOLEAN_COLUMNS	= EnumSet.of(ALLOWED, PREFERRED);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Column(String text)
-		{
-			this.text = text;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public String toString()
-		{
-			return text;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	text;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// CELL LOCATOR CLASS
-
-
-	private static class CellLocator
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private CellLocator(Column        column,
-							FortunaCipher cipher)
-		{
-			this.column = column;
-			this.cipher = cipher;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (obj instanceof CellLocator)
-			{
-				CellLocator locator = (CellLocator)obj;
-				return ((column == locator.column) && (cipher == locator.cipher));
-			}
-			return false;
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public int hashCode()
-		{
-			return ((column.ordinal() << 16) | cipher.ordinal());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	Column			column;
-		private	FortunaCipher	cipher;
-
-	}
-
-	//==================================================================
+	private	Set<FortunaCipher>		allowedCiphers;
+	private	FortunaCipher			preferredCipher;
+	private	Map<Column, Integer>	columnWidths;
+	private	int						rowHeight;
+	private	CellLocator				activeCell;
+	private	CellLocator				selectedCell;
+	private	CellState				cellState;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -372,7 +220,7 @@ class CipherTable
 		for (Column column : Column.BOOLEAN_COLUMNS)
 			columnWidths.put(column, 2 * CELL_HORIZONTAL_MARGIN + GRID_LINE_WIDTH + columnWidth);
 
-		// Set attributes
+		// Set properties
 		setOpaque(true);
 		setFocusable(true);
 
@@ -860,16 +708,176 @@ class CipherTable
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	Set<FortunaCipher>		allowedCiphers;
-	private	FortunaCipher			preferredCipher;
-	private	Map<Column, Integer>	columnWidths;
-	private	int						rowHeight;
-	private	CellLocator				activeCell;
-	private	CellLocator				selectedCell;
-	private	CellState				cellState;
+
+	// TABLE COLUMN
+
+
+	private enum Column
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		CIPHER
+		(
+			"Cipher"
+		),
+
+		ALLOWED
+		(
+			"Allowed"
+		),
+
+		PREFERRED
+		(
+			"Preferred"
+		);
+
+		//--------------------------------------------------------------
+
+		private static final	Set<Column>	BOOLEAN_COLUMNS	= EnumSet.of(ALLOWED, PREFERRED);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	text;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Column(String text)
+		{
+			this.text = text;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String toString()
+		{
+			return text;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CELL LOCATOR CLASS
+
+
+	private static class CellLocator
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Column			column;
+		private	FortunaCipher	cipher;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private CellLocator(Column        column,
+							FortunaCipher cipher)
+		{
+			this.column = column;
+			this.cipher = cipher;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+
+			return (obj instanceof CellLocator other) && (column == other.column) && (cipher == other.cipher);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public int hashCode()
+		{
+			return ((column.ordinal() << 16) | cipher.ordinal());
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Image data
+////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * PNG image data.
+	 */
+
+	private interface ImgData
+	{
+		byte[]	TICK	=
+		{
+			(byte)0x89, (byte)0x50, (byte)0x4E, (byte)0x47, (byte)0x0D, (byte)0x0A, (byte)0x1A, (byte)0x0A,
+			(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0D, (byte)0x49, (byte)0x48, (byte)0x44, (byte)0x52,
+			(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0A, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x0A,
+			(byte)0x08, (byte)0x06, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x8D, (byte)0x32, (byte)0xCF,
+			(byte)0xBD, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0xB3, (byte)0x49, (byte)0x44, (byte)0x41,
+			(byte)0x54, (byte)0x78, (byte)0xDA, (byte)0x63, (byte)0xF8, (byte)0xFF, (byte)0xFF, (byte)0x3F,
+			(byte)0x03, (byte)0x2E, (byte)0x1C, (byte)0x5F, (byte)0xD0, (byte)0x6F, (byte)0x9D, (byte)0x50,
+			(byte)0x30, (byte)0xF1, (byte)0x26, (byte)0x10, (byte)0xF7, (byte)0xE2, (byte)0x54, (byte)0x14,
+			(byte)0xDA, (byte)0xD0, (byte)0xC0, (byte)0x96, (byte)0x90, (byte)0x3F, (byte)0xE1, (byte)0x7A,
+			(byte)0x42, (byte)0xC1, (byte)0x84, (byte)0xFF, (byte)0x40, (byte)0x7C, (byte)0x03, (byte)0xA7,
+			(byte)0xC2, (byte)0xC4, (byte)0x82, (byte)0xFE, (byte)0x4A, (byte)0xA8, (byte)0x22, (byte)0x20,
+			(byte)0xEE, (byte)0x2F, (byte)0xC2, (byte)0xAA, (byte)0x28, (byte)0xB9, (byte)0x78, (byte)0x8A,
+			(byte)0x3C, (byte)0x50, (byte)0xC1, (byte)0x57, (byte)0xA8, (byte)0xC2, (byte)0x8B, (byte)0x0D,
+			(byte)0x0D, (byte)0x0D, (byte)0x2C, (byte)0x0C, (byte)0x29, (byte)0xF9, (byte)0x13, (byte)0xC4,
+			(byte)0x93, (byte)0x0A, (byte)0xFB, (byte)0x5D, (byte)0x42, (byte)0x43, (byte)0x57, (byte)0x31,
+			(byte)0x23, (byte)0x4C, (byte)0x9B, (byte)0xB0, (byte)0x11, (byte)0xAA, (byte)0xE8, (byte)0x5F,
+			(byte)0x62, (byte)0xDE, (byte)0x44, (byte)0x2B, (byte)0x90, (byte)0x18, (byte)0x03, (byte)0xD0,
+			(byte)0xD8, (byte)0x0B, (byte)0x20, (byte)0xC1, (byte)0xF8, (byte)0x82, (byte)0x89, (byte)0xAB,
+			(byte)0x41, (byte)0x3A, (byte)0x13, (byte)0x0A, (byte)0xFB, (byte)0x7C, (byte)0xE1, (byte)0x56,
+			(byte)0x16, (byte)0x4E, (byte)0x98, (byte)0x03, (byte)0xD3, (byte)0x0C, (byte)0x52, (byte)0xB8,
+			(byte)0x13, (byte)0x49, (byte)0x62, (byte)0x0D, (byte)0x90, (byte)0xBE, (byte)0x0F, (byte)0xE5,
+			(byte)0xBF, (byte)0x89, (byte)0xCB, (byte)0x9E, (byte)0x22, (byte)0x0C, (byte)0x57, (byte)0x98,
+			(byte)0x56, (byte)0xDE, (byte)0xC1, (byte)0x0F, (byte)0x14, (byte)0x3C, (byte)0x81, (byte)0x70,
+			(byte)0x38, (byte)0xDC, (byte)0x03, (byte)0x49, (byte)0xC8, (byte)0xEE, (byte)0x06, (byte)0x13,
+			(byte)0x58, (byte)0x14, (byte)0x1F, (byte)0x01, (byte)0xCA, (byte)0x30, (byte)0x62, (byte)0x28,
+			(byte)0x44, (byte)0x52, (byte)0xBC, (byte)0x36, (byte)0xBE, (byte)0x60, (byte)0xC2, (byte)0xE5,
+			(byte)0xA4, (byte)0xFC, (byte)0x09, (byte)0xEA, (byte)0xE8, (byte)0x21, (byte)0x01, (byte)0x00,
+			(byte)0x8C, (byte)0xFC, (byte)0xF3, (byte)0xF3, (byte)0x1D, (byte)0xDF, (byte)0xB3, (byte)0xE7,
+			(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x49, (byte)0x45, (byte)0x4E, (byte)0x44,
+			(byte)0xAE, (byte)0x42, (byte)0x60, (byte)0x82
+		};
+	}
+
+	//==================================================================
 
 }
 

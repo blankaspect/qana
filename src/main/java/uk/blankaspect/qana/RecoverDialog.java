@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -204,10 +203,9 @@ class RecoverDialog
 	private RecoverDialog(Window  owner,
 						  boolean outputToFile)
 	{
-
 		// Call superclass constructor
 		super(owner, RECOVER_STR + " " + (outputToFile ? FILE_STR : TEXT_STR),
-			  Dialog.ModalityType.APPLICATION_MODAL);
+			  ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -378,7 +376,7 @@ class RecoverDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -388,7 +386,6 @@ class RecoverDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -581,7 +578,7 @@ class RecoverDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -620,7 +617,7 @@ class RecoverDialog
 		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 		inputFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.PNG_FILES_STR,
-																AppConstants.PNG_FILE_SUFFIX));
+																AppConstants.PNG_FILENAME_EXTENSION));
 
 		outputFileChooser = new JFileChooser();
 		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);

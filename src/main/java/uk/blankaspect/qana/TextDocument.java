@@ -363,7 +363,7 @@ class TextDocument
 
 		public void actionPerformed(ActionEvent event)
 		{
-			TextDocument document = App.INSTANCE.getTextDocument();
+			TextDocument document = QanaApp.INSTANCE.getTextDocument();
 			if (document != null)
 				document.executeCommand(this);
 		}
@@ -435,8 +435,7 @@ class TextDocument
 		("The text was encrypted with an unrecognised algorithm."),
 
 		UNSUPPORTED_VERSION
-		("The version of the encrypted text (%1) is not supported by this version of " + App.SHORT_NAME +
-			"."),
+		("The version of the encrypted text (%1) is not supported by this version of " + QanaApp.SHORT_NAME + "."),
 
 		NO_ATTRIBUTE
 		("The required attribute is missing."),
@@ -444,10 +443,10 @@ class TextDocument
 		INVALID_ATTRIBUTE
 		("The attribute is invalid."),
 
-		FAILED_TO_GET_TIMESTAMP
+		FAILED_TO_GET_FILE_TIMESTAMP
 		("Failed to get the timestamp of the file."),
 
-		FAILED_TO_SET_TIMESTAMP
+		FAILED_TO_SET_FILE_TIMESTAMP
 		("Failed to set the timestamp of the file."),
 
 		NOT_ENOUGH_MEMORY_TO_PERFORM_COMMAND
@@ -685,17 +684,14 @@ class TextDocument
 
 	//------------------------------------------------------------------
 
-	public void setText(final String  text,
-						 final boolean caretToStart)
+	public void setText(String  text,
+						boolean caretToStart)
 	{
-		SwingUtilities.invokeLater(new Runnable()
+		SwingUtilities.invokeLater(() ->
 		{
-			public void run()
-			{
-				textArea.setText(text);
-				if (caretToStart)
-					textArea.setCaretPosition(0);
-			}
+			textArea.setText(text);
+			if (caretToStart)
+				textArea.setCaretPosition(0);
 		});
 	}
 
@@ -714,9 +710,8 @@ class TextDocument
 		String ciphertext = bytesToBase64(encrypt(key, progressView));
 
 		// Display text
-		setText(AppConfig.INSTANCE.isWrapCiphertextInXml()
-														? wrapTextInXml(ciphertext, Utils.getCipher(key))
-														: ciphertext,
+		setText(AppConfig.INSTANCE.isWrapCiphertextInXml() ? wrapTextInXml(ciphertext, Utils.getCipher(key))
+														   : ciphertext,
 				true);
 	}
 
@@ -825,11 +820,9 @@ class TextDocument
 
 		// Conceal encrypted text
 		progressView.initOverallProgress(1, 1, 2);
-		App app = App.INSTANCE;
-		new FileConcealer().conceal(inStream,
-									(carrierFile == null) ? app.getCarrierImageSource() : null,
-									carrierFile, outFile, inStream.available(),
-									app.getLengthEncoder(), maxNumBits,
+		QanaApp app = QanaApp.INSTANCE;
+		new FileConcealer().conceal(inStream, (carrierFile == null) ? app.getCarrierImageSource() : null, carrierFile,
+									outFile, inStream.available(), app.getLengthEncoder(), maxNumBits,
 									addRandomBits ? app.getRandomSource() : null);
 
 		// Set timestamp of output file
@@ -837,9 +830,9 @@ class TextDocument
 		{
 			long timestamp = carrierFile.lastModified();
 			if (timestamp == 0)
-				throw new FileException(ErrorId.FAILED_TO_GET_TIMESTAMP, carrierFile);
+				throw new FileException(ErrorId.FAILED_TO_GET_FILE_TIMESTAMP, carrierFile);
 			if (!outFile.setLastModified(timestamp))
-				throw new FileException(ErrorId.FAILED_TO_SET_TIMESTAMP, outFile);
+				throw new FileException(ErrorId.FAILED_TO_SET_FILE_TIMESTAMP, outFile);
 		}
 	}
 
@@ -859,7 +852,7 @@ class TextDocument
 		// Recover file
 		progressView.initOverallProgress(0, 1, 2);
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-		new FileConcealer().recover(inFile, outStream, App.INSTANCE.getLengthDecoder());
+		new FileConcealer().recover(inFile, outStream, QanaApp.INSTANCE.getLengthDecoder());
 
 		// Decrypt text
 		progressView.initOverallProgress(1, 1, 2);
@@ -1074,7 +1067,7 @@ class TextDocument
 		if (progressListener != null)
 			encrypter.addProgressListener(progressListener);
 		encrypter.encrypt(inStream, outStream, data.length, new ModernCalendar().getTimeInMillis(), key.getKey(),
-						  App.INSTANCE.getRandomKey(), generator -> App.INSTANCE.generateKey(generator));
+						  QanaApp.INSTANCE.getRandomKey(), QanaApp.INSTANCE::generateKey);
 
 		// Return encrypted data
 		return outStream.toByteArray();
@@ -1106,8 +1099,7 @@ class TextDocument
 		};
 		if (progressListener != null)
 			decrypter.addProgressListener(progressListener);
-		setTimestamp(decrypter.decrypt(inStream, outStream, data.length, key.getKey(),
-									   generator -> App.INSTANCE.generateKey(generator)));
+		setTimestamp(decrypter.decrypt(inStream, outStream, data.length, key.getKey(), QanaApp.INSTANCE::generateKey));
 
 		// Set decrypted text
 		setText(outStream.toString(), true);
@@ -1234,11 +1226,11 @@ class TextDocument
 		}
 		catch (AppException e)
 		{
-			App.INSTANCE.showErrorMessage(App.SHORT_NAME, e);
+			QanaApp.INSTANCE.showErrorMessage(QanaApp.SHORT_NAME, e);
 		}
 
 		// Update tab text and title and menus in main window
-		App.INSTANCE.updateTabText(this);
+		QanaApp.INSTANCE.updateTabText(this);
 		getWindow().updateTitleAndMenus();
 	}
 
@@ -1261,7 +1253,7 @@ class TextDocument
 	private void onClearEditList()
 	{
 		String[] optionStrs = Utils.getOptionStrings(AppConstants.CLEAR_STR);
-		if (JOptionPane.showOptionDialog(getWindow(), CLEAR_EDIT_LIST_STR, App.SHORT_NAME,
+		if (JOptionPane.showOptionDialog(getWindow(), CLEAR_EDIT_LIST_STR, QanaApp.SHORT_NAME,
 										 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
 										 optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION)
 		{
@@ -1351,14 +1343,13 @@ class TextDocument
 		KeyList.Key key = getKey(ENCRYPT_TEXT_STR);
 
 		// Encrypt text
-		if ((key != null) && App.INSTANCE.confirmUseTemporaryKey(key))
+		if ((key != null) && QanaApp.INSTANCE.confirmUseTemporaryKey(key))
 		{
 			// Check cipher
 			key.checkAllowedCipher(Utils.getCipher(key));
 
 			// Encrypt text
-			TaskProgressDialog.showDialog(getWindow(), ENCRYPT_TEXT_STR,
-										  new Task.EncryptText(this, key));
+			TaskProgressDialog.showDialog(getWindow(), ENCRYPT_TEXT_STR, new Task.EncryptText(this, key));
 		}
 	}
 
@@ -1389,16 +1380,15 @@ class TextDocument
 			KeyList.Key key = getKey(CONCEAL_TEXT_STR);
 
 			// Conceal text
-			if ((key != null) && App.INSTANCE.confirmUseTemporaryKey(key))
+			if ((key != null) && QanaApp.INSTANCE.confirmUseTemporaryKey(key))
 			{
 				// Check cipher
 				key.checkAllowedCipher(Utils.getCipher(key));
 
 				// Conceal text
 				TaskProgressDialog.showDialog2(getWindow(), CONCEAL_TEXT_STR,
-											   new Task.ConcealText(this, result.carrierFile,
-																	result.outFile, result.maxNumBits,
-																	result.setTimestamp,
+											   new Task.ConcealText(this, result.carrierFile, result.outFile,
+																	result.maxNumBits, result.setTimestamp,
 																	result.addRandomBits, key));
 			}
 		}

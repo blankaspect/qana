@@ -48,13 +48,13 @@ class TaskProgressDialog
 ////////////////////////////////////////////////////////////////////////
 
 	private TaskProgressDialog(Window owner,
-							   String titleStr,
+							   String title,
 							   Task   task,
 							   int    delay,
 							   int    numProgressBars)
 		throws AppException
 	{
-		super(owner, titleStr, task, delay, numProgressBars, (numProgressBars == 1) ? -1 : 1, true);
+		super(owner, title, task, delay, numProgressBars, (numProgressBars == 1) ? -1 : 1, true);
 	}
 
 	//------------------------------------------------------------------
@@ -64,21 +64,21 @@ class TaskProgressDialog
 ////////////////////////////////////////////////////////////////////////
 
 	public static void showDialog(Component parent,
-								  String    titleStr,
+								  String    title,
 								  Task      task)
 		throws AppException
 	{
-		new TaskProgressDialog(GuiUtils.getWindow(parent), titleStr, task, DEFAULT_DELAY, 1);
+		new TaskProgressDialog(GuiUtils.getWindow(parent), title, task, DEFAULT_DELAY, 1);
 	}
 
 	//------------------------------------------------------------------
 
 	public static void showDialog2(Component parent,
-								   String    titleStr,
+								   String    title,
 								   Task      task)
 		throws AppException
 	{
-		new TaskProgressDialog(GuiUtils.getWindow(parent), titleStr, task, DEFAULT_DELAY, 2);
+		new TaskProgressDialog(GuiUtils.getWindow(parent), title, task, DEFAULT_DELAY, 2);
 	}
 
 	//------------------------------------------------------------------

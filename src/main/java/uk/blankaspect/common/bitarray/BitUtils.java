@@ -57,7 +57,8 @@ public class BitUtils
 	 *
 	 * @param  length
 	 *           the length in bits of the bit field.
-	 * @return a bit mask corresponding to the length of the bit field, or 0xFFFFFFFF if {@code length} {@literal >=} 32.
+	 * @return a bit mask corresponding to the length of the bit field, or 0xFFFFFFFF if {@code length} {@literal >=}
+			   32.
 	 */
 
 	public static int lengthToMask(

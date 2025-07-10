@@ -20,7 +20,7 @@ package uk.blankaspect.common.crypto;
 
 import java.util.Arrays;
 
-import uk.blankaspect.common.exception.UnexpectedRuntimeException;
+import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
 //----------------------------------------------------------------------
 

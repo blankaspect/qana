@@ -28,6 +28,8 @@ import uk.blankaspect.common.crypto.StandardCsprng;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
+import uk.blankaspect.common.exception2.BaseException;
+
 import uk.blankaspect.common.platform.windows.FileAssociations;
 
 //----------------------------------------------------------------------
@@ -69,6 +71,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -127,6 +130,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -187,6 +191,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -246,6 +251,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -304,6 +310,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -358,6 +365,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -416,6 +424,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -476,6 +485,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -535,6 +545,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -593,6 +604,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -655,14 +667,15 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
 			try
 			{
-				key.getFileEncrypter(cipher, App.getEncryptionHeader())
-						.encrypt(inFile, outFile, key.getKey(), App.INSTANCE.getRandomKey(),
-								 generator -> App.INSTANCE.generateKey(generator));
+				key.getFileEncrypter(cipher, QanaApp.getEncryptionHeader())
+						.encrypt(inFile, outFile, key.getKey(), QanaApp.INSTANCE.getRandomKey(),
+								 QanaApp.INSTANCE::generateKey);
 			}
 			catch (TaskCancelledException e)
 			{
@@ -719,13 +732,14 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
 			try
 			{
-				key.getFileEncrypter(null, App.getEncryptionHeader())
-						.decrypt(inFile, outFile, key.getKey(), generator -> App.INSTANCE.generateKey(generator));
+				key.getFileEncrypter(null, QanaApp.getEncryptionHeader())
+						.decrypt(inFile, outFile, key.getKey(), QanaApp.INSTANCE::generateKey);
 			}
 			catch (TaskCancelledException e)
 			{
@@ -779,13 +793,14 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
 			try
 			{
-				key.getFileEncrypter(null, App.getEncryptionHeader())
-						.validate(file, key.getKey(), generator -> App.INSTANCE.generateKey(generator));
+				key.getFileEncrypter(null, QanaApp.getEncryptionHeader())
+						.validate(file, key.getKey(), QanaApp.INSTANCE::generateKey);
 			}
 			catch (TaskCancelledException e)
 			{
@@ -838,6 +853,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -896,6 +912,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -964,13 +981,14 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
 			try
 			{
-				App.INSTANCE.concealFile(inFile, carrierFile, outFile, maxNumBits, setTimestamp,
-											  addRandomBits, key);
+				QanaApp.INSTANCE.concealFile(inFile, carrierFile, outFile, maxNumBits, setTimestamp, addRandomBits,
+											 key);
 			}
 			catch (TaskCancelledException e)
 			{
@@ -1030,12 +1048,13 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
 			try
 			{
-				App.INSTANCE.recoverFile(inFile, outFile, key);
+				QanaApp.INSTANCE.recoverFile(inFile, outFile, key);
 			}
 			catch (TaskCancelledException e)
 			{
@@ -1099,6 +1118,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -1164,6 +1184,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -1229,6 +1250,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -1293,6 +1315,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -1350,6 +1373,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
@@ -1419,23 +1443,23 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task
 			try
 			{
-				fileAssociations.executeScript(App.SHORT_NAME, javaLauncherPathname, jarPathname,
-											   iconPathname, tempDirectoryPrefix, scriptFilename,
-											   removeEntries, scriptLifeCycle,
+				fileAssociations.executeScript(QanaApp.SHORT_NAME, javaLauncherPathname, jarPathname, iconPathname,
+											   tempDirectoryPrefix, scriptFilename, removeEntries, scriptLifeCycle,
 											   ((TextOutputTaskDialog)getProgressView()).getWriter());
 			}
-			catch (TaskCancelledException e)
+			catch (uk.blankaspect.common.exception2.TaskCancelledException e)
 			{
 				// ignore
 			}
-			catch (AppException e)
+			catch (BaseException e)
 			{
-				setException(e, false);
+				setException(new AppException(e.getMessage()), false);
 			}
 
 			// Remove thread
@@ -1484,6 +1508,7 @@ abstract class Task
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			// Perform task

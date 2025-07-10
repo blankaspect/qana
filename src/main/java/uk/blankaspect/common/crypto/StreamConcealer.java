@@ -2,7 +2,7 @@
 
 StreamConcealer.java
 
-Stream concealer class.
+Class: stream concealer.
 
 \*====================================================================*/
 
@@ -37,30 +37,29 @@ import uk.blankaspect.common.number.NumberUtils;
 //----------------------------------------------------------------------
 
 
-// STREAM CONCEALER CLASS
+// CLASS: STREAM CONCEALER
 
 
 /**
  * This class implements a mechanism for concealing a data stream in an image.
  * <p>
- * The data that is to be concealed is called the <i>payload</i>, and the image in which it will be
- * concealed is called the <i>carrier</i>.  In this class, the carrier image is represented by an RGB colour
- * model in which a pixel consists of R(ed), G(reen) and B(lue) components, each of which is an 8-bit value.
- * The payload is concealed by replacing low-order bits of the RGB colour components of the carrier with
- * bits of the payload, up to a specified number of bits per component (the maximum replacement depth).  The
- * replacements are spread evenly throughout the image with a modified form of the Bresenham line-drawing
- * algorithm.
+ * The data that is to be concealed is called the <i>payload</i>, and the image in which it will be concealed is called
+ * the <i>carrier</i>.  In this class, the carrier image is represented by an RGB colour model in which a pixel consists
+ * of R(ed), G(reen) and B(lue) components, each of which is an 8-bit value.  The payload is concealed by replacing
+ * low-order bits of the RGB colour components of the carrier with bits of the payload, up to a specified number of bits
+ * per component (the maximum replacement depth).  The replacements are spread evenly throughout the image with a
+ * modified form of the Bresenham line-drawing algorithm.
  * </p>
  * <p>
- * Bits of the RGB components of the carrier that are not replaced by the payload may optionally be replaced
- * by random bits, up to the maximum replacement depth, to disguise the presence of the payload as dither.
- * The supply of random data is delegated to a class that implements the {@link IRandomSource} interface.
+ * Bits of the RGB components of the carrier that are not replaced by the payload may optionally be replaced by random
+ * bits, up to the maximum replacement depth, to disguise the presence of the payload as dither.  Random data is
+ * supplied by a class that implements the {@link IRandomSource} interface.
  * </p>
  * <p>
- * In order for a concealed payload to be recovered from an image, its length must be known by the recovery
- * algorithm.  To achieve this, the length of the payload is concealed in the least significant bits of the
- * RGB components at the start of the image.  The encoding and decoding of the payload length are delegated
- * to classes that implement the {@link ILengthEncoder} and {@link ILengthDecoder} interfaces.
+ * In order for a concealed payload to be recovered from an image, its length must be known by the recovery algorithm.
+ * To achieve this, the length of the payload is concealed in the least significant bits of the RGB components at the
+ * start of the image.  The payload length is encoded and decoded by classes that implement the {@link ILengthEncoder}
+ * and {@link ILengthDecoder} interfaces respectively.
  * </p>
  */
 
@@ -71,591 +70,36 @@ public class StreamConcealer
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * The minimum value of the maximum number of bits per RGB colour component that will be replaced by the
-	 * payload.
-	 */
-	public static final		int	MIN_MAX_REPLACEMENT_DEPTH	= 1;
+	/** The minimum value of the maximum number of bits per RGB colour component that will be replaced by the
+		payload. */
+	public static final		int		MIN_MAX_REPLACEMENT_DEPTH	= 1;
 
-	/**
-	 * The maximum value of the maximum number of bits per RGB colour component that will be replaced by the
-	 * payload.
-	 */
-	public static final		int	MAX_MAX_REPLACEMENT_DEPTH	= 6;
+	/** The maximum value of the maximum number of bits per RGB colour component that will be replaced by the
+		payload. */
+	public static final		int		MAX_MAX_REPLACEMENT_DEPTH	= 6;
 
-	/**
-	 * The maximum number of bits in the binary representation of the length of a payload.
-	 */
-	public static final		int	MAX_NUM_LENGTH_BITS	= 24;
+	/** The maximum number of bits in the binary representation of the length of a payload. */
+	public static final		int		MAX_NUM_LENGTH_BITS	= 24;
 
-	/**
-	 * The maximum length (in bytes) of a payload.
-	 */
-	public static final		int	MAX_PAYLOAD_LENGTH	= (1 << MAX_NUM_LENGTH_BITS) - 1;
+	/** The maximum length (in bytes) of a payload. */
+	public static final		int		MAX_PAYLOAD_LENGTH	= (1 << MAX_NUM_LENGTH_BITS) - 1;
 
-	private static final	int	BYTES_PER_PIXEL		= 3;
-	private static final	int	RGB_INITIAL_SHIFT	= (BYTES_PER_PIXEL - 1) * 8;
+	private static final	int		BYTES_PER_PIXEL		= 3;
+	private static final	int		RGB_INITIAL_SHIFT	= (BYTES_PER_PIXEL - 1) * 8;
 
-	/**
-	 * The maximum size (in bytes) of a carrier image that is represented by 8-bit RGB colour components.
-	 */
-	public static final		int	MAX_CARRIER_SIZE	= MAX_PAYLOAD_LENGTH / BYTES_PER_PIXEL;
+	/** The maximum size (in bytes) of a carrier image that is represented by 8-bit RGB colour components. */
+	public static final		int		MAX_CARRIER_SIZE	= MAX_PAYLOAD_LENGTH / BYTES_PER_PIXEL;
 
-	private static final	int	BUFFER_SIZE			= 1 << 13;  // 8192
-	private static final	int	RANDOM_BUFFER_SIZE	= 1 << 12;  // 4096
+	private static final	int		BUFFER_LENGTH			= 1 << 13;  // 8192
+	private static final	int		RANDOM_BUFFER_LENGTH	= 1 << 12;  // 4096
 
 	private static final	String	DATA_STR	= "data";
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		ERROR_READING_DATA
-		("An error occurred when reading the %1."),
-
-		ERROR_WRITING_DATA
-		("An error occurred when writing the %1."),
-
-		PREMATURE_END_OF_DATA
-		("The end of the %1 was reached prematurely when reading the %1."),
-
-		IMAGE_IS_TOO_LARGE
-		("The image is too large to be used as a carrier."),
-
-		IMAGE_IS_TOO_SMALL
-		("The image is too small to conceal the input %1."),
-
-		UNEXPECTED_ID
-		("The image does not contain concealed data with the expected ID."),
-
-		UNEXPECTED_DATA_FORMAT
-		("The image does not contain concealed data in the expected format.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member interfaces
-////////////////////////////////////////////////////////////////////////
-
-
-	// INPUT INTERFACE
-
-
-	/**
-	 * This interface specifies an input to an concealment or recovery operation.
-	 *
-	 * @see StreamConcealer.IOutput
-	 * @see StreamConcealer#conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
-	 * @see StreamConcealer#recover(BufferedImage, IOutput, ILengthDecoder)
-	 */
-
-	public interface IInput
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Reads data from the input up to a specified length and stores it in a buffer.
-		 *
-		 * @param  buffer  the buffer in which the data will be stored.
-		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
-		 * @param  length  the maximum number of bytes to read.
-		 * @return the number of bytes that were read from the input.
-		 * @throws IOException
-		 *           if an error occurs when reading from the input.
-		 */
-
-		int read(byte[] buffer,
-				 int    offset,
-				 int    length)
-			throws IOException;
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// OUTPUT INTERFACE
-
-
-	/**
-	 * This interface specifies an output from an concealment or recovery operation.
-	 *
-	 * @see StreamConcealer.IInput
-	 * @see StreamConcealer#conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
-	 * @see StreamConcealer#recover(BufferedImage, IOutput, ILengthDecoder)
-	 */
-
-	public interface IOutput
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Writes a specifed number of bytes of data to the output.
-		 *
-		 * @param  data    the data to be written.
-		 * @param  offset  the start offset of the data in {@code data}.
-		 * @param  length  the number of bytes to write.
-		 * @throws IOException
-		 *           if an error occurs when writing to the output.
-		 */
-
-		void write(byte[] data,
-				   int    offset,
-				   int    length)
-			throws IOException;
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// LENGTH ENCODER INTERFACE
-
-
-	/**
-	 * This interface specifies the methods that must be implemented by a delegate that encodes the length
-	 * of a concealed payload.
-	 *
-	 * @see StreamConcealer.ILengthDecoder
-	 * @see StreamConcealer#conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
-	 * @see StreamConcealer#conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
-	 */
-
-	public interface ILengthEncoder
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Methods
-	////////////////////////////////////////////////////////////////////
-
-		int getLengthFieldNumBits(int numPixels);
-
-		//--------------------------------------------------------------
-
-		byte[] encodeLength(int length,
-							int numPixels);
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// LENGTH DECODER INTERFACE
-
-
-	/**
-	 * This interface specifies the methods that must be implemented by a delegate that decodes the length
-	 * of a concealed payload.
-	 *
-	 * @see StreamConcealer.ILengthEncoder
-	 * @see StreamConcealer#recover(BufferedImage, IOutput, ILengthDecoder)
-	 * @see StreamConcealer#recover(BufferedImage, OutputStream, ILengthDecoder)
-	 */
-
-	public interface ILengthDecoder
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Methods
-	////////////////////////////////////////////////////////////////////
-
-		int getLengthFieldNumBits(int numPixels);
-
-		//--------------------------------------------------------------
-
-		int decodeLength(byte[] data,
-						 int    numPixels);
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// RANDOM SOURCE INTERFACE
-
-
-	/**
-	 * This interface specifies the method that must be implemented by a delegate that provides random data
-	 * for replacing bits of the RGB colour components of a carrier that are not replaced by the payload, up
-	 * to the maximum replacement depth.
-	 */
-
-	public interface IRandomSource
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Provides random bytes up to a specified length.
-		 *
-		 * @param  buffer  the buffer in which the random data will be stored.
-		 * @param  offset  the offset in {@code buffer} at which the first byte of random data will be
-		 *                 stored.
-		 * @param  length  the maximum number of bytes to store.
-		 * @return the number of bytes that were stored in the buffer.
-		 */
-
-		int getRandomBytes(byte[] buffer,
-						   int    offset,
-						   int    length);
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// INPUT EXCEPTION CLASS
-
-
-	/**
-	 * This class encapsulates an exception that occurs when reading from an input stream.
-	 *
-	 * @see OutputException
-	 */
-
-	public static class InputException
-		extends ConcealerException
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private InputException(ErrorId id)
-		{
-			super(id);
-		}
-
-		//--------------------------------------------------------------
-
-		private InputException(ErrorId   id,
-							   Throwable cause)
-		{
-			super(id, cause);
-		}
-
-		//--------------------------------------------------------------
-
-		private InputException(ErrorId id,
-							   String  str)
-		{
-			super(id, str);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-	}
-
-	//==================================================================
-
-
-	// OUTPUT EXCEPTION CLASS
-
-
-	/**
-	 * This class encapsulates an exception that occurs when writing to an output stream.
-	 *
-	 * @see InputException
-	 */
-
-	public static class OutputException
-		extends ConcealerException
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private OutputException(ErrorId id)
-		{
-			super(id);
-		}
-
-		//--------------------------------------------------------------
-
-		private OutputException(ErrorId   id,
-								Throwable cause)
-		{
-			super(id, cause);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// CONCEALER EXCEPTION CLASS
-
-
-	/**
-	 * This is the base class of the {@link InputException} and {@link OutputException} classes.
-	 *
-	 * @see InputException
-	 * @see OutputException
-	 */
-
-	private static abstract class ConcealerException
-		extends AppException
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ConcealerException(ErrorId id)
-		{
-			super(id, DATA_STR);
-		}
-
-		//--------------------------------------------------------------
-
-		private ConcealerException(ErrorId   id,
-								   Throwable cause)
-		{
-			super(id, cause, DATA_STR);
-		}
-
-		//--------------------------------------------------------------
-
-		private ConcealerException(ErrorId id,
-								   String  str)
-		{
-			super(id, DATA_STR, str);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Sets the description of data in the message of an exception.
-		 * <p>
-		 * By default, the data that is processed by an concealment or recovery operation is described as
-		 * "data" in the message of an exception.  This method allows the description to be replaced by
-		 * something more specific to the kind of data stream; eg, "file".
-		 * </p>
-		 *
-		 * @param description  the description that will be applied to data in the message of an exception.
-		 */
-
-		public void setDataDescription(String description)
-		{
-			setReplacement(0, description);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// INPUT STREAM ADAPTER CLASS
-
-
-	/**
-	 * This class translates the interface of the {@link java.io.InputStream InputStream} class into the
-	 * {@link IInput} interface so that {@code InputStream} can be used as a parameter type for a
-	 * concealment operation.
-	 *
-	 * @see StreamConcealer#conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
-	 */
-
-
-	private static class InputStreamAdapter
-		implements IInput
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Creates an adapter to wrap a specified input stream.
-		 *
-		 * @param inStream  the input stream that will be translated by this implementation of {@link IInput}.
-		 */
-
-		private InputStreamAdapter(InputStream inStream)
-		{
-			inputStream = inStream;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Input interface
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Reads data from the input stream up to a specified length, and stores it in a buffer.
-		 *
-		 * @param  buffer  the buffer in which the data will be stored.
-		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
-		 * @param  length  the maximum number of bytes to read.
-		 * @return the number of bytes that were read from the input stream.
-		 * @throws IOException
-		 *           if an error occurs when reading from the input stream.
-		 */
-
-		public int read(byte[] buffer,
-						int    offset,
-						int    length)
-			throws IOException
-		{
-			return inputStream.read(buffer, offset, length);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	InputStream	inputStream;
-
-	}
-
-	//==================================================================
-
-
-	// OUTPUT STREAM ADAPTER CLASS
-
-
-	/**
-	 * This class translates the interface of the {@link java.io.OutputStream OutputStream} class into the
-	 * {@link IOutput} interface so that {@code OutputStream} can be used as a parameter type for a recovery
-	 * operation.
-	 *
-	 * @see StreamConcealer#recover(BufferedImage, OutputStream, ILengthDecoder)
-	 */
-
-	private static class OutputStreamAdapter
-		implements IOutput
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Creates an adapter to wrap a specified output stream.
-		 *
-		 * @param outStream  the output stream that will be translated by this implementation of {@link IOutput}.
-		 */
-
-		private OutputStreamAdapter(OutputStream outStream)
-		{
-			outputStream = outStream;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Output interface
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * Writes data from an array of bytes to the output stream.
-		 *
-		 * @param  data    the array of data to be written.
-		 * @param  offset  the start offset of the data in {@code data}.
-		 * @param  length  the number of bytes to write.
-		 * @throws IOException
-		 *           if an error occurs when writing to the output stream.
-		 */
-
-		public void write(byte[] data,
-						  int    offset,
-						  int    length)
-			throws IOException
-		{
-			outputStream.write(data, offset, length);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	OutputStream	outputStream;
-
-	}
-
-	//==================================================================
+	private	List<IProgressListener>	progressListeners;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -686,9 +130,10 @@ public class StreamConcealer
 	 * @see   #recoverLength(BufferedImage, ILengthDecoder)
 	 */
 
-	public static void concealLength(BufferedImage  image,
-									 int            length,
-									 ILengthEncoder lengthEncoder)
+	public static void concealLength(
+		BufferedImage	image,
+		int				length,
+		ILengthEncoder	lengthEncoder)
 	{
 		int width = image.getWidth();
 		int numPixels = width * image.getHeight();
@@ -735,8 +180,9 @@ public class StreamConcealer
 	 * @see    #concealLength(BufferedImage, int, ILengthEncoder)
 	 */
 
-	public static int recoverLength(BufferedImage  image,
-									ILengthDecoder lengthDecoder)
+	public static int recoverLength(
+		BufferedImage	image,
+		ILengthDecoder	lengthDecoder)
 	{
 		int width = image.getWidth();
 		int numPixels = width * image.getHeight();
@@ -776,7 +222,8 @@ public class StreamConcealer
 	 * @see   #getProgressListeners()
 	 */
 
-	public void addProgressListener(IProgressListener listener)
+	public void addProgressListener(
+		IProgressListener	listener)
 	{
 		progressListeners.add(listener);
 	}
@@ -794,7 +241,8 @@ public class StreamConcealer
 	 * @see   #getProgressListeners()
 	 */
 
-	public void removeProgressListener(IProgressListener listener)
+	public void removeProgressListener(
+		IProgressListener	listener)
 	{
 		progressListeners.remove(listener);
 	}
@@ -839,7 +287,7 @@ public class StreamConcealer
 	 *             <li>{@code maxReplacementDepth} is less than 1 or greater than 6.</li>
 	 *           </ul>
 	 * @throws InputException
-	 *           if an error occurred when reading from the input stream.
+	 *           if an error occurs when reading from the input stream.
 	 * @throws TaskCancelledException
 	 *           if the concealment operation was cancelled by the user.
 	 * @see    #conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
@@ -847,12 +295,13 @@ public class StreamConcealer
 	 * @see    #recover(BufferedImage, OutputStream, ILengthDecoder)
 	 */
 
-	public BufferedImage conceal(InputStream    inStream,
-								 BufferedImage  image,
-								 int            length,
-								 ILengthEncoder lengthEncoder,
-								 int            maxReplacementDepth,
-								 IRandomSource  randomSource)
+	public BufferedImage conceal(
+		InputStream		inStream,
+		BufferedImage	image,
+		int				length,
+		ILengthEncoder	lengthEncoder,
+		int				maxReplacementDepth,
+		IRandomSource	randomSource)
 		throws InputException, TaskCancelledException
 	{
 		return conceal(new InputStreamAdapter(inStream), image, length, lengthEncoder, maxReplacementDepth,
@@ -884,7 +333,7 @@ public class StreamConcealer
 	 *             <li>{@code maxReplacementDepth} is less than 1 or greater than 6.</li>
 	 *           </ul>
 	 * @throws InputException
-	 *           if an error occurred when reading from the input.
+	 *           if an error occurs when reading from the input.
 	 * @throws TaskCancelledException
 	 *           if the concealment operation was cancelled by the user.
 	 * @see    #conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
@@ -892,12 +341,13 @@ public class StreamConcealer
 	 * @see    #recover(BufferedImage, OutputStream, ILengthDecoder)
 	 */
 
-	public BufferedImage conceal(IInput         input,
-								 BufferedImage  image,
-								 int            length,
-								 ILengthEncoder lengthEncoder,
-								 int            maxReplacementDepth,
-								 IRandomSource  randomSource)
+	public BufferedImage conceal(
+		IInput			input,
+		BufferedImage	image,
+		int				length,
+		ILengthEncoder	lengthEncoder,
+		int				maxReplacementDepth,
+		IRandomSource	randomSource)
 		throws InputException, TaskCancelledException
 	{
 		// Validate arguments
@@ -945,11 +395,11 @@ public class StreamConcealer
 			if (remainder > 0)
 				++numRandomBits;
 			randomMask = (1 << numRandomBits) - 1;
-			randomBuffer = new byte[RANDOM_BUFFER_SIZE];
+			randomBuffer = new byte[RANDOM_BUFFER_LENGTH];
 		}
 
 		// Set input data in least significant bits of RGB values of image
-		byte[] buffer = new byte[BUFFER_SIZE];
+		byte[] buffer = new byte[BUFFER_LENGTH];
 		int numBits = 0;
 		int bitBuffer = 0;
 		int bitDataLength = 0;
@@ -982,7 +432,7 @@ public class StreamConcealer
 						{
 							// Read data from input
 							blockIndex = 0;
-							blockLength = Math.min(length - offset, BUFFER_SIZE);
+							blockLength = Math.min(length - offset, BUFFER_LENGTH);
 							try
 							{
 								blockLength = input.read(buffer, 0, blockLength);
@@ -1068,9 +518,9 @@ public class StreamConcealer
 	 * @param  outStream      the output stream to which the recovered data will be written.
 	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
 	 * @throws InputException
-	 *           if an error occurred when recovering the concealed data.
+	 *           if an error occurs when recovering the concealed data.
 	 * @throws OutputException
-	 *           if an error occurred when writing to the output stream.
+	 *           if an error occurs when writing to the output stream.
 	 * @throws TaskCancelledException
 	 *           if the recovery operation was cancelled by the user.
 	 * @see    #recover(BufferedImage, IOutput, ILengthDecoder)
@@ -1078,9 +528,10 @@ public class StreamConcealer
 	 * @see    #conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
 	 */
 
-	public void recover(BufferedImage  image,
-						OutputStream   outStream,
-						ILengthDecoder lengthDecoder)
+	public void recover(
+		BufferedImage	image,
+		OutputStream	outStream,
+		ILengthDecoder	lengthDecoder)
 		throws InputException, OutputException, TaskCancelledException
 	{
 		recover(image, new OutputStreamAdapter(outStream), lengthDecoder);
@@ -1096,9 +547,9 @@ public class StreamConcealer
 	 * @param  output         the output to which the recovered data will be written.
 	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
 	 * @throws InputException
-	 *           if an error occurred when recovering the concealed data.
+	 *           if an error occurs when recovering the concealed data.
 	 * @throws OutputException
-	 *           if an error occurred when writing to the output.
+	 *           if an error occurs when writing to the output.
 	 * @throws TaskCancelledException
 	 *           if the recovery operation was cancelled by the user.
 	 * @see    #recover(BufferedImage, OutputStream, ILengthDecoder)
@@ -1106,9 +557,10 @@ public class StreamConcealer
 	 * @see    #conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
 	 */
 
-	public void recover(BufferedImage  image,
-						IOutput        output,
-						ILengthDecoder lengthDecoder)
+	public void recover(
+		BufferedImage	image,
+		IOutput			output,
+		ILengthDecoder	lengthDecoder)
 		throws InputException, OutputException, TaskCancelledException
 	{
 		// Test size of image
@@ -1142,7 +594,7 @@ public class StreamConcealer
 		int inc1 = 2 * (dy - dx);
 
 		// Extract output data from least significant bits of RGB values of image
-		byte[] buffer = new byte[BUFFER_SIZE];
+		byte[] buffer = new byte[BUFFER_LENGTH];
 		int numBits = 0;
 		int bitBuffer = 0;
 		int bitDataLength = 0;
@@ -1237,10 +689,577 @@ public class StreamConcealer
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	List<IProgressListener>	progressListeners;
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		ERROR_READING_DATA
+		("An error occurred when reading the %1."),
+
+		ERROR_WRITING_DATA
+		("An error occurred when writing the %1."),
+
+		PREMATURE_END_OF_DATA
+		("The end of the %1 was reached prematurely when reading the %1."),
+
+		IMAGE_IS_TOO_LARGE
+		("The image is too large to be used as a carrier."),
+
+		IMAGE_IS_TOO_SMALL
+		("The image is too small to conceal the input %1."),
+
+		UNEXPECTED_ID
+		("The image does not contain concealed data with the expected ID."),
+
+		UNEXPECTED_DATA_FORMAT
+		("The image does not contain concealed data in the expected format.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(
+			String	message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member interfaces
+////////////////////////////////////////////////////////////////////////
+
+
+	// INTERFACE: INPUT
+
+
+	/**
+	 * This interface specifies an input to an concealment or recovery operation.
+	 *
+	 * @see StreamConcealer.IOutput
+	 * @see StreamConcealer#conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
+	 * @see StreamConcealer#recover(BufferedImage, IOutput, ILengthDecoder)
+	 */
+
+	public interface IInput
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Reads data from the input up to a specified length and stores it in a buffer.
+		 *
+		 * @param  buffer  the buffer in which the data will be stored.
+		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
+		 * @param  length  the maximum number of bytes to read.
+		 * @return the number of bytes that were read from the input.
+		 * @throws IOException
+		 *           if an error occurs when reading from the input.
+		 */
+
+		int read(
+			byte[]	buffer,
+			int		offset,
+			int		length)
+			throws IOException;
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// INTERFACE: OUTPUT
+
+
+	/**
+	 * This interface specifies an output from an concealment or recovery operation.
+	 *
+	 * @see StreamConcealer.IInput
+	 * @see StreamConcealer#conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
+	 * @see StreamConcealer#recover(BufferedImage, IOutput, ILengthDecoder)
+	 */
+
+	public interface IOutput
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Writes a specifed number of bytes of data to the output.
+		 *
+		 * @param  data    the data to be written.
+		 * @param  offset  the start offset of the data in {@code data}.
+		 * @param  length  the number of bytes to write.
+		 * @throws IOException
+		 *           if an error occurs when writing to the output.
+		 */
+
+		void write(
+			byte[]	data,
+			int		offset,
+			int		length)
+			throws IOException;
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// INTERFACE: LENGTH ENCODER
+
+
+	/**
+	 * This interface specifies the methods that must be implemented an encoder of the length of a concealed payload.
+	 *
+	 * @see StreamConcealer.ILengthDecoder
+	 * @see StreamConcealer#conceal(IInput, BufferedImage, int, ILengthEncoder, int, IRandomSource)
+	 * @see StreamConcealer#conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
+	 */
+
+	public interface ILengthEncoder
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Methods
+	////////////////////////////////////////////////////////////////////
+
+		int getLengthFieldNumBits(
+			int	numPixels);
+
+		//--------------------------------------------------------------
+
+		byte[] encodeLength(
+			int	length,
+			int	numPixels);
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// INTERFACE: LENGTH DECODER
+
+
+	/**
+	 * This interface specifies the methods that must be implemented by a decoder of the length of a concealed payload.
+	 *
+	 * @see StreamConcealer.ILengthEncoder
+	 * @see StreamConcealer#recover(BufferedImage, IOutput, ILengthDecoder)
+	 * @see StreamConcealer#recover(BufferedImage, OutputStream, ILengthDecoder)
+	 */
+
+	public interface ILengthDecoder
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Methods
+	////////////////////////////////////////////////////////////////////
+
+		int getLengthFieldNumBits(
+			int	numPixels);
+
+		//--------------------------------------------------------------
+
+		int decodeLength(
+			byte[]	data,
+			int		numPixels);
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// INTERFACE: RANDOM SOURCE
+
+
+	/**
+	 * This functional interface specifies the method that must be implemented by a provider of random data for
+	 * replacing bits of the RGB colour components of a carrier that are not replaced by the payload, up to the maximum
+	 * replacement depth.
+	 */
+
+	@FunctionalInterface
+	public interface IRandomSource
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Provides random bytes up to a specified length.
+		 *
+		 * @param  buffer  the buffer in which the random data will be stored.
+		 * @param  offset  the offset in {@code buffer} at which the first byte of random data will be
+		 *                 stored.
+		 * @param  length  the maximum number of bytes to store.
+		 * @return the number of bytes that were stored in the buffer.
+		 */
+
+		int getRandomBytes(
+			byte[]	buffer,
+			int		offset,
+			int		length);
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: INPUT EXCEPTION
+
+
+	/**
+	 * This class encapsulates an exception that occurs when reading from an input stream.
+	 *
+	 * @see OutputException
+	 */
+
+	public static class InputException
+		extends ConcealerException
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private InputException(
+			ErrorId	id)
+		{
+			super(id);
+		}
+
+		//--------------------------------------------------------------
+
+		private InputException(
+			ErrorId		id,
+			Throwable	cause)
+		{
+			super(id, cause);
+		}
+
+		//--------------------------------------------------------------
+
+		private InputException(
+			ErrorId	id,
+			String	str)
+		{
+			super(id, str);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: OUTPUT EXCEPTION
+
+
+	/**
+	 * This class encapsulates an exception that occurs when writing to an output stream.
+	 *
+	 * @see InputException
+	 */
+
+	public static class OutputException
+		extends ConcealerException
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private OutputException(
+			ErrorId	id)
+		{
+			super(id);
+		}
+
+		//--------------------------------------------------------------
+
+		private OutputException(
+			ErrorId		id,
+			Throwable	cause)
+		{
+			super(id, cause);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: CONCEALER EXCEPTION
+
+
+	/**
+	 * This is the base class of the {@link InputException} and {@link OutputException} classes.
+	 *
+	 * @see InputException
+	 * @see OutputException
+	 */
+
+	private static abstract class ConcealerException
+		extends AppException
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ConcealerException(
+			ErrorId	id)
+		{
+			super(id, DATA_STR);
+		}
+
+		//--------------------------------------------------------------
+
+		private ConcealerException(
+			ErrorId		id,
+			Throwable	cause)
+		{
+			super(id, cause, DATA_STR);
+		}
+
+		//--------------------------------------------------------------
+
+		private ConcealerException(
+			ErrorId	id,
+			String	str)
+		{
+			super(id, DATA_STR, str);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Sets the description of data in the message of an exception.
+		 * <p>
+		 * By default, the data that is processed by an concealment or recovery operation is described as
+		 * "data" in the message of an exception.  This method allows the description to be replaced by
+		 * something more specific to the kind of data stream; eg, "file".
+		 * </p>
+		 *
+		 * @param description  the description that will be applied to data in the message of an exception.
+		 */
+
+		public void setDataDescription(String description)
+		{
+			setReplacement(0, description);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: INPUT STREAM ADAPTER
+
+
+	/**
+	 * This class translates the interface of the {@link java.io.InputStream InputStream} class into the
+	 * {@link IInput} interface so that {@code InputStream} can be used as a parameter type for a
+	 * concealment operation.
+	 *
+	 * @see StreamConcealer#conceal(InputStream, BufferedImage, int, ILengthEncoder, int, IRandomSource)
+	 */
+
+
+	private static class InputStreamAdapter
+		implements IInput
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	InputStream	inputStream;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Creates an adapter to wrap a specified input stream.
+		 *
+		 * @param inStream  the input stream that will be translated by this implementation of {@link IInput}.
+		 */
+
+		private InputStreamAdapter(
+			InputStream	inStream)
+		{
+			inputStream = inStream;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Input interface
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Reads data from the input stream up to a specified length, and stores it in a buffer.
+		 *
+		 * @param  buffer  the buffer in which the data will be stored.
+		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
+		 * @param  length  the maximum number of bytes to read.
+		 * @return the number of bytes that were read from the input stream.
+		 * @throws IOException
+		 *           if an error occurs when reading from the input stream.
+		 */
+
+		@Override
+		public int read(
+			byte[]	buffer,
+			int		offset,
+			int		length)
+			throws IOException
+		{
+			return inputStream.read(buffer, offset, length);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: OUTPUT STREAM ADAPTER
+
+
+	/**
+	 * This class translates the interface of the {@link java.io.OutputStream OutputStream} class into the
+	 * {@link IOutput} interface so that {@code OutputStream} can be used as a parameter type for a recovery
+	 * operation.
+	 *
+	 * @see StreamConcealer#recover(BufferedImage, OutputStream, ILengthDecoder)
+	 */
+
+	private static class OutputStreamAdapter
+		implements IOutput
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	OutputStream	outputStream;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Creates an adapter to wrap a specified output stream.
+		 *
+		 * @param outStream  the output stream that will be translated by this implementation of {@link IOutput}.
+		 */
+
+		private OutputStreamAdapter(
+			OutputStream	outStream)
+		{
+			outputStream = outStream;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Output interface
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * Writes data from an array of bytes to the output stream.
+		 *
+		 * @param  data    the array of data to be written.
+		 * @param  offset  the start offset of the data in {@code data}.
+		 * @param  length  the number of bytes to write.
+		 * @throws IOException
+		 *           if an error occurs when writing to the output stream.
+		 */
+
+		@Override
+		public void write(
+			byte[]	data,
+			int		offset,
+			int		length)
+			throws IOException
+		{
+			outputStream.write(data, offset, length);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

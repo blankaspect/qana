@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -39,7 +38,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -156,16 +154,16 @@ class TextWrapDialog
 		'\u2013'    // en dash
 	};
 
-	private static final	List<TaggedText.FieldDef>		FIELD_DEFS		= Arrays.asList
+	private static final	List<TaggedText.FieldDef>		FIELD_DEFS		= List.of
 	(
 		new TaggedText.FieldDef(0)
 	);
-	private static final	List<TaggedText.VPaddingDef>	V_PADDING_DEFS	= Arrays.asList
+	private static final	List<TaggedText.VPaddingDef>	V_PADDING_DEFS	= List.of
 	(
 		new TaggedText.VPaddingDef(0, 0.2f, new Color(160, 192, 160)),
 		new TaggedText.VPaddingDef(1, 0.5f)
 	);
-	private static final	List<TaggedText.StyleDef>		STYLE_DEFS		= Arrays.asList
+	private static final	List<TaggedText.StyleDef>		STYLE_DEFS		= List.of
 	(
 		new TaggedText.StyleDef(0, FontStyle.BOLD,        new Color(0, 64, 64)),
 		new TaggedText.StyleDef(1,                        new Color(32, 32, 32)),
@@ -174,7 +172,7 @@ class TextWrapDialog
 		new TaggedText.StyleDef(4, FontStyle.BOLD_ITALIC, new Color(0, 96, 0)),
 		new TaggedText.StyleDef(5, FontStyle.ITALIC,      new Color(64, 64, 80))
 	);
-	private static final	List<TaggedText.HPaddingDef>	H_PADDING_DEFS	= Arrays.asList
+	private static final	List<TaggedText.HPaddingDef>	H_PADDING_DEFS	= List.of
 	(
 		new TaggedText.HPaddingDef(0, 1.0f),
 		new TaggedText.HPaddingDef(1, 1.2f)
@@ -763,7 +761,7 @@ class TextWrapDialog
 			textPanel.updateText();
 			pack();
 
-			// Set location of dialog box
+			// Set location of dialog
 			if (helpDialogLocation == null)
 				helpDialogLocation = GuiUtils.getComponentLocation(this, TextWrapDialog.this);
 			setLocation(helpDialogLocation);
@@ -824,9 +822,8 @@ class TextWrapDialog
 	private TextWrapDialog(Window owner,
 						   int    currentIndent)
 	{
-
 		// Call superclass constructor
-		super(owner, WRAP_TEXT_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, WRAP_TEXT_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -1036,7 +1033,7 @@ class TextWrapDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -1046,7 +1043,6 @@ class TextWrapDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -1107,8 +1103,10 @@ class TextWrapDialog
 		Result result = null;
 		if (accepted)
 		{
-			IntegerPair indent = indentComboBox.isEnabled() ? indentComboBox.getValue(currentIndent) : IntegerPair.ZEROS;
-			result = new Result(lineLengthComboBox.getValue(), indent.getFirst(), indent.getSecond());
+			IntegerPair indent = indentComboBox.isEnabled()
+										? indentComboBox.getValue(currentIndent)
+										: IntegerPair.ZEROS;
+			result = new Result(lineLengthComboBox.getValue(), indent.first(), indent.second());
 		}
 		return result;
 	}
@@ -1152,16 +1150,16 @@ class TextWrapDialog
 				try
 				{
 					IntegerPair indent = indentComboBox.getValue(currentIndent);
-					if ((indent.getFirst() < MIN_INDENT) || (indent.getFirst() > MAX_INDENT))
+					if ((indent.first() < MIN_INDENT) || (indent.first() > MAX_INDENT))
 						throw new AppException(ErrorId.FIRST_INDENT_OUT_OF_BOUNDS);
-					if ((indent.getSecond() < MIN_INDENT) || (indent.getSecond() > MAX_INDENT))
+					if ((indent.second() < MIN_INDENT) || (indent.second() > MAX_INDENT))
 						throw new AppException(ErrorId.SECOND_INDENT_OUT_OF_BOUNDS);
 
 					if (lineLength > 0)
 					{
-						if (indent.getFirst() >= lineLength)
+						if (indent.first() >= lineLength)
 							throw new AppException(ErrorId.LINE_LENGTH_AND_FIRST_INDENT_OUT_OF_ORDER);
-						if (indent.getSecond() >= lineLength)
+						if (indent.second() >= lineLength)
 							throw new AppException(ErrorId.LINE_LENGTH_AND_SECOND_INDENT_OUT_OF_ORDER);
 					}
 				}
@@ -1227,7 +1225,7 @@ class TextWrapDialog
 		}
 		catch (AppException e)
 		{
-			JOptionPane.showMessageDialog(this, e, App.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e, QanaApp.SHORT_NAME, JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

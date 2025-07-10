@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -99,200 +98,29 @@ class FileSelectionDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point	location;
 
-	// FILE SELECTION PANEL CLASS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
-
-	private static class FileSelectionPanel
-		extends uk.blankaspect.ui.swing.container.FileSelectionPanel
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	SYSTEM_STR	= "system";
-		private static final	String	ARCHIVE_STR	= "archive";
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public FileSelectionPanel(int    listNumViewableColumns,
-								  int    listNumViewableRows,
-								  String titleStr)
-		{
-			super(listNumViewableColumns, listNumViewableRows, Mode.FILES_RECURSIVE, pathnameKind,
-				  titleStr, null);
-			setTransferHandler(FileTransferHandler.INSTANCE);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected String getTitle()
-		{
-			return App.SHORT_NAME;
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		protected String fileToPathname(File file)
-		{
-			return Utils.getPathname(file);
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		protected String pathnameKindToString(PathnameKind pathnameKind,
-											  boolean      title)
-		{
-			String str = null;
-			switch (pathnameKind)
-			{
-				case NORMAL:
-					str = SYSTEM_STR;
-					break;
-
-				case RELATIVE:
-					str = ARCHIVE_STR;
-					break;
-			}
-			return (title ? StringUtils.firstCharToUpperCase(str) : str);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class variables
-	////////////////////////////////////////////////////////////////////
-
-		private static	PathnameKind	pathnameKind	= PathnameKind.NORMAL;
-
-	}
-
-	//==================================================================
-
-
-	// LENGTH FIELD CLASS
-
-
-	private static class LengthField
-		extends JComponent
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	Color	TEXT_COLOUR	= Colours.FOREGROUND;
-
-		private static final	String	PREFIX	= "(";
-		private static final	String	SUFFIX	= ")";
-		private static final	String	EXCESS_PREFIX	= "> ";
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private LengthField(int maxLength)
-		{
-			// Initialise instance variables
-			this.maxLength = maxLength;
-			AppFont.MAIN.apply(this);
-			int numDigits = NumberUtils.getNumDecDigitsInt(maxLength);
-			String prototypeStr = PREFIX + EXCESS_PREFIX + "0".repeat(numDigits) + SUFFIX;
-			FontMetrics fontMetrics = getFontMetrics(getFont());
-			setPreferredSize(new Dimension(fontMetrics.stringWidth(prototypeStr),
-										   fontMetrics.getAscent() + fontMetrics.getDescent()));
-
-			// Set attributes
-			setOpaque(true);
-			setFocusable(false);
-
-			// Initialise length
-			setLength(0);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected void paintComponent(Graphics gr)
-		{
-			// Create copy of graphics context
-			gr = gr.create();
-
-			// Get dimensions
-			int width = getWidth();
-			int height = getHeight();
-
-			// Draw background
-			gr.setColor(getBackground());
-			gr.fillRect(0, 0, width, height);
-
-			// Set rendering hints for text antialiasing and fractional metrics
-			TextRendering.setHints((Graphics2D)gr);
-
-			// Draw text
-			gr.setColor(TEXT_COLOUR);
-			FontMetrics fontMetrics = gr.getFontMetrics();
-			gr.drawString(text, width - fontMetrics.stringWidth(text), fontMetrics.getAscent());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		public void setLength(int length)
-		{
-			String str = PREFIX + ((length > maxLength) ? EXCESS_PREFIX + Integer.toString(maxLength)
-														: Integer.toString(length)) + SUFFIX;
-			if (!Objects.equals(str, text))
-			{
-				text = str;
-				repaint();
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int		maxLength;
-		private	String	text;
-
-	}
-
-	//==================================================================
+	private	boolean				accepted;
+	private	LengthField			listLengthField;
+	private	FileSelectionPanel	inputFilePanel;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
 	private FileSelectionDialog(Window owner,
-								String titleStr,
+								String title,
 								int    maxNumFiles)
 	{
-
 		// Call superclass constructor
-		super(owner, titleStr, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, title, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -450,7 +278,7 @@ class FileSelectionDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -460,7 +288,6 @@ class FileSelectionDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -470,11 +297,10 @@ class FileSelectionDialog
 ////////////////////////////////////////////////////////////////////////
 
 	public static List<FileSelectionPanel.SelectedFile> showDialog(Component parent,
-																   String    titleStr,
+																   String    title,
 																   int       maxNumFiles)
 	{
-		return new FileSelectionDialog(GuiUtils.getWindow(parent), titleStr, maxNumFiles).
-																								getFiles();
+		return new FileSelectionDialog(GuiUtils.getWindow(parent), title, maxNumFiles).getFiles();
 	}
 
 	//------------------------------------------------------------------
@@ -551,18 +377,187 @@ class FileSelectionDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point	location;
 
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
+	// FILE SELECTION PANEL CLASS
 
-	private	boolean				accepted;
-	private	LengthField			listLengthField;
-	private	FileSelectionPanel	inputFilePanel;
+
+	private static class FileSelectionPanel
+		extends uk.blankaspect.ui.swing.container.FileSelectionPanel
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	SYSTEM_STR	= "system";
+		private static final	String	ARCHIVE_STR	= "archive";
+
+	////////////////////////////////////////////////////////////////////
+	//  Class variables
+	////////////////////////////////////////////////////////////////////
+
+		private static	PathnameKind	pathnameKind	= PathnameKind.NORMAL;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public FileSelectionPanel(int    listNumViewableColumns,
+								  int    listNumViewableRows,
+								  String title)
+		{
+			super(listNumViewableColumns, listNumViewableRows, Mode.FILES_RECURSIVE, pathnameKind, title, null);
+			setTransferHandler(FileTransferHandler.INSTANCE);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected String getTitle()
+		{
+			return QanaApp.SHORT_NAME;
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		protected String fileToPathname(File file)
+		{
+			return Utils.getPathname(file);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		protected String pathnameKindToString(PathnameKind pathnameKind,
+											  boolean      title)
+		{
+			String str = null;
+			switch (pathnameKind)
+			{
+				case NORMAL:
+					str = SYSTEM_STR;
+					break;
+
+				case RELATIVE:
+					str = ARCHIVE_STR;
+					break;
+			}
+			return (title ? StringUtils.firstCharToUpperCase(str) : str);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// LENGTH FIELD CLASS
+
+
+	private static class LengthField
+		extends JComponent
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	Color	TEXT_COLOUR	= Colours.FOREGROUND;
+
+		private static final	String	PREFIX	= "(";
+		private static final	String	SUFFIX	= ")";
+		private static final	String	EXCESS_PREFIX	= "> ";
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int		maxLength;
+		private	String	text;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private LengthField(int maxLength)
+		{
+			// Initialise instance variables
+			this.maxLength = maxLength;
+			AppFont.MAIN.apply(this);
+			int numDigits = NumberUtils.getNumDecDigitsInt(maxLength);
+			String prototypeStr = PREFIX + EXCESS_PREFIX + "0".repeat(numDigits) + SUFFIX;
+			FontMetrics fontMetrics = getFontMetrics(getFont());
+			setPreferredSize(new Dimension(fontMetrics.stringWidth(prototypeStr),
+										   fontMetrics.getAscent() + fontMetrics.getDescent()));
+
+			// Set properties
+			setOpaque(true);
+			setFocusable(false);
+
+			// Initialise length
+			setLength(0);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected void paintComponent(Graphics gr)
+		{
+			// Create copy of graphics context
+			gr = gr.create();
+
+			// Get dimensions
+			int width = getWidth();
+			int height = getHeight();
+
+			// Draw background
+			gr.setColor(getBackground());
+			gr.fillRect(0, 0, width, height);
+
+			// Set rendering hints for text antialiasing and fractional metrics
+			TextRendering.setHints((Graphics2D)gr);
+
+			// Draw text
+			gr.setColor(TEXT_COLOUR);
+			FontMetrics fontMetrics = gr.getFontMetrics();
+			gr.drawString(text, width - fontMetrics.stringWidth(text), fontMetrics.getAscent());
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		public void setLength(int length)
+		{
+			String str = PREFIX + ((length > maxLength) ? EXCESS_PREFIX + Integer.toString(maxLength)
+														: Integer.toString(length)) + SUFFIX;
+			if (!Objects.equals(str, text))
+			{
+				text = str;
+				repaint();
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

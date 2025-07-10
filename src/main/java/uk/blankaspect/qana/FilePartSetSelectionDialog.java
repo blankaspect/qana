@@ -20,7 +20,6 @@ package uk.blankaspect.qana;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -143,7 +142,7 @@ class FilePartSetSelectionDialog
 			setExtraWidth(2 * (2 * getHorizontalMargin() + SEPARATOR_WIDTH));
 			setRowHeight(getRowHeight() + 1);
 
-			// Set attributes
+			// Set properties
 			setDragEnabled(false);
 		}
 
@@ -228,9 +227,8 @@ class FilePartSetSelectionDialog
 	private FilePartSetSelectionDialog(Window                           owner,
 									   List<FileSplitter.FirstFilePart> fileParts)
 	{
-
 		// Call superclass constructor
-		super(owner, TITLE_STR, Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -336,7 +334,7 @@ class FilePartSetSelectionDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -346,7 +344,6 @@ class FilePartSetSelectionDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------

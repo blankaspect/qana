@@ -174,7 +174,7 @@ class FileTransferHandler
 						IFileImporter fileImporter = getFileImporter(support.getComponent());
 						if ((files.size() > 1) && !fileImporter.canImportMultipleFiles())
 							throw new AppException(ErrorId.MULTIPLE_FILE_TRANSFER_NOT_SUPPORTED);
-						App.INSTANCE.addImport(fileImporter, files);
+						QanaApp.INSTANCE.addImport(fileImporter, files);
 						return true;
 					}
 				}
@@ -189,7 +189,7 @@ class FileTransferHandler
 			}
 			catch (AppException e)
 			{
-				App.INSTANCE.showErrorMessage(App.SHORT_NAME, e);
+				QanaApp.INSTANCE.showErrorMessage(QanaApp.SHORT_NAME, e);
 			}
 		}
 		return false;

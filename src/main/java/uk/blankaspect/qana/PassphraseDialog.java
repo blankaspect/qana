@@ -19,7 +19,6 @@ package uk.blankaspect.qana;
 
 
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -71,10 +70,11 @@ class PassphraseDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	PASSPHRASE_MAX_LENGTH			= 1024;
-	private static final	int	PASSPHRASE_FIELD_NUM_COLUMNS	= 40;
+	private static final	int		PASSPHRASE_MAX_LENGTH			= 1024;
+	private static final	int		PASSPHRASE_FIELD_NUM_COLUMNS	= 40;
 
-	private static final	String	TITLE_STR		= "Passphrase";
+	private static final	String	DEFAULT_TITLE	= "Passphrase";
+
 	private static final	String	PASSPHRASE_STR	= "Passphrase";
 
 	// Commands
@@ -98,12 +98,10 @@ class PassphraseDialog
 ////////////////////////////////////////////////////////////////////////
 
 	private PassphraseDialog(Window owner,
-							 String titleStr)
+							 String title)
 	{
-
 		// Call superclass constructor
-		super(owner, (titleStr == null) ? TITLE_STR : TITLE_STR + " : " + titleStr,
-			  Dialog.ModalityType.APPLICATION_MODAL);
+		super(owner, (title == null) ? DEFAULT_TITLE : DEFAULT_TITLE + " : " + title, ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -233,7 +231,7 @@ class PassphraseDialog
 		// Resize dialog to its preferred size
 		pack();
 
-		// Set location of dialog box
+		// Set location of dialog
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -243,7 +241,6 @@ class PassphraseDialog
 
 		// Show dialog
 		setVisible(true);
-
 	}
 
 	//------------------------------------------------------------------
@@ -253,9 +250,9 @@ class PassphraseDialog
 ////////////////////////////////////////////////////////////////////////
 
 	public static String showDialog(Component parent,
-									String    titleStr)
+									String    title)
 	{
-		return new PassphraseDialog(GuiUtils.getWindow(parent), titleStr).getPassphrase();
+		return new PassphraseDialog(GuiUtils.getWindow(parent), title).getPassphrase();
 	}
 
 	//------------------------------------------------------------------

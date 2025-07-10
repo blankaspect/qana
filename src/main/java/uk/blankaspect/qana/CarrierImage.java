@@ -2,7 +2,7 @@
 
 CarrierImage.java
 
-Carrier image class.
+Class: carrier image.
 
 \*====================================================================*/
 
@@ -43,7 +43,7 @@ import uk.blankaspect.common.range.IntegerRange;
 //----------------------------------------------------------------------
 
 
-// CARRIER IMAGE CLASS
+// CLASS: CARRIER IMAGE
 
 
 class CarrierImage
@@ -53,7 +53,7 @@ class CarrierImage
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		int	NUM_CARRIER_BITS	= 2;
+	public static final		int		NUM_CARRIER_BITS	= 2;
 
 	private static final	IntegerRange	VERTEX_RANGE			= new IntegerRange(3, 7);
 	private static final	DoubleRange		NORMAL_OFFSET_RANGE		= new DoubleRange(0.25, 0.75);
@@ -67,19 +67,115 @@ class CarrierImage
 	private static final	float	SHAPE_BRIGHTNESS		= 0.75f;
 	private static final	float	GREEN_FACTOR			= 0.85f;
 
-	private static final	int	ALPHA	= 64;
+	private static final	int		ALPHA	= 64;
 
-	private static final	int	MARGIN	= 2;
+	private static final	int		MARGIN	= 2;
 
-	private static final	int	RANDOM_MASK	= (1 << NUM_CARRIER_BITS) - 1;
-	private static final	int	RGB_MASK	= 0xFF ^ RANDOM_MASK;
+	private static final	int		RANDOM_MASK	= (1 << NUM_CARRIER_BITS) - 1;
+	private static final	int		RGB_MASK	= 0xFF ^ RANDOM_MASK;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	BufferedImage	image;
+
+////////////////////////////////////////////////////////////////////////
+//  Constructors
+////////////////////////////////////////////////////////////////////////
+
+	public CarrierImage(
+		int		width,
+		int		height,
+		int		cellSize,
+		Kind	imageKind)
+	{
+		// Initialise local variables
+		int numColumns = 2 * MARGIN + (width + cellSize - 1) / cellSize;
+		int numRows = 2 * MARGIN + (height + cellSize - 1) / cellSize;
+
+		DoubleRange initialLengthRange = new DoubleRange(INITIAL_LENGTH_RANGE.lowerBound * (double)cellSize,
+														 INITIAL_LENGTH_RANGE.upperBound * (double)cellSize);
+		DoubleRange controlCoordRange = new DoubleRange(CONTROL_COORD_RANGE.lowerBound * (double)cellSize,
+														CONTROL_COORD_RANGE.upperBound * (double)cellSize);
+
+		Prng01 prng = new Prng01();
+
+		// Create image and graphics context
+		image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D gr = image.createGraphics();
+
+		// Set rendering hints
+		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING,        RenderingHints.VALUE_ANTIALIAS_ON);
+		gr.setRenderingHint(RenderingHints.KEY_RENDERING,           RenderingHints.VALUE_RENDER_QUALITY);
+		gr.setRenderingHint(RenderingHints.KEY_INTERPOLATION,       RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		gr.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+		gr.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING,     RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+		gr.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,      RenderingHints.VALUE_STROKE_PURE);
+
+		// Fill image with background colour
+		Color colour = new Color(Color.HSBtoRGB((float)prng.nextDouble(), BACKGROUND_SATURATION,
+												BACKGROUND_BRIGHTNESS));
+		gr.setColor(colour);
+		gr.fillRect(0, 0, width, height);
+
+		// Create and draw shapes
+		for (int i = 0; i < numColumns * numRows; i++)
+		{
+			int numVertices = prng.nextInt(VERTEX_RANGE);
+			Shape shape = new Shape(numVertices, imageKind, initialLengthRange, NORMAL_OFFSET_RANGE, NORMAL_RATIO_RANGE,
+									controlCoordRange, (float)prng.nextDouble(), prng);
+
+			Rectangle2D bounds = shape.path.getBounds2D();
+			int ix = i % numColumns;
+			int iy = (i / numColumns) % numRows;
+			double dx = (double)((ix - MARGIN) * cellSize) + 0.5 * ((double)cellSize - bounds.getWidth());
+			double dy = (double)((iy - MARGIN) * cellSize) + 0.5 * ((double)cellSize - bounds.getHeight());
+			shape.translate(dx, dy);
+
+			colour = new Color(Color.HSBtoRGB(shape.hue, SHAPE_SATURATION, SHAPE_BRIGHTNESS));
+			colour = new Color(colour.getRed(), (int)StrictMath.round((float)colour.getGreen() * GREEN_FACTOR),
+							   colour.getBlue(), ALPHA);
+			gr.setColor(colour);
+			gr.fill(shape.path);
+		}
+
+		// Randomise least significant bits of RGB values
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				int value = prng.nextInt32();
+				int rgb = image.getRGB(x, y);
+				int r = (rgb >>> 16 & RGB_MASK) | (value & RANDOM_MASK);
+				value >>>= NUM_CARRIER_BITS;
+				int g = (rgb >>> 8 & RGB_MASK) | (value & RANDOM_MASK);
+				value >>>= NUM_CARRIER_BITS;
+				int b = (rgb & RGB_MASK) | (value & RANDOM_MASK);
+				image.setRGB(x, y, (0xFF << 24) | (r << 16) | (g << 8) | b);
+			}
+		}
+	}
+
+	//------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////
+//  Instance methods
+////////////////////////////////////////////////////////////////////////
+
+	public BufferedImage getImage()
+	{
+		return image;
+	}
+
+	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
 //  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
 
-	// IMAGE KIND
+	// ENUMERATION: KIND OF IMAGE
 
 
 	enum Kind
@@ -112,12 +208,21 @@ class CarrierImage
 		);
 
 	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	key;
+		private	String	text;
+		private	int		cellSizeDivisor;
+
+	////////////////////////////////////////////////////////////////////
 	//  Constructors
 	////////////////////////////////////////////////////////////////////
 
-		private Kind(String key,
-					 String text,
-					 int    cellSizeDivisor)
+		private Kind(
+			String	key,
+			String	text,
+			int		cellSizeDivisor)
 		{
 			this.key = key;
 			this.text = text;
@@ -130,6 +235,7 @@ class CarrierImage
 	//  Instance methods : IStringKeyed interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getKey()
 		{
 			return key;
@@ -160,14 +266,6 @@ class CarrierImage
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	key;
-		private	String	text;
-		private	int		cellSizeDivisor;
-
 	}
 
 	//==================================================================
@@ -177,11 +275,18 @@ class CarrierImage
 ////////////////////////////////////////////////////////////////////////
 
 
-	// SHAPE CLASS
+	// CLASS: SHAPE
 
 
 	private static class Shape
 	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	Path2D.Double	path;
+		private	float			hue;
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -191,14 +296,15 @@ class CarrierImage
 		 * @throws IllegalArgumentException
 		 */
 
-		private Shape(int         numVertices,
-					  Kind        imageKind,
-					  DoubleRange initialLengthRange,
-					  DoubleRange normalOffsetRange,
-					  DoubleRange normalRatioRange,
-					  DoubleRange controlCoordRange,
-					  float       hue,
-					  Prng01      prng)
+		private Shape(
+			int			numVertices,
+			Kind		imageKind,
+			DoubleRange	initialLengthRange,
+			DoubleRange	normalOffsetRange,
+			DoubleRange	normalRatioRange,
+			DoubleRange	controlCoordRange,
+			float		hue,
+			Prng01		prng)
 		{
 			final	double	TWO_PI				= 2.0 * StrictMath.PI;
 			final	double	MIN_DT_FACTOR		= 0.15;
@@ -229,14 +335,13 @@ class CarrierImage
 			// Generate second vertex, Q
 			double length = prng.nextDouble(initialLengthRange);
 			double angle = prng.nextDouble() * TWO_PI;
-			Point2D.Double v2 = new Point2D.Double(length * StrictMath.cos(angle),
-												   length * StrictMath.sin(angle));
+			Point2D.Double v2 = new Point2D.Double(length * StrictMath.cos(angle), length * StrictMath.sin(angle));
 			vertices.add(v2);
 
 			// Generate third vertex as normal displacement from line segment PQ
 			double p = prng.nextDouble(normalOffsetRange);
-			double d = prng.nextDouble(normalRatioRange) * length *
-												StrictMath.sqrt((p < 0.5) ? p * (2.0 - p) : 1.0 - p * p);
+			double d = prng.nextDouble(normalRatioRange) * length
+											* StrictMath.sqrt((p < 0.5) ? p * (2.0 - p) : 1.0 - p * p);
 			vertices.add(getNormalVertex(v1, v2, p, -d));
 
 			// Generate remaining vertices
@@ -408,10 +513,11 @@ class CarrierImage
 	//  Class methods
 	////////////////////////////////////////////////////////////////////
 
-		private static Point2D.Double getNormalVertex(Point2D.Double vertex1,
-													  Point2D.Double vertex2,
-													  double         fraction,
-													  double         normalLength)
+		private static Point2D.Double getNormalVertex(
+			Point2D.Double	vertex1,
+			Point2D.Double	vertex2,
+			double			fraction,
+			double			normalLength)
 		{
 			if (vertex1.equals(vertex2))
 				throw new IllegalArgumentException();
@@ -453,120 +559,18 @@ class CarrierImage
 	//  Instance methods
 	////////////////////////////////////////////////////////////////////
 
-		private void translate(double deltaX,
-							   double deltaY)
+		private void translate(
+			double	deltaX,
+			double	deltaY)
 		{
 			path.transform(AffineTransform.getTranslateInstance(deltaX, deltaY));
 		}
 
 		//--------------------------------------------------------------
 
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private	Path2D.Double	path;
-		private	float			hue;
-
 	}
 
 	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Constructors
-////////////////////////////////////////////////////////////////////////
-
-	public CarrierImage(int  width,
-						int  height,
-						int  cellSize,
-						Kind imageKind)
-	{
-		// Initialise local variables
-		int numColumns = 2 * MARGIN + (width + cellSize - 1) / cellSize;
-		int numRows = 2 * MARGIN + (height + cellSize - 1) / cellSize;
-
-		DoubleRange initialLengthRange = new DoubleRange(INITIAL_LENGTH_RANGE.lowerBound * (double)cellSize,
-														 INITIAL_LENGTH_RANGE.upperBound * (double)cellSize);
-		DoubleRange controlCoordRange = new DoubleRange(CONTROL_COORD_RANGE.lowerBound * (double)cellSize,
-														CONTROL_COORD_RANGE.upperBound * (double)cellSize);
-
-		Prng01 prng = new Prng01();
-
-		// Create image and graphics context
-		image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D gr = image.createGraphics();
-
-		// Set rendering hints
-		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		gr.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-		gr.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-		gr.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-		gr.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-		gr.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-
-		// Fill image with background colour
-		Color colour = new Color(Color.HSBtoRGB((float)prng.nextDouble(), BACKGROUND_SATURATION,
-												BACKGROUND_BRIGHTNESS));
-		gr.setColor(colour);
-		gr.fillRect(0, 0, width, height);
-
-		// Create and draw shapes
-		for (int i = 0; i < numColumns * numRows; i++)
-		{
-			int numVertices = prng.nextInt(VERTEX_RANGE);
-			Shape shape = new Shape(numVertices, imageKind, initialLengthRange, NORMAL_OFFSET_RANGE,
-									NORMAL_RATIO_RANGE, controlCoordRange, (float)prng.nextDouble(),
-									prng);
-
-			Rectangle2D bounds = shape.path.getBounds2D();
-			int ix = i % numColumns;
-			int iy = (i / numColumns) % numRows;
-			double dx = (double)((ix - MARGIN) * cellSize) + 0.5 * ((double)cellSize - bounds.getWidth());
-			double dy = (double)((iy - MARGIN) * cellSize) + 0.5 * ((double)cellSize - bounds.getHeight());
-			shape.translate(dx, dy);
-
-			colour = new Color(Color.HSBtoRGB(shape.hue, SHAPE_SATURATION, SHAPE_BRIGHTNESS));
-			colour = new Color(colour.getRed(), (int)StrictMath.round((float)colour.getGreen() * GREEN_FACTOR),
-							   colour.getBlue(), ALPHA);
-			gr.setColor(colour);
-			gr.fill(shape.path);
-		}
-
-		// Randomise least significant bits of RGB values
-		for (int x = 0; x < width; x++)
-		{
-			for (int y = 0; y < height; y++)
-			{
-				int value = prng.nextInt32();
-				int rgb = image.getRGB(x, y);
-				int r = (rgb >>> 16 & RGB_MASK) | (value & RANDOM_MASK);
-				value >>>= NUM_CARRIER_BITS;
-				int g = (rgb >>> 8 & RGB_MASK) | (value & RANDOM_MASK);
-				value >>>= NUM_CARRIER_BITS;
-				int b = (rgb & RGB_MASK) | (value & RANDOM_MASK);
-				image.setRGB(x, y, (0xFF << 24) | (r << 16) | (g << 8) | b);
-			}
-		}
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance methods
-////////////////////////////////////////////////////////////////////////
-
-	public BufferedImage getImage()
-	{
-		return image;
-	}
-
-	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	BufferedImage	image;
 
 }
 
