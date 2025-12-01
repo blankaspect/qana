@@ -2,7 +2,7 @@
 
 RecoverDialog.java
 
-Recover dialog class.
+Class: 'recover' dialog.
 
 \*====================================================================*/
 
@@ -52,7 +52,6 @@ import javax.swing.event.DocumentListener;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
-import uk.blankaspect.common.misc.FilenameSuffixFilter;
 import uk.blankaspect.common.misc.IFileImporter;
 
 import uk.blankaspect.ui.swing.action.KeyAction;
@@ -61,14 +60,18 @@ import uk.blankaspect.ui.swing.button.FButton;
 
 import uk.blankaspect.ui.swing.container.PathnamePanel;
 
+import uk.blankaspect.ui.swing.filechooser.FileChooserUtils;
+
 import uk.blankaspect.ui.swing.label.FLabel;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
-// RECOVER DIALOG CLASS
+// CLASS: 'RECOVER' DIALOG
 
 
 class RecoverDialog
@@ -102,110 +105,54 @@ class RecoverDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point			location;
+	private static	File			inputFile;
+	private static	File			outputFile;
+	private static	JFileChooser	inputFileChooser;
+	private static	JFileChooser	outputFileChooser;
 
-	// ERROR IDENTIFIERS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
+	private	boolean			accepted;
+	private	FPathnameField	inputFileField;
+	private	FPathnameField	outputFileField;
+	private	JButton			recoverButton;
 
-	private enum ErrorId
-		implements AppException.IId
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
 	{
+		inputFileChooser = new JFileChooser();
+		inputFileChooser.setDialogTitle(INPUT_FILE_TITLE_STR);
+		inputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
+		FileChooserUtils.setFilter(inputFileChooser, AppConstants.PNG_FILE_FILTER);
 
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILE_DOES_NOT_EXIST
-		("The file does not exist."),
-
-		NOT_A_FILE
-		("The input pathname does not denote a normal file."),
-
-		NO_INPUT_FILE
-		("No input file was specified."),
-
-		NO_OUTPUT_FILE
-		("No output file was specified.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
+		outputFileChooser = new JFileChooser();
+		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
+		outputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// RESULT CLASS
-
-
-	public static class Result
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public Result(File inFile,
-					  File outFile)
-		{
-			this.inFile = inFile;
-			this.outFile = outFile;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		File	inFile;
-		File	outFile;
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private RecoverDialog(Window  owner,
-						  boolean outputToFile)
+	private RecoverDialog(
+		Window	owner,
+		boolean	outputToFile)
 	{
 		// Call superclass constructor
-		super(owner, RECOVER_STR + " " + (outputToFile ? FILE_STR : TEXT_STR),
-			  ModalityType.APPLICATION_MODAL);
+		super(owner, RECOVER_STR + " " + (outputToFile ? FILE_STR : TEXT_STR), ModalityType.APPLICATION_MODAL);
 
 		// Set icons
 		setIconImages(owner.getIconImages());
@@ -275,8 +222,7 @@ class RecoverDialog
 			outputFileField = new FPathnameField(outputFile);
 			outputFileField.getDocument().addDocumentListener(this);
 			FPathnameField.addObserver(KEY, outputFileField);
-			PathnamePanel outputFilePanel = new PathnamePanel(outputFileField, Command.CHOOSE_OUTPUT_FILE,
-															  this);
+			PathnamePanel outputFilePanel = new PathnamePanel(outputFileField, Command.CHOOSE_OUTPUT_FILE, this);
 
 			gbc.gridx = 1;
 			gbc.gridy = gridY++;
@@ -360,11 +306,22 @@ class RecoverDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -394,8 +351,9 @@ class RecoverDialog
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static Result showDialog(Component parent,
-									boolean   outputToFile)
+	public static Result showDialog(
+		Component	parent,
+		boolean		outputToFile)
 	{
 		return new RecoverDialog(GuiUtils.getWindow(parent), outputToFile).getResult();
 	}
@@ -406,21 +364,17 @@ class RecoverDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void actionPerformed(ActionEvent event)
+	@Override
+	public void actionPerformed(
+		ActionEvent	event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.CHOOSE_INPUT_FILE))
-			onChooseInputFile();
-
-		else if (command.equals(Command.CHOOSE_OUTPUT_FILE))
-			onChooseOutputFile();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.CHOOSE_INPUT_FILE  -> onChooseInputFile();
+			case Command.CHOOSE_OUTPUT_FILE -> onChooseOutputFile();
+			case Command.ACCEPT             -> onAccept();
+			case Command.CLOSE              -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -429,21 +383,27 @@ class RecoverDialog
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void changedUpdate(DocumentEvent event)
+	@Override
+	public void changedUpdate(
+		DocumentEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void insertUpdate(DocumentEvent event)
+	@Override
+	public void insertUpdate(
+		DocumentEvent	event)
 	{
 		updateAcceptButton();
 	}
 
 	//------------------------------------------------------------------
 
-	public void removeUpdate(DocumentEvent event)
+	@Override
+	public void removeUpdate(
+		DocumentEvent	event)
 	{
 		updateAcceptButton();
 	}
@@ -471,7 +431,8 @@ class RecoverDialog
 	//------------------------------------------------------------------
 
 	@Override
-	public void importFiles(List<File> files)
+	public void importFiles(
+		List<File>	files)
 	{
 		inputFileField.setFile(files.get(0));
 	}
@@ -484,15 +445,15 @@ class RecoverDialog
 
 	private Result getResult()
 	{
-		return (accepted ? new Result(inputFile, outputFile) : null);
+		return accepted ? new Result(inputFile, outputFile) : null;
 	}
 
 	//------------------------------------------------------------------
 
 	private void updateAcceptButton()
 	{
-		recoverButton.setEnabled(!inputFileField.isEmpty() &&
-								  ((outputFileField == null) || !outputFileField.isEmpty()));
+		recoverButton.setEnabled(!inputFileField.isEmpty()
+									&& ((outputFileField == null) || !outputFileField.isEmpty()));
 	}
 
 	//------------------------------------------------------------------
@@ -596,44 +557,80 @@ class RecoverDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point			location;
-	private static	File			inputFile;
-	private static	File			outputFile;
-	private static	JFileChooser	inputFileChooser;
-	private static	JFileChooser	outputFileChooser;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// ENUMERATION: ERROR IDENTIFIERS
 
-	static
+
+	private enum ErrorId
+		implements AppException.IId
 	{
-		inputFileChooser = new JFileChooser();
-		inputFileChooser.setDialogTitle(INPUT_FILE_TITLE_STR);
-		inputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
-		inputFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.PNG_FILES_STR,
-																AppConstants.PNG_FILENAME_EXTENSION));
 
-		outputFileChooser = new JFileChooser();
-		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
-		outputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILE_DOES_NOT_EXIST
+		("The file does not exist."),
+
+		NOT_A_FILE
+		("The input pathname does not denote a normal file."),
+
+		NO_INPUT_FILE
+		("No input file was specified."),
+
+		NO_OUTPUT_FILE
+		("No output file was specified.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
 	}
 
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member records
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean			accepted;
-	private	FPathnameField	inputFileField;
-	private	FPathnameField	outputFileField;
-	private	JButton			recoverButton;
+
+	// RECORD: RESULT
+
+
+	public record Result(
+		File	inFile,
+		File	outFile)
+	{ }
+
+	//==================================================================
 
 }
 

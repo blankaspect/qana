@@ -2,7 +2,7 @@
 
 AppConstants.java
 
-Application constants interface.
+Interface: application constants.
 
 \*====================================================================*/
 
@@ -22,10 +22,12 @@ import java.awt.Insets;
 
 import java.text.DecimalFormat;
 
+import uk.blankaspect.common.misc.FilenameSuffixFilter;
+
 //----------------------------------------------------------------------
 
 
-// APPLICATION CONSTANTS INTERFACE
+// INTERFACE: APPLICATION CONSTANTS
 
 
 interface AppConstants
@@ -67,16 +69,25 @@ interface AppConstants
 	String	PNG_FILENAME_EXTENSION		= ".png";
 	String	XML_FILENAME_EXTENSION		= ".xml";
 
-	// File-filter descriptions
-	String	BMP_FILES_STR	= "Bitmap files";
-	String	EXE_FILES_STR	= "Windows executable files";
-	String	ICON_FILES_STR	= "Windows icon files";
-	String	GIF_FILES_STR	= "GIF files";
-	String	JAR_FILES_STR	= "JAR files";
-	String	JPEG_FILES_STR	= "JPEG files";
-	String	KEY_FILES_STR	= QanaApp.SHORT_NAME + " key database files";
-	String	PNG_FILES_STR	= "PNG files";
-	String	XML_FILES_STR	= "XML files";
+	// Filters for file choosers
+	FilenameSuffixFilter BMP_FILE_FILTER	=
+			new FilenameSuffixFilter("Bitmap files", BMP_FILENAME_EXTENSION);
+	FilenameSuffixFilter EXE_FILE_FILTER	=
+			new FilenameSuffixFilter("Windows executable files", EXE_FILENAME_EXTENSION);
+	FilenameSuffixFilter GIF_FILE_FILTER	=
+			new FilenameSuffixFilter("GIF files", GIF_FILENAME_EXTENSION);
+	FilenameSuffixFilter ICON_FILE_FILTER	=
+			new FilenameSuffixFilter("Windows icon files", ICON_FILENAME_EXTENSION);
+	FilenameSuffixFilter JAR_FILE_FILTER	=
+			new FilenameSuffixFilter("JAR files", JAR_FILENAME_EXTENSION);
+	FilenameSuffixFilter JPEG_FILE_FILTER	=
+			new FilenameSuffixFilter("JPEG files", JPEG_FILENAME_EXTENSION1, JPEG_FILENAME_EXTENSION2);
+	FilenameSuffixFilter KEY_FILE_FILTER	=
+			new FilenameSuffixFilter(QanaApp.SHORT_NAME + " key database files", KEY_FILENAME_EXTENSION);
+	FilenameSuffixFilter PNG_FILE_FILTER	=
+			new FilenameSuffixFilter("PNG files", PNG_FILENAME_EXTENSION);
+	FilenameSuffixFilter XML_FILE_FILTER	=
+			new FilenameSuffixFilter("XML files", XML_FILENAME_EXTENSION);
 
 }
 

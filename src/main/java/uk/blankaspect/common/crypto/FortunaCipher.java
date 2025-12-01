@@ -2,7 +2,7 @@
 
 FortunaCipher.java
 
-Fortuna cipher enumeration.
+Enumeration: kind of Fortuna cipher.
 
 \*====================================================================*/
 
@@ -18,6 +18,7 @@ package uk.blankaspect.common.crypto;
 // IMPORTS
 
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -26,15 +27,15 @@ import uk.blankaspect.common.misc.IStringKeyed;
 //----------------------------------------------------------------------
 
 
-// FORTUNA CIPHER ENUMERATION
+// ENUMERATION: KIND OF FORTUNA CIPHER
 
 
 /**
- * This is an enumeration of the kinds of cipher that are supported by the {@link Fortuna} cryptographically
- * secure pseudo-random number generator (PRNG).
+ * This is an enumeration of the kinds of cipher that are supported by the {@link Fortuna} cryptographically secure
+ * pseudo-random number generator (PRNG).
  * <p>
- * The enum constants have factory methods for creating the appropriate subclasses of {@link Fortuna} and
- * {@link Fortuna.XorCombiner}.
+ * The enum constants have factory methods for creating the appropriate subclasses of {@link Fortuna} and {@link
+ * Fortuna.XorCombiner}.
  * </p>
  */
 
@@ -58,7 +59,8 @@ public enum FortunaCipher
 	)
 	{
 		@Override
-		public Fortuna createPrng(byte[] seed)
+		public Fortuna createPrng(
+			byte[]	seed)
 		{
 			return new FortunaAes256(seed);
 		}
@@ -66,7 +68,8 @@ public enum FortunaCipher
 		//--------------------------------------------------------------
 
 		@Override
-		public Fortuna createPrng(String seed)
+		public Fortuna createPrng(
+			String	seed)
 		{
 			return new FortunaAes256(seed);
 		}
@@ -74,8 +77,9 @@ public enum FortunaCipher
 		//--------------------------------------------------------------
 
 		@Override
-		public Fortuna.XorCombiner createCombiner(byte[] seed,
-												  int    blockSize)
+		public Fortuna.XorCombiner createCombiner(
+			byte[]	seed,
+			int		blockSize)
 		{
 			return FortunaAes256.createCombiner(seed, blockSize);
 		}
@@ -95,7 +99,8 @@ public enum FortunaCipher
 	)
 	{
 		@Override
-		public Fortuna createPrng(byte[] seed)
+		public Fortuna createPrng(
+			byte[]	seed)
 		{
 			return new FortunaSalsa20(seed);
 		}
@@ -103,7 +108,8 @@ public enum FortunaCipher
 		//--------------------------------------------------------------
 
 		@Override
-		public Fortuna createPrng(String seed)
+		public Fortuna createPrng(
+			String	seed)
 		{
 			return new FortunaSalsa20(seed);
 		}
@@ -111,8 +117,9 @@ public enum FortunaCipher
 		//--------------------------------------------------------------
 
 		@Override
-		public Fortuna.XorCombiner createCombiner(byte[] seed,
-												  int    blockSize)
+		public Fortuna.XorCombiner createCombiner(
+			byte[]	seed,
+			int		blockSize)
 		{
 			return FortunaSalsa20.createCombiner(seed, blockSize);
 		}
@@ -128,12 +135,21 @@ public enum FortunaCipher
 	public static final		int	ID_MASK		= MAX_NUM_IDS - 1;
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String	key;
+	private	String	text;
+	private	int		keySize;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private FortunaCipher(String key,
-						  String text,
-						  int    keySize)
+	private FortunaCipher(
+		String	key,
+		String	text,
+		int		keySize)
 	{
 		this.key = key;
 		this.text = text;
@@ -147,53 +163,47 @@ public enum FortunaCipher
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Returns the enum constant corresponding to the specified key.
+	 * Returns the kind of cipher that is associated with the specified key.
 	 *
-	 * @param  key  the key for which the enum constant is sought.
-	 * @return the enum constant corresponding to the specified key, or {@code null} if there is no enum
-	 *         constant corresponding to {@code key}.
+	 * @param  key
+	 *           the key whose associated kind of cipher is sought.
+	 * @return the kind of cipher that is associated with {@code key}, or {@code null} if there is such kind of cipher.
 	 */
 
-	public static FortunaCipher forKey(String key)
+	public static FortunaCipher forKey(
+		String	key)
 	{
-		for (FortunaCipher value : values())
-		{
-			if (value.key.equals(key))
-				return value;
-		}
-		return null;
+		return Arrays.stream(values()).filter(value -> value.key.equals(key)).findFirst().orElse(null);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns the enum constant corresponding to the specified identifier.
+	 * Returns the kind of cipher that is associated with the specified identifier.
 	 *
-	 * @param  id  the identifier for which the enum constant is sought.
-	 * @return the enum constant corresponding to the specified identifier, or {@code null} if there is no
-	 *         enum constant corresponding to {@code id}.
+	 * @param  id
+	 *           the identifier whose associated kind of cipher is sought.
+	 * @return the kind of cipher that is associated with {@code id}, or {@code null} if there is such kind of cipher.
 	 */
 
-	public static FortunaCipher forId(int id)
+	public static FortunaCipher forId(
+		int	id)
 	{
-		for (FortunaCipher value : values())
-		{
-			if (value.getId() == id)
-				return value;
-		}
-		return null;
+		return Arrays.stream(values()).filter(value -> value.getId() == id).findFirst().orElse(null);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Converts a set of {@link FortunaCipher} enum constants to a bit mask and returns it.
+	 * Converts a set of {@link FortunaCipher} enumeration constants to a bit mask and returns it.
 	 *
-	 * @param  ciphers  the set of {@link FortunaCipher} enum constants that will be converted.
-	 * @return a bit mask that corresponds to {@code ciphers}.
+	 * @param  ciphers
+	 *           the set of {@link FortunaCipher} enumeration constants to be converted.
+	 * @return the bit mask that corresponds to {@code ciphers}.
 	 */
 
-	public static int setToBitMask(Set<FortunaCipher> ciphers)
+	public static int setToBitMask(
+		Set<FortunaCipher>	ciphers)
 	{
 		int mask = 0;
 		for (FortunaCipher cipher : ciphers)
@@ -204,16 +214,18 @@ public enum FortunaCipher
 	//------------------------------------------------------------------
 
 	/**
-	 * Converts a bit mask of ciphers to a set of {@link FortunaCipher} enum constants and returns it.
+	 * Converts a bit mask of ciphers to a set of {@link FortunaCipher} enumeration constants and returns it.
 	 * <p>
-	 * Bits of {@code mask} that do not correspond to a {@link FortunaCipher} enum constant are ignored.
+	 * A bit of {@code mask} that does not correspond to a {@link FortunaCipher} enumeration constant is ignored.
 	 * </p>
 	 *
-	 * @param  mask  the bit mask that will be converted.
-	 * @return a set of {@link FortunaCipher} enum constants that corresponds to {@code mask}.
+	 * @param  mask
+	 *           the bit mask to be converted.
+	 * @return a set of {@link FortunaCipher} enumeration constants that corresponds to {@code mask}.
 	 */
 
-	public static Set<FortunaCipher> bitMaskToSet(int mask)
+	public static Set<FortunaCipher> bitMaskToSet(
+		int	mask)
 	{
 		Set<FortunaCipher> ciphers = EnumSet.noneOf(FortunaCipher.class);
 		for (FortunaCipher cipher : FortunaCipher.values())
@@ -233,17 +245,18 @@ public enum FortunaCipher
 	/**
 	 * Creates a pseudo-random number generator that is initialised with the specified seed.
 	 * <p>
-	 * The PRNG will not be able to generate random data until sufficient entropy has accumulated for the
-	 * generator to be reseeded.  The ability to reseed can be tested with {@link Fortuna#canReseed()}.
+	 * The PRNG will not be able to generate random data until sufficient entropy has accumulated for the generator to
+	 * be reseeded.  The ability to reseed can be tested with {@link Fortuna#canReseed()}.
 	 * </p>
 	 *
-	 * @param  seed  a sequence of bytes that will be used to seed the pseudo-random number generator.  If
-	 *               {@code seed} is {@code null}, a random seed derived from the sources of entropy will be
-	 *               used.
+	 * @param  seed
+	 *           a sequence of bytes that will be used to seed the pseudo-random number generator.  If {@code seed} is
+	 *           {@code null}, a random seed derived from the sources of entropy will be used.
 	 * @return the pseudo-random number generator that was created.
 	 */
 
-	public abstract Fortuna createPrng(byte[] seed);
+	public abstract Fortuna createPrng(
+		byte[]	seed);
 
 	//------------------------------------------------------------------
 
@@ -256,39 +269,41 @@ public enum FortunaCipher
 	 * the generator to be reseeded.  The ability to reseed can be tested with {@link Fortuna#canReseed()}.
 	 * </p>
 	 *
-	 * @param  seed  a string whose UTF-8 encoding will be used to seed the pseudo-random number generator.
-	 *               If {@code seed} is {@code null}, a random seed derived from the sources of entropy will
-	 *               be used.
+	 * @param  seed
+	 *           a string whose UTF-8 encoding will be used to seed the pseudo-random number generator.  If {@code seed}
+	 *           is {@code null}, a random seed derived from the sources of entropy will be used.
 	 * @return the pseudo-random number generator that was created.
 	 */
 
-	public abstract Fortuna createPrng(String seed);
+	public abstract Fortuna createPrng(
+		String	seed);
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates an object that will combine data and random data generated by a PRNG with an exclusive-OR
-	 * operation.
+	 * Creates an object that will combine data and random data generated by a PRNG with an exclusive-OR operation.
 	 * <p>
-	 * The PRNG is created by this method and initialised with the specified seed.  If the seed is {@code
-	 * null}, a random seed derived from the sources of entropy will be used.  In this case, the PRNG will
-	 * not be able to generate random data until sufficient entropy has accumulated for the generator to be
-	 * reseeded.  The ability to reseed can be tested with the {@link Fortuna#canReseed() canReseed()}
-	 * method of the PRNG that is returned by {@link Fortuna.XorCombiner#getPrng()}.
+	 * The PRNG is created by this method and initialised with the specified seed.  If the seed is {@code null}, a
+	 * random seed derived from the sources of entropy will be used.  In this case, the PRNG will not be able to
+	 * generate random data until sufficient entropy has accumulated for the generator to be reseeded.  The ability to
+	 * reseed can be tested with the {@link Fortuna#canReseed() canReseed()} method of the PRNG that is returned by
+	 * {@link Fortuna.XorCombiner#getPrng()}.
 	 * </p>
 	 *
-	 * @param  seed       the seed that will be used to initialise the PRNG that will generate the random
-	 *                    data for the exclusive-OR operation.  If {@code seed} is {@code null}, a random
-	 *                    seed derived from the sources of entropy will be used.
-	 * @param  blockSize  the number of bytes of random data that will be extracted from this object's
-	 *                    PRNG with each request.
+	 * @param  seed
+	 *           the seed that will be used to initialise the PRNG that will generate the random data for the
+	 *           exclusive-OR operation.  If {@code seed} is {@code null}, a random seed derived from the sources of
+	 *           entropy will be used.
+	 * @param  blockSize
+	 *           the number of bytes of random data that will be extracted from this object's PRNG with each request.
 	 * @return an exclusive-OR combiner object.
 	 * @throws IllegalArgumentException
 	 *           if {@code blockSize} is out of bounds for the particular cipher.
 	 */
 
-	public abstract Fortuna.XorCombiner createCombiner(byte[] seed,
-													   int    blockSize);
+	public abstract Fortuna.XorCombiner createCombiner(
+		byte[]	seed,
+		int		blockSize);
 
 	//------------------------------------------------------------------
 
@@ -356,14 +371,6 @@ public enum FortunaCipher
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	String	key;
-	private	String	text;
-	private	int		keySize;
 
 }
 

@@ -90,7 +90,7 @@ public class StreamConcealer
 	/** The maximum size (in bytes) of a carrier image that is represented by 8-bit RGB colour components. */
 	public static final		int		MAX_CARRIER_SIZE	= MAX_PAYLOAD_LENGTH / BYTES_PER_PIXEL;
 
-	private static final	int		BUFFER_LENGTH			= 1 << 13;  // 8192
+	private static final	int		BUFFER_LENGTH			= 1 << 16;  // 65536
 	private static final	int		RANDOM_BUFFER_LENGTH	= 1 << 12;  // 4096
 
 	private static final	String	DATA_STR	= "data";
@@ -124,9 +124,12 @@ public class StreamConcealer
 	 * Encodes a specified length of a payload with a specified encoder and conceals the encoded length in a
 	 * specified image.
 	 *
-	 * @param image          the image in which the length will be concealed.
-	 * @param length         the length that will be concealed.
-	 * @param lengthEncoder  the object that will encode the length as an array of bytes.
+	 * @param image
+	 *          the image in which the length will be concealed.
+	 * @param length
+	 *          the length that will be concealed.
+	 * @param lengthEncoder
+	 *          the object that will encode the length as an array of bytes.
 	 * @see   #recoverLength(BufferedImage, ILengthDecoder)
 	 */
 
@@ -174,8 +177,10 @@ public class StreamConcealer
 	 * Extracts the encoded length of a payload from a specified image, decodes the length with a specified
 	 * decoder and returns the length.
 	 *
-	 * @param  image          the image from which the length will be recovered.
-	 * @param  lengthDecoder  the object that will decode the length from an array of bytes.
+	 * @param  image
+	 *           the image from which the length will be recovered.
+	 * @param  lengthDecoder
+	 *           the object that will decode the length from an array of bytes.
 	 * @return the length that was recovered from the image and decoded.
 	 * @see    #concealLength(BufferedImage, int, ILengthEncoder)
 	 */
@@ -217,9 +222,10 @@ public class StreamConcealer
 	/**
 	 * Adds a specified progress listener to this concealer's list of progress listeners.
 	 *
-	 * @param listener  the progress listener that will be added to the list.
+	 * @param listener
+	 *          the progress listener that will be added to the list.
 	 * @see   #removeProgressListener(IProgressListener)
-	 * @see   #getProgressListeners()
+	 * @see   #progressListeners()
 	 */
 
 	public void addProgressListener(
@@ -236,9 +242,10 @@ public class StreamConcealer
 	 * The removal operation has no effect if the specified listener is not in the list.
 	 * </p>
 	 *
-	 * @param listener  the progress listener that will be removed from the list.
+	 * @param listener
+	 *          the progress listener that will be removed from the list.
 	 * @see   #addProgressListener(IProgressListener)
-	 * @see   #getProgressListeners()
+	 * @see   #progressListeners()
 	 */
 
 	public void removeProgressListener(
@@ -257,7 +264,7 @@ public class StreamConcealer
 	 * @see    #removeProgressListener(IProgressListener)
 	 */
 
-	public IProgressListener[] getProgressListeners()
+	public IProgressListener[] progressListeners()
 	{
 		return progressListeners.toArray(IProgressListener[]::new);
 	}
@@ -268,17 +275,21 @@ public class StreamConcealer
 	 * Conceals data read from a specified input stream (the <i>payload</i>) in a specified image (the
 	 * <i>carrier</i>), and returns the resulting image as a newly allocated object.
 	 *
-	 * @param  inStream             the input stream from which the payload will be read.
-	 * @param  image                the image in which the payload will be concealed.
-	 * @param  length               the length (in bytes) of the payload.
-	 * @param  lengthEncoder        the object that will encode the length of the payload as an array of
-	 *                              bytes.
-	 * @param  maxReplacementDepth  the maximum number of bits per RGB colour component of {@code image}
-	 *                              that will be replaced by the payload.
-	 * @param  randomSource         a source of random data for replacing bits of the RGB components of
-	 *                              {@code image} that are not replaced by the payload, up to {@code
-	 *                              maxReplacementDepth}.  If {@code randomSource} is {@code null}, no
-	 *                              carrier bits will be replaced by random data.
+	 * @param  inStream
+	 *           the input stream from which the payload will be read.
+	 * @param  image
+	 *           the image in which the payload will be concealed.
+	 * @param  length
+	 *           the length (in bytes) of the payload.
+	 * @param  lengthEncoder
+	 *           the object that will encode the length of the payload as an array of bytes.
+	 * @param  maxReplacementDepth
+	 *           the maximum number of bits per RGB colour component of {@code image} that will be replaced by the
+	 *           payload.
+	 * @param  randomSource
+	 *           a source of random data for replacing bits of the RGB components of {@code image} that are not replaced
+	 *           by the payload, up to {@code maxReplacementDepth}.  If {@code randomSource} is {@code null}, no carrier
+	 *           bits will be replaced by random data.
 	 * @return a newly allocated image in which the payload is concealed.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -314,17 +325,21 @@ public class StreamConcealer
 	 * Conceals data read from a specified input (the <i>payload</i>) in a specified image (the
 	 * <i>carrier</i>), and returns the resulting image as a newly allocated object.
 	 *
-	 * @param  input                the input from which the payload will be read.
-	 * @param  image                the image in which the payload will be concealed.
-	 * @param  length               the length (in bytes) of the payload.
-	 * @param  lengthEncoder        the object that will encode the length of the payload as an array of
-	 *                              bytes.
-	 * @param  maxReplacementDepth  the maximum number of bits per RGB colour component of {@code image}
-	 *                              that will be replaced by the payload.
-	 * @param  randomSource         a source of random data for replacing bits of the RGB components of
-	 *                              {@code image} that are not replaced by the payload, up to {@code
-	 *                              maxReplacementDepth}.  If {@code randomSource} is {@code null}, no
-	 *                              carrier bits will be replaced by random data.
+	 * @param  input
+	 *           the input from which the payload will be read.
+	 * @param  image
+	 *           the image in which the payload will be concealed.
+	 * @param  length
+	 *           the length (in bytes) of the payload.
+	 * @param  lengthEncoder
+	 *           the object that will encode the length of the payload as an array of bytes.
+	 * @param  maxReplacementDepth
+	 *           the maximum number of bits per RGB colour component of {@code image} that will be replaced by the
+	 *           payload.
+	 * @param  randomSource
+	 *           a source of random data for replacing bits of the RGB components of {@code image} that are not replaced
+	 *           by the payload, up to {@code maxReplacementDepth}.  If {@code randomSource} is {@code null}, no carrier
+	 *           bits will be replaced by random data.
 	 * @return a newly allocated image in which the payload is concealed.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -351,9 +366,8 @@ public class StreamConcealer
 		throws InputException, TaskCancelledException
 	{
 		// Validate arguments
-		if ((length < 0) || (length > MAX_PAYLOAD_LENGTH) ||
-			 (maxReplacementDepth < MIN_MAX_REPLACEMENT_DEPTH) ||
-			 (maxReplacementDepth > MAX_MAX_REPLACEMENT_DEPTH))
+		if ((length < 0) || (length > MAX_PAYLOAD_LENGTH)
+			|| (maxReplacementDepth < MIN_MAX_REPLACEMENT_DEPTH) || (maxReplacementDepth > MAX_MAX_REPLACEMENT_DEPTH))
 			throw new IllegalArgumentException();
 
 		// Test size of image
@@ -456,8 +470,7 @@ public class StreamConcealer
 						while (randomIndex >= randomLength)
 						{
 							randomIndex = 0;
-							randomLength = randomSource.getRandomBytes(randomBuffer, 0,
-																	   randomBuffer.length);
+							randomLength = randomSource.getRandomBytes(randomBuffer, 0, randomBuffer.length);
 						}
 						rgb &= ~(randomMask << shift);
 						rgb |= (randomBuffer[randomIndex++] & randomMask) << shift;
@@ -514,9 +527,12 @@ public class StreamConcealer
 	 * Recovers concealed data (the <i>payload</i>) from a specified image and writes the recovered data to
 	 * a specified output stream.
 	 *
-	 * @param  image          the image from which the concealed data will be recovered.
-	 * @param  outStream      the output stream to which the recovered data will be written.
-	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
+	 * @param  image
+	 *           the image from which the concealed data will be recovered.
+	 * @param  outStream
+	 *           the output stream to which the recovered data will be written.
+	 * @param  lengthDecoder
+	 *           the object that will decode the length of the payload from an array of bytes.
 	 * @throws InputException
 	 *           if an error occurs when recovering the concealed data.
 	 * @throws OutputException
@@ -543,9 +559,12 @@ public class StreamConcealer
 	 * Recovers concealed data (the <i>payload</i>) from a specified image and writes the recovered data to
 	 * a specified output.
 	 *
-	 * @param  image          the image from which the concealed data will be recovered.
-	 * @param  output         the output to which the recovered data will be written.
-	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
+	 * @param  image
+	 *           the image from which the concealed data will be recovered.
+	 * @param  output
+	 *           the output to which the recovered data will be written.
+	 * @param  lengthDecoder
+	 *           the object that will decode the length of the payload from an array of bytes.
 	 * @throws InputException
 	 *           if an error occurs when recovering the concealed data.
 	 * @throws OutputException
@@ -785,9 +804,12 @@ public class StreamConcealer
 		/**
 		 * Reads data from the input up to a specified length and stores it in a buffer.
 		 *
-		 * @param  buffer  the buffer in which the data will be stored.
-		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
-		 * @param  length  the maximum number of bytes to read.
+		 * @param  buffer
+		 *           the buffer in which the data will be stored.
+		 * @param  offset
+		 *           the offset in {@code buffer} at which the first byte of data will be stored.
+		 * @param  length
+		 *           the maximum number of bytes to read.
 		 * @return the number of bytes that were read from the input.
 		 * @throws IOException
 		 *           if an error occurs when reading from the input.
@@ -827,9 +849,12 @@ public class StreamConcealer
 		/**
 		 * Writes a specifed number of bytes of data to the output.
 		 *
-		 * @param  data    the data to be written.
-		 * @param  offset  the start offset of the data in {@code data}.
-		 * @param  length  the number of bytes to write.
+		 * @param  data
+		 *           the data to be written.
+		 * @param  offset
+		 *           the start offset of the data in {@code data}.
+		 * @param  length
+		 *           the number of bytes to write.
 		 * @throws IOException
 		 *           if an error occurs when writing to the output.
 		 */
@@ -935,10 +960,12 @@ public class StreamConcealer
 		/**
 		 * Provides random bytes up to a specified length.
 		 *
-		 * @param  buffer  the buffer in which the random data will be stored.
-		 * @param  offset  the offset in {@code buffer} at which the first byte of random data will be
-		 *                 stored.
-		 * @param  length  the maximum number of bytes to store.
+		 * @param  buffer
+		 *           the buffer in which the random data will be stored.
+		 * @param  offset
+		 *           the offset in {@code buffer} at which the first byte of random data will be stored.
+		 * @param  length
+		 *           the maximum number of bytes to store.
 		 * @return the number of bytes that were stored in the buffer.
 		 */
 
@@ -1000,10 +1027,6 @@ public class StreamConcealer
 		}
 
 		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
 
 	}
 
@@ -1100,15 +1123,17 @@ public class StreamConcealer
 		/**
 		 * Sets the description of data in the message of an exception.
 		 * <p>
-		 * By default, the data that is processed by an concealment or recovery operation is described as
-		 * "data" in the message of an exception.  This method allows the description to be replaced by
-		 * something more specific to the kind of data stream; eg, "file".
+		 * By default, the data that is processed by an concealment or recovery operation is described as 'data' in the
+		 * message of an exception.  This method allows the description to be replaced by something more specific to the
+		 * kind of data stream; eg, 'file'.
 		 * </p>
 		 *
-		 * @param description  the description that will be applied to data in the message of an exception.
+		 * @param description
+		 *          the description that will be applied to data in the message of an exception.
 		 */
 
-		public void setDataDescription(String description)
+		public void setDataDescription(
+			String	description)
 		{
 			setReplacement(0, description);
 		}
@@ -1149,7 +1174,8 @@ public class StreamConcealer
 		/**
 		 * Creates an adapter to wrap a specified input stream.
 		 *
-		 * @param inStream  the input stream that will be translated by this implementation of {@link IInput}.
+		 * @param inStream
+		 *          the input stream that will be translated by this implementation of {@link IInput}.
 		 */
 
 		private InputStreamAdapter(
@@ -1161,15 +1187,18 @@ public class StreamConcealer
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Input interface
+	//  Instance methods : IInput interface
 	////////////////////////////////////////////////////////////////////
 
 		/**
 		 * Reads data from the input stream up to a specified length, and stores it in a buffer.
 		 *
-		 * @param  buffer  the buffer in which the data will be stored.
-		 * @param  offset  the offset in {@code buffer} at which the first byte of data will be stored.
-		 * @param  length  the maximum number of bytes to read.
+		 * @param  buffer
+		 *           the buffer in which the data will be stored.
+		 * @param  offset
+		 *           the offset in {@code buffer} at which the first byte of data will be stored.
+		 * @param  length
+		 *           the maximum number of bytes to read.
 		 * @return the number of bytes that were read from the input stream.
 		 * @throws IOException
 		 *           if an error occurs when reading from the input stream.
@@ -1220,7 +1249,8 @@ public class StreamConcealer
 		/**
 		 * Creates an adapter to wrap a specified output stream.
 		 *
-		 * @param outStream  the output stream that will be translated by this implementation of {@link IOutput}.
+		 * @param outStream
+		 *          the output stream that will be translated by this implementation of {@link IOutput}.
 		 */
 
 		private OutputStreamAdapter(
@@ -1232,15 +1262,18 @@ public class StreamConcealer
 		//--------------------------------------------------------------
 
 	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Output interface
+	//  Instance methods : IOutput interface
 	////////////////////////////////////////////////////////////////////
 
 		/**
 		 * Writes data from an array of bytes to the output stream.
 		 *
-		 * @param  data    the array of data to be written.
-		 * @param  offset  the start offset of the data in {@code data}.
-		 * @param  length  the number of bytes to write.
+		 * @param  data
+		 *           the array of data to be written.
+		 * @param  offset
+		 *           the start offset of the data in {@code data}.
+		 * @param  length
+		 *           the number of bytes to write.
 		 * @throws IOException
 		 *           if an error occurs when writing to the output stream.
 		 */

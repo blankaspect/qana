@@ -415,7 +415,7 @@ public class EntropyAccumulator
 		SourceKind	sourceKind)
 	{
 		SourceParams params = sourceParams.get(sourceKind);
-		return ((params == null) ? 0 : params.bitMask);
+		return (params == null) ? 0 : params.bitMask;
 	}
 
 	//------------------------------------------------------------------
@@ -432,7 +432,7 @@ public class EntropyAccumulator
 		SourceKind	sourceKind)
 	{
 		SourceParams params = sourceParams.get(sourceKind);
-		return ((params == null) ? 0 : params.interval);
+		return (params == null) ? 0 : params.interval;
 	}
 
 	//------------------------------------------------------------------
@@ -441,7 +441,7 @@ public class EntropyAccumulator
 	 * Returns the metrics of the entropy sources of this entropy accumulator.
 	 * <p>
 	 * For each entropy source, there are two metrics for each masked bit of the source: the relative frequency of
-	 * 1-bits and the relative frequencies of 8-bit sequences.
+	 * '1' bits and the relative frequencies of 8-bit sequences.
 	 * </p>
 	 *
 	 * @return the metrics for the entropy sources, or {@code null} if metrics are not enabled.
@@ -1030,7 +1030,7 @@ public class EntropyAccumulator
 	/**
 	 * This class encapsulates some metrics of an entropy source.
 	 * <p>
-	 * There are two metrics for each masked bit of the entropy source: the relative frequency of 1-bits and the
+	 * There are two metrics for each masked bit of the entropy source: the relative frequency of '1' bits and the
 	 * relative frequencies of 8-bit sequences.
 	 * </p>
 	 */

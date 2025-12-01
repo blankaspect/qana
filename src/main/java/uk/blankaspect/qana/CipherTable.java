@@ -119,51 +119,24 @@ class CipherTable
 
 	private static final	KeyAction.KeyCommandPair[]	KEY_COMMANDS	=
 	{
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),
-			Command.SELECT_UP_UNIT
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
-			Command.SELECT_DOWN_UNIT
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_HOME, KeyEvent.CTRL_DOWN_MASK),
-			Command.SELECT_UP_MAX
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_END, KeyEvent.CTRL_DOWN_MASK),
-			Command.SELECT_DOWN_MAX
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0),
-			Command.SELECT_LEFT_UNIT
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0),
-			Command.SELECT_RIGHT_UNIT
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0),
-			Command.SELECT_LEFT_MAX
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_END, 0),
-			Command.SELECT_RIGHT_MAX
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0),
-			Command.TOGGLE_CELL
-		)
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),
+						  Command.SELECT_UP_UNIT),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
+						  Command.SELECT_DOWN_UNIT),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, KeyEvent.CTRL_DOWN_MASK),
+						  Command.SELECT_UP_MAX),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_END, KeyEvent.CTRL_DOWN_MASK),
+						  Command.SELECT_DOWN_MAX),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0),
+						  Command.SELECT_LEFT_UNIT),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0),
+						  Command.SELECT_RIGHT_UNIT),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0),
+						  Command.SELECT_LEFT_MAX),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0),
+						  Command.SELECT_RIGHT_MAX),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0),
+						  Command.TOGGLE_CELL)
 	};
 
 ////////////////////////////////////////////////////////////////////////
@@ -239,36 +212,21 @@ class CipherTable
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.SELECT_UP_UNIT))
-			onSelectUpUnit();
-
-		else if (command.equals(Command.SELECT_DOWN_UNIT))
-			onSelectDownUnit();
-
-		else if (command.equals(Command.SELECT_UP_MAX))
-			onSelectUpMax();
-
-		else if (command.equals(Command.SELECT_DOWN_MAX))
-			onSelectDownMax();
-
-		else if (command.equals(Command.SELECT_LEFT_UNIT))
-			onSelectLeftUnit();
-
-		else if (command.equals(Command.SELECT_RIGHT_UNIT))
-			onSelectRightUnit();
-
-		else if (command.equals(Command.SELECT_LEFT_MAX))
-			onSelectLeftMax();
-
-		else if (command.equals(Command.SELECT_RIGHT_MAX))
-			onSelectRightMax();
-
-		else if (command.equals(Command.TOGGLE_CELL))
-			onToggleCell();
+		switch (event.getActionCommand())
+		{
+			case Command.SELECT_UP_UNIT    -> onSelectUpUnit();
+			case Command.SELECT_DOWN_UNIT  -> onSelectDownUnit();
+			case Command.SELECT_UP_MAX     -> onSelectUpMax();
+			case Command.SELECT_DOWN_MAX   -> onSelectDownMax();
+			case Command.SELECT_LEFT_UNIT  -> onSelectLeftUnit();
+			case Command.SELECT_RIGHT_UNIT -> onSelectRightUnit();
+			case Command.SELECT_LEFT_MAX   -> onSelectLeftMax();
+			case Command.SELECT_RIGHT_MAX  -> onSelectRightMax();
+			case Command.TOGGLE_CELL       -> onToggleCell();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -277,6 +235,7 @@ class CipherTable
 //  Instance methods : FocusListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void focusGained(FocusEvent event)
 	{
 		repaint();
@@ -284,6 +243,7 @@ class CipherTable
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void focusLost(FocusEvent event)
 	{
 		repaint();
@@ -295,6 +255,7 @@ class CipherTable
 //  Instance methods : MouseListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void mouseClicked(MouseEvent event)
 	{
 		// do nothing
@@ -302,6 +263,7 @@ class CipherTable
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseEntered(MouseEvent event)
 	{
 		updateCellState(event, false);
@@ -309,6 +271,7 @@ class CipherTable
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseExited(MouseEvent event)
 	{
 		updateCellState(event, false);
@@ -316,6 +279,7 @@ class CipherTable
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mousePressed(MouseEvent event)
 	{
 		if (SwingUtilities.isLeftMouseButton(event))
@@ -326,6 +290,7 @@ class CipherTable
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseReleased(MouseEvent event)
 	{
 		boolean pressed = (cellState == CellState.PRESSED);
@@ -345,6 +310,7 @@ class CipherTable
 //  Instance methods : MouseMotionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void mouseDragged(MouseEvent event)
 	{
 		updateCellState(event, true);
@@ -352,6 +318,7 @@ class CipherTable
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseMoved(MouseEvent event)
 	{
 		updateCellState(event, false);
@@ -823,7 +790,7 @@ class CipherTable
 		@Override
 		public int hashCode()
 		{
-			return ((column.ordinal() << 16) | cipher.ordinal());
+			return (column.ordinal() << 16) | cipher.ordinal();
 		}
 
 		//--------------------------------------------------------------

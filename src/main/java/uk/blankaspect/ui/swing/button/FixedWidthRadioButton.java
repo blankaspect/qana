@@ -2,7 +2,7 @@
 
 FixedWidthRadioButton.java
 
-Fixed-width radio button class.
+Class: fixed-width radio button.
 
 \*====================================================================*/
 
@@ -23,7 +23,7 @@ import uk.blankaspect.common.misc.MaxValueMap;
 //----------------------------------------------------------------------
 
 
-// FIXED-WIDTH RADIO BUTTON CLASS
+// CLASS: FIXED-WIDTH RADIO BUTTON
 
 
 public abstract class FixedWidthRadioButton
@@ -41,7 +41,8 @@ public abstract class FixedWidthRadioButton
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	protected FixedWidthRadioButton(String text)
+	protected FixedWidthRadioButton(
+		String	text)
 	{
 		super(text);
 		MaxValueMap.add(getKey(), this);
@@ -61,6 +62,7 @@ public abstract class FixedWidthRadioButton
 //  Instance methods : MaxValueMap.IEntry interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public int getValue()
 	{
 		return getPreferredSize().width;
@@ -68,7 +70,9 @@ public abstract class FixedWidthRadioButton
 
 	//------------------------------------------------------------------
 
-	public void setValue(int value)
+	@Override
+	public void setValue(
+		int	value)
 	{
 		setIconTextGap(MIN_ICON_TEXT_GAP + value - getPreferredSize().width);
 	}

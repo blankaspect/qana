@@ -63,6 +63,8 @@ import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 import uk.blankaspect.ui.swing.text.TextRendering;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -88,137 +90,19 @@ class FilePartSetSelectionDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point	location;
 
-	// FILE-PART LIST CLASS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
-
-	private static class FilePartList
-		extends SingleSelectionList<FileSplitter.FirstFilePart>
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	NUM_COLUMNS	= 1;
-		private static final	int	NUM_ROWS	= 12;
-
-		private static final	int	SEPARATOR_WIDTH	= 1;
-
-		private static final	Color	SEPARATOR_COLOUR	= new Color(192, 200, 192);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private FilePartList(List<FileSplitter.FirstFilePart> fileParts)
-		{
-			// Call superclass constructor
-			super(NUM_COLUMNS, NUM_ROWS, AppFont.MAIN.getFont(), fileParts);
-
-			// Get widths of fields
-			FontMetrics fontMetrics = getFontMetrics(getFont());
-			int timestampFieldWidth = 0;
-			for (FileSplitter.FirstFilePart filePart : fileParts)
-			{
-				int width = fontMetrics.stringWidth(filePart.name);
-				if (filenameFieldWidth < width)
-					filenameFieldWidth = width;
-
-				width = fontMetrics.stringWidth(Integer.toString(filePart.numFileParts));
-				if (numPartsFieldWidth < width)
-					numPartsFieldWidth = width;
-
-				width = fontMetrics.stringWidth(getTimestampString(filePart));
-				if (timestampFieldWidth < width)
-					timestampFieldWidth = width;
-			}
-
-			// Set column width, extra width and row height
-			setColumnWidth(filenameFieldWidth + numPartsFieldWidth + timestampFieldWidth);
-			setExtraWidth(2 * (2 * getHorizontalMargin() + SEPARATOR_WIDTH));
-			setRowHeight(getRowHeight() + 1);
-
-			// Set properties
-			setDragEnabled(false);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static String getTimestampString(FileSplitter.FirstFilePart filePart)
-		{
-			return CalendarTime.timeToString(filePart.timestamp, "  ");
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected void drawElement(Graphics gr,
-								   int      index)
-		{
-			// Create copy of graphics context
-			gr = gr.create();
-
-			// Set rendering hints for text antialiasing and fractional metrics
-			TextRendering.setHints((Graphics2D)gr);
-
-			// Get file part
-			FileSplitter.FirstFilePart filePart = getElement(index);
-
-			// Draw filename
-			int rowHeight = getRowHeight();
-			int x = getHorizontalMargin();
-			int y = index * rowHeight;
-			FontMetrics fontMetrics = gr.getFontMetrics();
-			int textY = y + DEFAULT_VERTICAL_MARGIN + fontMetrics.getAscent();
-			gr.setColor(getForegroundColour(index));
-			gr.drawString(filePart.name, x, textY);
-
-			// Draw number of file parts
-			String str = Integer.toString(filePart.numFileParts);
-			x += filenameFieldWidth + getExtraWidth() / 2;
-			gr.drawString(str, x + numPartsFieldWidth - fontMetrics.stringWidth(str), textY);
-
-			// Draw timestamp
-			x += numPartsFieldWidth + getExtraWidth() / 2;
-			gr.drawString(getTimestampString(filePart), x, textY);
-
-			// Draw separators
-			gr.setColor(SEPARATOR_COLOUR);
-			x = 2 * getHorizontalMargin() + filenameFieldWidth;
-			int y2 = y + rowHeight - 1;
-			gr.drawLine(x, y, x, y2);
-			x += getExtraWidth() / 2 + numPartsFieldWidth;
-			gr.drawLine(x, y, x, y2);
-
-			// Draw bottom border
-			y += rowHeight - 1;
-			gr.drawLine(0, y, getWidth() - 1, y);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int	filenameFieldWidth;
-		private	int	numPartsFieldWidth;
-
-	}
-
-	//==================================================================
+	private	boolean			accepted;
+	private	FilePartList	filePartList;
+	private	JScrollPane		filePartListScrollPane;
+	private	JButton			okButton;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -318,11 +202,22 @@ class FilePartSetSelectionDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -364,15 +259,14 @@ class FilePartSetSelectionDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(FilePartList.Command.EDIT_ELEMENT) || command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.ACCEPT, FilePartList.Command.EDIT_ELEMENT -> onAccept();
+			case Command.CLOSE                                     -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -381,6 +275,7 @@ class FilePartSetSelectionDialog
 //  Instance methods : ChangeListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void stateChanged(ChangeEvent event)
 	{
 		if (!filePartListScrollPane.getVerticalScrollBar().getValueIsAdjusting() &&
@@ -394,6 +289,7 @@ class FilePartSetSelectionDialog
 //  Instance methods : ListSelectionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void valueChanged(ListSelectionEvent event)
 	{
 		okButton.setEnabled(filePartList.isSelection());
@@ -407,7 +303,7 @@ class FilePartSetSelectionDialog
 
 	private FileSplitter.FirstFilePart getFilePart()
 	{
-		return (accepted ? filePartList.getSelectedElement() : null);
+		return accepted ? filePartList.getSelectedElement() : null;
 	}
 
 	//------------------------------------------------------------------
@@ -430,19 +326,137 @@ class FilePartSetSelectionDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point	location;
 
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
+	// FILE-PART LIST CLASS
 
-	private	boolean			accepted;
-	private	FilePartList	filePartList;
-	private	JScrollPane		filePartListScrollPane;
-	private	JButton			okButton;
+
+	private static class FilePartList
+		extends SingleSelectionList<FileSplitter.FirstFilePart>
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int		NUM_COLUMNS	= 1;
+		private static final	int		NUM_ROWS	= 12;
+
+		private static final	int		SEPARATOR_WIDTH	= 1;
+
+		private static final	Color	SEPARATOR_COLOUR	= new Color(192, 200, 192);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int	filenameFieldWidth;
+		private	int	numPartsFieldWidth;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private FilePartList(List<FileSplitter.FirstFilePart> fileParts)
+		{
+			// Call superclass constructor
+			super(NUM_COLUMNS, NUM_ROWS, AppFont.MAIN.getFont(), fileParts);
+
+			// Get widths of fields
+			FontMetrics fontMetrics = getFontMetrics(getFont());
+			int timestampFieldWidth = 0;
+			for (FileSplitter.FirstFilePart filePart : fileParts)
+			{
+				int width = fontMetrics.stringWidth(filePart.name);
+				if (filenameFieldWidth < width)
+					filenameFieldWidth = width;
+
+				width = fontMetrics.stringWidth(Integer.toString(filePart.numFileParts));
+				if (numPartsFieldWidth < width)
+					numPartsFieldWidth = width;
+
+				width = fontMetrics.stringWidth(getTimestampString(filePart));
+				if (timestampFieldWidth < width)
+					timestampFieldWidth = width;
+			}
+
+			// Set column width, extra width and row height
+			setColumnWidth(filenameFieldWidth + numPartsFieldWidth + timestampFieldWidth);
+			setExtraWidth(2 * (2 * getHorizontalMargin() + SEPARATOR_WIDTH));
+			setRowHeight(getRowHeight() + 1);
+
+			// Set properties
+			setDragEnabled(false);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static String getTimestampString(FileSplitter.FirstFilePart filePart)
+		{
+			return CalendarTime.timeToString(filePart.timestamp, "  ");
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected void drawElement(Graphics gr,
+								   int      index)
+		{
+			// Create copy of graphics context
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
+
+			// Set rendering hints for text antialiasing and fractional metrics
+			TextRendering.setHints(gr2d);
+
+			// Get file part
+			FileSplitter.FirstFilePart filePart = getElement(index);
+
+			// Draw filename
+			int rowHeight = getRowHeight();
+			int x = getHorizontalMargin();
+			int y = index * rowHeight;
+			FontMetrics fontMetrics = gr2d.getFontMetrics();
+			int textY = y + DEFAULT_VERTICAL_MARGIN + fontMetrics.getAscent();
+			gr2d.setColor(getForegroundColour(index));
+			gr2d.drawString(filePart.name, x, textY);
+
+			// Draw number of file parts
+			String str = Integer.toString(filePart.numFileParts);
+			x += filenameFieldWidth + getExtraWidth() / 2;
+			gr2d.drawString(str, x + numPartsFieldWidth - fontMetrics.stringWidth(str), textY);
+
+			// Draw timestamp
+			x += numPartsFieldWidth + getExtraWidth() / 2;
+			gr2d.drawString(getTimestampString(filePart), x, textY);
+
+			// Draw separators
+			gr2d.setColor(SEPARATOR_COLOUR);
+			x = 2 * getHorizontalMargin() + filenameFieldWidth;
+			int y2 = y + rowHeight - 1;
+			gr2d.drawLine(x, y, x, y2);
+			x += getExtraWidth() / 2 + numPartsFieldWidth;
+			gr2d.drawLine(x, y, x, y2);
+
+			// Draw bottom border
+			y += rowHeight - 1;
+			gr2d.drawLine(0, y, getWidth() - 1, y);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

@@ -134,8 +134,8 @@ public abstract class FileSelectionPanel
 
 	private static final	KeyAction.KeyCommandPair[]	KEY_COMMANDS	=
 	{
-		new KeyAction.KeyCommandPair(DELETE_KEY, Command.REMOVE),
-		new KeyAction.KeyCommandPair(PASTE_KEY,  Command.PASTE_FILES)
+		KeyAction.command(DELETE_KEY, Command.REMOVE),
+		KeyAction.command(PASTE_KEY,  Command.PASTE_FILES)
 	};
 
 ////////////////////////////////////////////////////////////////////////
@@ -345,19 +345,13 @@ public abstract class FileSelectionPanel
 	{
 		try
 		{
-			String command = event.getActionCommand();
-
-			if (command.equals(Command.ADD))
-				onAdd();
-
-			else if (command.equals(Command.REMOVE))
-				onRemove();
-
-			else if (command.equals(Command.TOGGLE_PATHNAME_KIND))
-				onTogglePathnameKind();
-
-			else if (command.equals(Command.PASTE_FILES))
-				onPasteFiles();
+			switch (event.getActionCommand())
+			{
+				case Command.ADD                  -> onAdd();
+				case Command.REMOVE               -> onRemove();
+				case Command.TOGGLE_PATHNAME_KIND -> onTogglePathnameKind();
+				case Command.PASTE_FILES          -> onPasteFiles();
+			}
 		}
 		catch (AppException e)
 		{

@@ -54,7 +54,6 @@ import javax.swing.KeyStroke;
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.FileException;
 
-import uk.blankaspect.common.misc.FilenameSuffixFilter;
 import uk.blankaspect.common.misc.MaxValueMap;
 
 import uk.blankaspect.ui.swing.action.KeyAction;
@@ -66,6 +65,8 @@ import uk.blankaspect.ui.swing.combobox.FComboBox;
 
 import uk.blankaspect.ui.swing.container.PathnamePanel;
 
+import uk.blankaspect.ui.swing.filechooser.FileChooserUtils;
+
 import uk.blankaspect.ui.swing.font.FontUtils;
 
 import uk.blankaspect.ui.swing.label.FLabel;
@@ -73,6 +74,8 @@ import uk.blankaspect.ui.swing.label.FLabel;
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 import uk.blankaspect.ui.swing.textfield.IntegerField;
+
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
 
 //----------------------------------------------------------------------
 
@@ -89,9 +92,9 @@ class GarbageGeneratorDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	MIN_OUTPUT_LENGTH		= 1;
-	private static final	int	MAX_OUTPUT_LENGTH		= 99999999;
-	private static final	int	DEFAULT_OUTPUT_LENGTH	= 1000;
+	private static final	int		MIN_OUTPUT_LENGTH		= 1;
+	private static final	int		MAX_OUTPUT_LENGTH		= 99999999;
+	private static final	int		DEFAULT_OUTPUT_LENGTH	= 1000;
 
 	private static final	Insets	GENERATE_LENGTH_BUTTON_MARGINS	= new Insets(1, 4, 1, 4);
 
@@ -119,429 +122,43 @@ class GarbageGeneratorDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// OUTPUT KIND
-
-
-	private enum OutputKind
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILE
-		(
-			"File",
-			KeyEvent.VK_F,
-			11
-		),
-
-		TEXT
-		(
-			"Text",
-			KeyEvent.VK_T,
-			7
-		),
-
-		IMAGE
-		(
-			"Image",
-			KeyEvent.VK_I,
-			9
-		);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private OutputKind(String text,
-						   int    mnemonicKey,
-						   int    numLengthRanges)
-		{
-			this.text = text;
-			this.mnemonicKey = mnemonicKey;
-			this.numLengthRanges = numLengthRanges;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		public static OutputKind get()
-		{
-			for (OutputKind value : values())
-			{
-				if (value.radioButton.isSelected())
-					return value;
-			}
-			return null;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		public RadioButton getRadioButton()
-		{
-			if (radioButton == null)
-			{
-				radioButton = new RadioButton(" " + text);
-				radioButton.setMnemonic(mnemonicKey);
-				radioButton.setActionCommand(Command.SELECT_OUTPUT_KIND);
-				if (buttonGroup == null)
-					buttonGroup = new ButtonGroup();
-				buttonGroup.add(radioButton);
-			}
-			return radioButton;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class variables
-	////////////////////////////////////////////////////////////////////
-
-		private static	ButtonGroup	buttonGroup;
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String		text;
-		private	int			mnemonicKey;
-		private	RadioButton	radioButton;
-		private	int			numLengthRanges;
-
-	}
-
-	//==================================================================
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		NO_FILE
-		("No file was specified."),
-
-		NO_IMAGE_FILE
-		("No image file was specified."),
-
-		NOT_A_FILE
-		("The pathname does not denote a file."),
-
-		INVALID_LENGTH
-		("The length is invalid."),
-
-		LENGTH_OUT_OF_BOUNDS
-		("The length must be between " + MIN_OUTPUT_LENGTH + " and " + MAX_OUTPUT_LENGTH + ".");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
+	private static	Point		location;
+	private static	int			lengthRangeIndex;
+	private static	Random		randSeq				= new Random();
+	private static	OutputKind	outputKind			= OutputKind.FILE;
+	private static	File		outputFile;
+	private static	File		imageFile;
+	private static	int			outputLength		= DEFAULT_OUTPUT_LENGTH;
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
+	private	boolean					accepted;
+	private	FPathnameField			outPathnameField;
+	private	PathnamePanel			outPathnamePanel;
+	private	FPathnameField			imagePathnameField;
+	private	PathnamePanel			imagePathnamePanel;
+	private	LengthField				lengthField;
+	private	FComboBox<LengthRange>	lengthRangeComboBox;
+	private	JFileChooser			outFileChooser;
+	private	JFileChooser			imageFileChooser;
 
-	// RESULT CLASS
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
 
-
-	public static class Result
+	static
 	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Result(File file,
-					   File imageFile,
-					   int  length)
-		{
-			this.file = file;
-			this.imageFile = imageFile;
-			this.length = length;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		File	file;
-		File	imageFile;
-		int		length;
-
+		LENGTH_RANGES = new ArrayList<>();
+		for (int exponent = LengthRange.MIN_EXPONENT; exponent <= LengthRange.MAX_EXPONENT;
+																exponent += LengthRange.EXPONENT_INCREMENT)
+			LENGTH_RANGES.add(new LengthRange(exponent));
+		LENGTH_RANGES.get(0).lowerBound = 1;
 	}
-
-	//==================================================================
-
-
-	// LENGTH RANGE CLASS
-
-
-	private static class LengthRange
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	MIN_EXPONENT		= 4;
-		private static final	int	MAX_EXPONENT		= 24;
-		private static final	int	EXPONENT_INCREMENT	= 2;
-
-		private static final	int	K_EXPONENT	= 10;
-		private static final	int	K_BOUND		= 1 << K_EXPONENT;
-
-		private static final	int	M_EXPONENT	= 20;
-		private static final	int	M_BOUND		= 1 << M_EXPONENT;
-
-		private static final	String	K_SUFFIX	= " KiB";
-		private static final	String	M_SUFFIX	= " MiB";
-
-		private static final	String	DEFAULT_BOUND_SEPARATOR	= "to";
-		private static final	char[]	BOUND_SEPARATOR_CHARS	=
-		{
-			'\u2013',   // EN DASH
-			'\u2212'    // MINUS SIGN
-		};
-
-		private static final	String	BOUND_SEPARATOR;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private LengthRange(int exponent)
-		{
-			lowerBound = 1 << exponent;
-			upperBound = 1 << (exponent + EXPONENT_INCREMENT);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static String boundToString(int bound)
-		{
-			String suffix = "";
-			int value = bound;
-			if (bound >= M_BOUND)
-			{
-				suffix = M_SUFFIX;
-				value >>>= M_EXPONENT;
-			}
-			else if (bound >= K_BOUND)
-			{
-				suffix = K_SUFFIX;
-				value >>>= K_EXPONENT;
-			}
-			return (Integer.toString(value) + suffix);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public String toString()
-		{
-			return (boundToString(lowerBound) + " " + BOUND_SEPARATOR + " " +
-																			boundToString(upperBound));
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Static initialiser
-	////////////////////////////////////////////////////////////////////
-
-		static
-		{
-			String separator = DEFAULT_BOUND_SEPARATOR;
-			for (char separatorChar : BOUND_SEPARATOR_CHARS)
-			{
-				if (AppFont.COMBO_BOX.getFont().canDisplay(separatorChar))
-				{
-					separator = Character.toString(separatorChar);
-					break;
-				}
-			}
-			BOUND_SEPARATOR = separator;
-		}
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int	lowerBound;
-		private	int	upperBound;
-
-	}
-
-	//==================================================================
-
-
-	// RADIO BUTTON CLASS
-
-
-	private static class RadioButton
-		extends FixedWidthRadioButton
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	KEY	= RadioButton.class.getCanonicalName();
-
-		private static final	Color	BACKGROUND_COLOUR	= new Color(252, 224, 128);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private RadioButton(String text)
-		{
-			super(text);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static void reset()
-		{
-			MaxValueMap.removeAll(KEY);
-		}
-
-		//--------------------------------------------------------------
-
-		private static void update()
-		{
-			MaxValueMap.update(KEY);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public Color getBackground()
-		{
-			return (isSelected() ? BACKGROUND_COLOUR : super.getBackground());
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		protected String getKey()
-		{
-			return KEY;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// LENGTH FIELD CLASS
-
-
-	private static class LengthField
-		extends IntegerField.Unsigned
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	LENGTH	= 8;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private LengthField(int value)
-		{
-			super(LENGTH, value);
-			AppFont.TEXT_FIELD.apply(this);
-			GuiUtils.setTextComponentMargins(this);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected int getColumnWidth()
-		{
-			return (FontUtils.getCharWidth('0', getFontMetrics(getFont())) + 1);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -562,15 +179,14 @@ class GarbageGeneratorDialog
 		outFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		outFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		outFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
-		outFileChooser.setFileFilter(FileKind.ENCRYPTED.getFileFilter());
+		FileChooserUtils.setFilter(outFileChooser, FileKind.ENCRYPTED.getFileFilter());
 
 		imageFileChooser = new JFileChooser();
 		imageFileChooser.setDialogTitle(IMAGE_FILE_STR);
 		imageFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		imageFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
 		imageFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
-		imageFileChooser.setFileFilter(new FilenameSuffixFilter(AppConstants.PNG_FILES_STR,
-																AppConstants.PNG_FILENAME_EXTENSION));
+		FileChooserUtils.setFilter(imageFileChooser, AppConstants.PNG_FILE_FILTER);
 
 
 		//----  Control panel
@@ -587,7 +203,7 @@ class GarbageGeneratorDialog
 		RadioButton.reset();
 
 		// Radio button: file
-		JRadioButton fileRadioButton = OutputKind.FILE.getRadioButton();
+		JRadioButton fileRadioButton = OutputKind.FILE.radioButton();
 		fileRadioButton.addActionListener(this);
 
 		gbc.gridx = 0;
@@ -620,7 +236,7 @@ class GarbageGeneratorDialog
 		controlPanel.add(outPathnamePanel);
 
 		// Radio button: text
-		JRadioButton textRadioButton = OutputKind.TEXT.getRadioButton();
+		JRadioButton textRadioButton = OutputKind.TEXT.radioButton();
 		if (canGenerateText)
 			textRadioButton.addActionListener(this);
 		else
@@ -643,7 +259,7 @@ class GarbageGeneratorDialog
 		controlPanel.add(textRadioButton);
 
 		// Radio button: image
-		JRadioButton imageRadioButton = OutputKind.IMAGE.getRadioButton();
+		JRadioButton imageRadioButton = OutputKind.IMAGE.radioButton();
 		imageRadioButton.addActionListener(this);
 
 		gbc.gridx = 0;
@@ -770,11 +386,8 @@ class GarbageGeneratorDialog
 		gridBag.setConstraints(generateLengthButton, gbc);
 		lengthPanel.add(generateLengthButton);
 
-		// Update widths of radio buttons
-		RadioButton.update();
-
 		// Select radio button
-		outputKind.getRadioButton().setSelected(true);
+		outputKind.radioButton().setSelected(true);
 
 
 		//----  Button panel
@@ -839,14 +452,28 @@ class GarbageGeneratorDialog
 		// Set content pane
 		setContentPane(mainPanel);
 
+		// Update widths of radio buttons
+		RadioButton.update();
+
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -885,27 +512,18 @@ class GarbageGeneratorDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.SELECT_OUTPUT_KIND))
-			onSelectOutputKind();
-
-		else if (command.equals(Command.CHOOSE_OUTPUT_FILE))
-			onChooseOutputFile();
-
-		else if (command.equals(Command.CHOOSE_IMAGE_FILE))
-			onChooseImageFile();
-
-		else if (command.equals(Command.GENERATE_LENGTH))
-			onGenerateLength();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.SELECT_OUTPUT_KIND -> onSelectOutputKind();
+			case Command.CHOOSE_OUTPUT_FILE -> onChooseOutputFile();
+			case Command.CHOOSE_IMAGE_FILE  -> onChooseImageFile();
+			case Command.GENERATE_LENGTH    -> onGenerateLength();
+			case Command.ACCEPT             -> onAccept();
+			case Command.CLOSE              -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -1092,43 +710,411 @@ class GarbageGeneratorDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point		location;
-	private static	int			lengthRangeIndex;
-	private static	Random		randSeq				= new Random();
-	private static	OutputKind	outputKind			= OutputKind.FILE;
-	private static	File		outputFile;
-	private static	File		imageFile;
-	private static	int			outputLength		= DEFAULT_OUTPUT_LENGTH;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// OUTPUT KIND
 
-	static
+
+	private enum OutputKind
 	{
-		LENGTH_RANGES = new ArrayList<>();
-		for (int exponent = LengthRange.MIN_EXPONENT; exponent <= LengthRange.MAX_EXPONENT;
-																exponent += LengthRange.EXPONENT_INCREMENT)
-			LENGTH_RANGES.add(new LengthRange(exponent));
-		LENGTH_RANGES.get(0).lowerBound = 1;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILE
+		(
+			"File",
+			KeyEvent.VK_F,
+			11
+		),
+
+		TEXT
+		(
+			"Text",
+			KeyEvent.VK_T,
+			7
+		),
+
+		IMAGE
+		(
+			"Image",
+			KeyEvent.VK_I,
+			9
+		);
+
+	////////////////////////////////////////////////////////////////////
+	//  Class variables
+	////////////////////////////////////////////////////////////////////
+
+		private static	ButtonGroup	buttonGroup;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String		text;
+		private	int			mnemonicKey;
+		private	RadioButton	radioButton;
+		private	int			numLengthRanges;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private OutputKind(String text,
+						   int    mnemonicKey,
+						   int    numLengthRanges)
+		{
+			this.text = text;
+			this.mnemonicKey = mnemonicKey;
+			this.numLengthRanges = numLengthRanges;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		public static OutputKind get()
+		{
+			for (OutputKind value : values())
+			{
+				if (value.radioButton.isSelected())
+					return value;
+			}
+			return null;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		public RadioButton radioButton()
+		{
+			if (radioButton == null)
+			{
+				radioButton = new RadioButton(" " + text);
+				radioButton.setMnemonic(mnemonicKey);
+				radioButton.setActionCommand(Command.SELECT_OUTPUT_KIND);
+				if (buttonGroup == null)
+					buttonGroup = new ButtonGroup();
+				buttonGroup.add(radioButton);
+			}
+			return radioButton;
+		}
+
+		//--------------------------------------------------------------
+
 	}
 
+	//==================================================================
+
+
+	// ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		NO_FILE
+		("No file was specified."),
+
+		NO_IMAGE_FILE
+		("No image file was specified."),
+
+		NOT_A_FILE
+		("The pathname does not denote a file."),
+
+		INVALID_LENGTH
+		("The length is invalid."),
+
+		LENGTH_OUT_OF_BOUNDS
+		("The length must be between " + MIN_OUTPUT_LENGTH + " and " + MAX_OUTPUT_LENGTH + ".");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member records
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean					accepted;
-	private	FPathnameField			outPathnameField;
-	private	PathnamePanel			outPathnamePanel;
-	private	FPathnameField			imagePathnameField;
-	private	PathnamePanel			imagePathnamePanel;
-	private	LengthField				lengthField;
-	private	FComboBox<LengthRange>	lengthRangeComboBox;
-	private	JFileChooser			outFileChooser;
-	private	JFileChooser			imageFileChooser;
+
+	// RECORD: RESULT
+
+
+	public record Result(
+		File	file,
+		File	imageFile,
+		int		length)
+	{ }
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// LENGTH RANGE CLASS
+
+
+	private static class LengthRange
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int		MIN_EXPONENT		= 4;
+		private static final	int		MAX_EXPONENT		= 24;
+		private static final	int		EXPONENT_INCREMENT	= 2;
+
+		private static final	int		K_EXPONENT	= 10;
+		private static final	int		K_BOUND		= 1 << K_EXPONENT;
+
+		private static final	int		M_EXPONENT	= 20;
+		private static final	int		M_BOUND		= 1 << M_EXPONENT;
+
+		private static final	String	K_SUFFIX	= " KiB";
+		private static final	String	M_SUFFIX	= " MiB";
+
+		private static final	String	DEFAULT_BOUND_SEPARATOR	= "to";
+		private static final	char[]	BOUND_SEPARATOR_CHARS	=
+		{
+			'\u2013',   // EN DASH
+			'\u2212'    // MINUS SIGN
+		};
+
+		private static final	String	BOUND_SEPARATOR;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int	lowerBound;
+		private	int	upperBound;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private LengthRange(int exponent)
+		{
+			lowerBound = 1 << exponent;
+			upperBound = 1 << (exponent + EXPONENT_INCREMENT);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static String boundToString(int bound)
+		{
+			String suffix = "";
+			int value = bound;
+			if (bound >= M_BOUND)
+			{
+				suffix = M_SUFFIX;
+				value >>>= M_EXPONENT;
+			}
+			else if (bound >= K_BOUND)
+			{
+				suffix = K_SUFFIX;
+				value >>>= K_EXPONENT;
+			}
+			return Integer.toString(value) + suffix;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String toString()
+		{
+			return boundToString(lowerBound) + " " + BOUND_SEPARATOR + " " + boundToString(upperBound);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Static initialiser
+	////////////////////////////////////////////////////////////////////
+
+		static
+		{
+			String separator = DEFAULT_BOUND_SEPARATOR;
+			for (char separatorChar : BOUND_SEPARATOR_CHARS)
+			{
+				if (AppFont.COMBO_BOX.getFont().canDisplay(separatorChar))
+				{
+					separator = Character.toString(separatorChar);
+					break;
+				}
+			}
+			BOUND_SEPARATOR = separator;
+		}
+
+	}
+
+	//==================================================================
+
+
+	// RADIO BUTTON CLASS
+
+
+	private static class RadioButton
+		extends FixedWidthRadioButton
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	KEY	= RadioButton.class.getCanonicalName();
+
+		private static final	Color	BACKGROUND_COLOUR	= new Color(252, 224, 128);
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private RadioButton(String text)
+		{
+			super(text);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static void reset()
+		{
+			MaxValueMap.removeAll(KEY);
+		}
+
+		//--------------------------------------------------------------
+
+		private static void update()
+		{
+			MaxValueMap.update(KEY);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public Color getBackground()
+		{
+			return isSelected() ? BACKGROUND_COLOUR : super.getBackground();
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		protected String getKey()
+		{
+			return KEY;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// LENGTH FIELD CLASS
+
+
+	private static class LengthField
+		extends IntegerField.Unsigned
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	LENGTH	= 8;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private LengthField(int value)
+		{
+			super(LENGTH, value);
+			AppFont.TEXT_FIELD.apply(this);
+			GuiUtils.setTextComponentMargins(this);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected int getColumnWidth()
+		{
+			return FontUtils.getCharWidth('0', getFontMetrics(getFont())) + 1;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

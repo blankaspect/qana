@@ -163,8 +163,8 @@ public class StreamEncrypter
 	private static final	int		TIMESTAMP_FIELD_SIZE		= Long.SIZE / Byte.SIZE;
 	private static final	int		HASH_VALUE_FIELD_SIZE		= HmacSha256.HASH_VALUE_SIZE;
 
-	private static final	int		METADATA1_SIZE	= CIPHER_FIELD_SIZE + 3 * PADDING_LENGTH_FIELD_SIZE
-															+ TIMESTAMP_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
+	private static final	int		METADATA1_SIZE	=
+			CIPHER_FIELD_SIZE + 3 * PADDING_LENGTH_FIELD_SIZE + TIMESTAMP_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
 	private static final	int		METADATA2_SIZE	= SALT_FIELD_SIZE + PARAMETERS_FIELD_SIZE;
 
 	private static final	int		BUFFER_LENGTH	= 1 << 13;  // 8192
@@ -545,7 +545,7 @@ public class StreamEncrypter
 
 	public int getMaxOverheadSize()
 	{
-		return (getMinOverheadSize() + MIN_LENGTH - PADDING_SIZE);
+		return getMinOverheadSize() + MIN_LENGTH - PADDING_SIZE;
 	}
 
 	//------------------------------------------------------------------
@@ -583,7 +583,7 @@ public class StreamEncrypter
 	 * @param listener
 	 *          the progress listener that will be added to the list.
 	 * @see   #removeProgressListener(IProgressListener)
-	 * @see   #getProgressListeners()
+	 * @see   #progressListeners()
 	 */
 
 	public void addProgressListener(
@@ -603,7 +603,7 @@ public class StreamEncrypter
 	 * @param listener
 	 *          the progress listener that will be removed from the list.
 	 * @see   #addProgressListener(IProgressListener)
-	 * @see   #getProgressListeners()
+	 * @see   #progressListeners()
 	 */
 
 	public void removeProgressListener(
@@ -622,7 +622,7 @@ public class StreamEncrypter
 	 * @see    #removeProgressListener(IProgressListener)
 	 */
 
-	public IProgressListener[] getProgressListeners()
+	public IProgressListener[] progressListeners()
 	{
 		return progressListeners.toArray(IProgressListener[]::new);
 	}
@@ -1966,7 +1966,7 @@ public class StreamEncrypter
 			int	offset,
 			int	length)
 		{
-			return (minValue + BitUtils.getBitField(data, offset, length));
+			return minValue + BitUtils.getBitField(data, offset, length);
 		}
 
 		//--------------------------------------------------------------
@@ -2023,12 +2023,11 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns the number of threads that should be allocated for the processing of parallel superblocks
-		 * in the KDF.
+		 * Returns the number of threads that should be allocated for the processing of parallel superblocks in the KDF.
 		 * <p>
-		 * The value returned by this method will not exceed the number of available processors on the
-		 * system.  If the <i>maximum number of threads</i> parameter of this parameter set is zero, the
-		 * number of threads will be the number of available processors.
+		 * The value returned by this method will not exceed the number of processors that are available to the system.
+		 * If the <i>maximum number of threads</i> parameter of this parameter set is 0, the number of threads will be
+		 * the number of available processors minus 1, or 1 if the system has a single processor.
 		 * </p>
 		 *
 		 * @return the number of threads that should be allocated for the processing of parallel superblocks
@@ -2038,7 +2037,7 @@ public class StreamEncrypter
 		public int getNumThreads()
 		{
 			int numProcessors = Runtime.getRuntime().availableProcessors();
-			return ((maxNumThreads == 0) ? numProcessors : Math.min(maxNumThreads, numProcessors));
+			return (maxNumThreads == 0) ? Math.max(1, numProcessors - 1) : Math.min(maxNumThreads, numProcessors);
 		}
 
 		//--------------------------------------------------------------

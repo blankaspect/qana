@@ -87,7 +87,7 @@ class StringTable
 		for (String str : strings)
 		{
 			if (offset <= startOffset + str.length())
-				return ((offset == startOffset) ? str : str.substring(offset - startOffset));
+				return (offset == startOffset) ? str : str.substring(offset - startOffset);
 			startOffset += str.length() + 1;
 		}
 		return null;
@@ -102,7 +102,7 @@ class StringTable
 		{
 			offset += s.length();
 			if (s.endsWith(str))
-				return (offset - str.length());
+				return offset - str.length();
 			++offset;
 		}
 		return -offset;

@@ -339,7 +339,7 @@ public class ByteUnitIntegerSpinnerPanel
 		@Override
 		protected int getEditorValue()
 		{
-			return (editor.getValue() << unit.exponent);
+			return editor.getValue() << unit.exponent;
 		}
 
 		//--------------------------------------------------------------
@@ -355,7 +355,7 @@ public class ByteUnitIntegerSpinnerPanel
 		@Override
 		protected int getModifierFactor(InputModifiers modifiers)
 		{
-			return (super.getModifierFactor(modifiers) << unit.exponent);
+			return super.getModifierFactor(modifiers) << unit.exponent;
 		}
 
 		//--------------------------------------------------------------

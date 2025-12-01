@@ -196,7 +196,7 @@ class KdfParameterPanel
 		@Override
 		public Color getBackground()
 		{
-			return (isSelected() ? BACKGROUND_COLOUR : super.getBackground());
+			return isSelected() ? BACKGROUND_COLOUR : super.getBackground();
 		}
 
 		//--------------------------------------------------------------
@@ -262,32 +262,32 @@ class KdfParameterPanel
 		protected void paintComponent(Graphics gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(BACKGROUND_COLOUR);
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(BACKGROUND_COLOUR);
+			gr2d.fillRect(0, 0, width, height);
 
 			// Draw text
 			if (text != null)
 			{
 				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints((Graphics2D)gr);
+				TextRendering.setHints(gr2d);
 
 				// Draw text
-				FontMetrics fontMetrics = gr.getFontMetrics();
-				gr.setColor(TEXT_COLOUR);
-				gr.drawString(text, width - HORIZONTAL_MARGIN - fontMetrics.stringWidth(text),
-							  VERTICAL_MARGIN + fontMetrics.getAscent());
+				FontMetrics fontMetrics = gr2d.getFontMetrics();
+				gr2d.setColor(TEXT_COLOUR);
+				gr2d.drawString(text, width - HORIZONTAL_MARGIN - fontMetrics.stringWidth(text),
+								VERTICAL_MARGIN + fontMetrics.getAscent());
 			}
 
 			// Draw border
-			gr.setColor(BORDER_COLOUR);
-			gr.drawRect(0, 0, width - 1, height - 1);
+			gr2d.setColor(BORDER_COLOUR);
+			gr2d.drawRect(0, 0, width - 1, height - 1);
 		}
 
 		//--------------------------------------------------------------
@@ -739,13 +739,11 @@ class KdfParameterPanel
 	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.SELECT_PARAMETER_KIND))
-			onSelectParameterKind();
-
-		else if (command.equals(Command.GENERATE_KEY))
-			onGenerateKey();
+		switch (event.getActionCommand())
+		{
+			case Command.SELECT_PARAMETER_KIND -> onSelectParameterKind();
+			case Command.GENERATE_KEY          -> onGenerateKey();
+		}
 	}
 
 	//------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 DecryptDialog.java
 
-Decrypt dialog class.
+Class: 'decrypt' dialog.
 
 \*====================================================================*/
 
@@ -60,14 +60,18 @@ import uk.blankaspect.ui.swing.button.FButton;
 
 import uk.blankaspect.ui.swing.container.PathnamePanel;
 
+import uk.blankaspect.ui.swing.filechooser.FileChooserUtils;
+
 import uk.blankaspect.ui.swing.label.FLabel;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
-// DECRYPT DIALOG CLASS
+// CLASS: 'DECRYPT' DIALOG
 
 
 class DecryptDialog
@@ -104,103 +108,51 @@ class DecryptDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point			location;
+	private static	File			inputFile;
+	private static	File			outputFile;
+	private static	JFileChooser	inputFileChooser;
+	private static	JFileChooser	outputFileChooser;
 
-	// ERROR IDENTIFIERS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
+	private	boolean			accepted;
+	private	FPathnameField	inputFileField;
+	private	FPathnameField	outputFileField;
+	private	JButton			decryptButton;
 
-	private enum ErrorId
-		implements AppException.IId
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
 	{
+		inputFileChooser = new JFileChooser();
+		inputFileChooser.setDialogTitle(INPUT_FILE_TITLE_STR);
+		inputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
+		FileChooserUtils.setFilter(inputFileChooser, FileKind.ENCRYPTED.getFileFilter());
 
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FILE_DOES_NOT_EXIST
-		("The file does not exist."),
-
-		NOT_A_FILE
-		("The output pathname does not denote a normal file."),
-
-		NO_INPUT_FILE
-		("No input file was specified.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
+		outputFileChooser = new JFileChooser();
+		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
+		outputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// RESULT CLASS
-
-
-	public static class Result
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public Result(File inFile,
-					  File outFile)
-		{
-			this.inFile = inFile;
-			this.outFile = outFile;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		File	inFile;
-		File	outFile;
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private DecryptDialog(Window owner,
-						  File   inFile)
+	private DecryptDialog(
+		Window	owner,
+		File	inFile)
 	{
 		// Call superclass constructor
 		super(owner, TITLE_STR, ModalityType.APPLICATION_MODAL);
@@ -377,11 +329,22 @@ class DecryptDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -415,8 +378,9 @@ class DecryptDialog
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static Result showDialog(Component parent,
-									File      inFile)
+	public static Result showDialog(
+		Component	parent,
+		File		inFile)
 	{
 		return new DecryptDialog(GuiUtils.getWindow(parent), inFile).getResult();
 	}
@@ -427,24 +391,18 @@ class DecryptDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void actionPerformed(ActionEvent event)
+	@Override
+	public void actionPerformed(
+		ActionEvent	event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.CHOOSE_INPUT_FILE))
-			onChooseInputFile();
-
-		else if (command.equals(Command.CHOOSE_OUTPUT_FILE))
-			onChooseOutputFile();
-
-		else if (command.equals(Command.SET_OUTPUT_FILE_FROM_INPUT_FILE))
-			onSetOutputFileFromInputFile();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.CHOOSE_INPUT_FILE               -> onChooseInputFile();
+			case Command.CHOOSE_OUTPUT_FILE              -> onChooseOutputFile();
+			case Command.SET_OUTPUT_FILE_FROM_INPUT_FILE -> onSetOutputFileFromInputFile();
+			case Command.ACCEPT                          -> onAccept();
+			case Command.CLOSE                           -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -453,21 +411,27 @@ class DecryptDialog
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void changedUpdate(DocumentEvent event)
+	@Override
+	public void changedUpdate(
+		DocumentEvent	event)
 	{
 		// do nothing
 	}
 
 	//------------------------------------------------------------------
 
-	public void insertUpdate(DocumentEvent event)
+	@Override
+	public void insertUpdate(
+		DocumentEvent	event)
 	{
 		updateAcceptButton();
 	}
 
 	//------------------------------------------------------------------
 
-	public void removeUpdate(DocumentEvent event)
+	@Override
+	public void removeUpdate(
+		DocumentEvent	event)
 	{
 		updateAcceptButton();
 	}
@@ -495,7 +459,8 @@ class DecryptDialog
 	//------------------------------------------------------------------
 
 	@Override
-	public void importFiles(List<File> files)
+	public void importFiles(
+		List<File>	files)
 	{
 		inputFileField.setFile(files.get(0));
 	}
@@ -508,7 +473,7 @@ class DecryptDialog
 
 	private Result getResult()
 	{
-		return (accepted ? new Result(inputFile, outputFile) : null);
+		return accepted ? new Result(inputFile, outputFile) : null;
 	}
 
 	//------------------------------------------------------------------
@@ -565,8 +530,10 @@ class DecryptDialog
 			inputFileChooser.setCurrentDirectory(inputFileField.getCanonicalFile());
 		inputFileChooser.rescanCurrentDirectory();
 		if (inputFileChooser.showDialog(this, SELECT_STR) == JFileChooser.APPROVE_OPTION)
+		{
 			inputFileField.setFile(Utils.appendSuffix(inputFileChooser.getSelectedFile(),
 													  FileKind.ENCRYPTED.getFilenameSuffix()));
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -630,43 +597,77 @@ class DecryptDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point			location;
-	private static	File			inputFile;
-	private static	File			outputFile;
-	private static	JFileChooser	inputFileChooser;
-	private static	JFileChooser	outputFileChooser;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// ENUMERATION: ERROR IDENTIFIERS
 
-	static
+
+	private enum ErrorId
+		implements AppException.IId
 	{
-		inputFileChooser = new JFileChooser();
-		inputFileChooser.setDialogTitle(INPUT_FILE_TITLE_STR);
-		inputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		inputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		inputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
-		inputFileChooser.setFileFilter(FileKind.ENCRYPTED.getFileFilter());
 
-		outputFileChooser = new JFileChooser();
-		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
-		outputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FILE_DOES_NOT_EXIST
+		("The file does not exist."),
+
+		NOT_A_FILE
+		("The output pathname does not denote a normal file."),
+
+		NO_INPUT_FILE
+		("No input file was specified.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
 	}
 
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member records
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean			accepted;
-	private	FPathnameField	inputFileField;
-	private	FPathnameField	outputFileField;
-	private	JButton			decryptButton;
+
+	// RECORD: RESULT
+
+
+	public record Result(
+		File	inFile,
+		File	outFile)
+	{ }
+
+	//==================================================================
 
 }
 

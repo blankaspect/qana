@@ -114,7 +114,8 @@ class ArchiveDocument
 	private static final	int		HEADER_SIZE		= STRING_TABLE_OFFSET_FIELD_SIZE + NUM_ELEMENTS_FIELD_SIZE;
 	private static final	int		METADATA_SIZE	= HEADER_SIZE + HASH_VALUE_FIELD_SIZE;
 
-	private static final	String	TEMPORARY_FILENAME_EXTENSION	= ".$tmp";
+	private static final	String	TEMP_FILENAME_PREFIX	= "qarc";
+	private static final	String	TEMP_FILENAME_EXTENSION	= ".$tmp";
 
 	private static final	String	UNNAMED_STR					= "Unnamed";
 	private static final	String	FILE_STR					= "file";
@@ -277,7 +278,7 @@ class ArchiveDocument
 	@Override
 	public String getName()
 	{
-		return ((file == null) ? UNNAMED_STR + unnamedIndex : file.getName());
+		return (file == null) ? UNNAMED_STR + unnamedIndex : file.getName();
 	}
 
 	//------------------------------------------------------------------
@@ -1123,7 +1124,7 @@ class ArchiveDocument
 
 	private ArchiveView.Table getTable()
 	{
-		return ((view == null) ? null : view.getTable());
+		return (view == null) ? null : view.getTable();
 	}
 
 	//------------------------------------------------------------------
@@ -1284,7 +1285,7 @@ class ArchiveDocument
 			// Create temporary file
 			try
 			{
-				tempFile = File.createTempFile(null, TEMPORARY_FILENAME_EXTENSION, outDirectory);
+				tempFile = File.createTempFile(TEMP_FILENAME_PREFIX, TEMP_FILENAME_EXTENSION, outDirectory);
 			}
 			catch (Exception e)
 			{
@@ -2526,7 +2527,7 @@ class ArchiveDocument
 			while (true)
 			{
 				if (path1.size() == index)
-					return ((path2.size() == index) ? name1.compareTo(name2) : -1);
+					return (path2.size() == index) ? name1.compareTo(name2) : -1;
 				else
 				{
 					if (path2.size() == index)

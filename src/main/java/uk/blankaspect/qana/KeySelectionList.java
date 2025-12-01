@@ -331,7 +331,7 @@ class KeySelectionList
 
 		private int getRowHeight()
 		{
-			return (TOP_MARGIN + getFontMetrics(getFont()).getHeight() + BOTTOM_MARGIN);
+			return TOP_MARGIN + getFontMetrics(getFont()).getHeight() + BOTTOM_MARGIN;
 		}
 
 		//--------------------------------------------------------------

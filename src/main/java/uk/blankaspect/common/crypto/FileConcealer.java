@@ -91,33 +91,35 @@ public class FileConcealer
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Conceals the contents of a specified file (the <i>payload</i>) in an image (the <i>carrier</i>), and
-	 * writes the resulting image in PNG format to a specified file.
+	 * Conceals the contents of the specified file (the <i>payload</i>) in the specified image (the <i>carrier</i>), and
+	 * writes the resulting image in PNG format to the specified file.
 	 * <p>
-	 * The maximum length of the payload is 2<sup>24</sup> - 1 (16777215).
+	 * The maximum length of the payload is 2<sup>24</sup> - 1 (16,777,215).
 	 * </p>
 	 *
-	 * @param  inFile               the input file from which the payload will be read.
-	 * @param  carrierImageSource   the source of the image in which the payload will be concealed.  If
-	 *                              {@code carrierImageSource} is {@code null}, the carrier image wil be
-	 *                              read from the file specified by {@code carrierFile}.
-	 * @param  carrierFile          the file containing the image in which the payload will be concealed.
-	 *                              {@code carrierFile} is used as the source of the carrier image only if
-	 *                              {@code carrierImageSource} is {@code null}.
-	 * @param  outFile              the file to which the image containing the concealed payload will be
-	 *                              written in PNG format.
-	 * @param  lengthEncoder        the object that will encode the length of the payload as an array of
-	 *                              bytes.
-	 * @param  maxReplacementDepth  the maximum number of bits per RGB colour component of the carrier that
-	 *                              will be replaced by the payload.
-	 * @param  randomSource         a source of random data for replacing bits of the RGB components of the
-	 *                              carrier that are not replaced by the payload, up to {@code
-	 *                              maxReplacementDepth}.  If {@code randomSource} is {@code null}, no
-	 *                              carrier bits will be replaced by random data.
+	 * @param  inFile
+	 *           the input file from which the payload will be read.
+	 * @param  carrierImageSource
+	 *           the source of the image in which the payload will be concealed.  If {@code carrierImageSource} is
+	 *           {@code null}, the carrier image wil be read from the file specified by {@code carrierFile}.
+	 * @param  carrierFile
+	 *           the file containing the image in which the payload will be concealed.  {@code carrierFile} is used as
+	 *           the source of the carrier image only if {@code carrierImageSource} is {@code null}.
+	 * @param  outFile
+	 *           the file to which the image containing the concealed payload will be written in PNG format.
+	 * @param  lengthEncoder
+	 *           the object that will encode the length of the payload as an array of bytes.
+	 * @param  maxReplacementDepth
+	 *           the maximum number of bits per RGB colour component of the carrier that will be replaced by the
+	 *           payload.
+	 * @param  randomSource
+	 *           a source of random data for replacing bits of the RGB components of the carrier that are not replaced
+	 *           by the payload, up to {@code maxReplacementDepth}.  If {@code randomSource} is {@code null}, no carrier
+	 *           bits will be replaced by random data.
 	 * @throws IllegalArgumentException
 	 *           if {@code maxReplacementDepth} is less than 1 or greater than 6.
 	 * @throws AppException
-	 *           if an error occurred during the concealment operation.
+	 *           if an error occurs during the concealment operation.
 	 * @throws TaskCancelledException
 	 *           if the concealment operation was cancelled by the user.
 	 * @see    #conceal(InputStream, IImageSource, File, File, int, StreamConcealer.ILengthEncoder, int,
@@ -215,38 +217,41 @@ public class FileConcealer
 	//------------------------------------------------------------------
 
 	/**
-	 * Conceals data read from an input stream (the <i>payload</i>) in an image (the <i>carrier</i>), and
-	 * writes the resulting image in PNG format to a specified file.
+	 * Conceals data read from the specified input stream (the <i>payload</i>) in a specified image (the
+	 * <i>carrier</i>), and writes the resulting image in PNG format to the specified file.
 	 * <p>
-	 * The maximum length of the payload is 2<sup>24</sup> - 1 (16777215).
+	 * The maximum length of the payload is 2<sup>24</sup> - 1 (16,777,215).
 	 * </p>
 	 *
-	 * @param  inStream             the input stream from which the payload will be read.
-	 * @param  carrierImageSource   the source of the image in which the payload will be concealed.  If
-	 *                              {@code carrierImageSource} is {@code null}, the carrier image wil be
-	 *                              read from the file specified by {@code carrierFile}.
-	 * @param  carrierFile          the file containing the image in which the payload will be concealed.
-	 *                              {@code carrierFile} is used as the source of the carrier image only if
-	 *                              {@code carrierImageSource} is {@code null}.
-	 * @param  outFile              the file to which the image containing the concealed payload will be
-	 *                              written in PNG format.
-	 * @param  length               the length (in bytes) of the payload.
-	 * @param  lengthEncoder        the object that will encode the length of the payload as an array of
-	 *                              bytes.
-	 * @param  maxReplacementDepth  the maximum number of bits per RGB colour component of the carrier that
-	 *                              will be replaced by the payload.
-	 * @param  randomSource         a source of random data for replacing bits of the RGB components of the
-	 *                              carrier that are not replaced by the payload, up to {@code
-	 *                              maxReplacementDepth}.  If {@code randomSource} is {@code null}, no
-	 *                              carrier bits will be replaced by random data.
+	 * @param  inStream
+	 *           the input stream from which the payload will be read.
+	 * @param  carrierImageSource
+	 *           the source of the image in which the payload will be concealed.  If {@code carrierImageSource} is
+	 *           {@code null}, the carrier image wil be read from the file specified by {@code carrierFile}.
+	 * @param  carrierFile
+	 *           the file containing the image in which the payload will be concealed.  {@code carrierFile} is used as
+	 *           the source of the carrier image only if {@code carrierImageSource} is {@code null}.
+	 * @param  outFile
+	 *           the file to which the image containing the concealed payload will be written in PNG format.
+	 * @param  length
+	 *           the length (in bytes) of the payload.
+	 * @param  lengthEncoder
+	 *           the object that will encode the length of the payload as an array of bytes.
+	 * @param  maxReplacementDepth
+	 *           the maximum number of bits per RGB colour component of the carrier that will be replaced by the
+	 *           payload.
+	 * @param  randomSource
+	 *           a source of random data for replacing bits of the RGB components of the carrier that are not replaced
+	 *           by the payload, up to {@code maxReplacementDepth}.  If {@code randomSource} is {@code null}, no carrier
+	 *           bits will be replaced by random data.
 	 * @throws IllegalArgumentException
 	 *           if
 	 *           <ul>
-	 *             <li>{@code length} is negative or greater than 2<sup>24</sup> - 1 (16777215), or</li>
+	 *             <li>{@code length} is negative or greater than 2<sup>24</sup> - 1 (16,777,215), or</li>
 	 *             <li>{@code maxReplacementDepth} is less than 1 or greater than 6.</li>
 	 *           </ul>
 	 * @throws AppException
-	 *           if an error occurred during the concealment operation.
+	 *           if an error occurs during the concealment operation.
 	 * @throws TaskCancelledException
 	 *           if the concealment operation was cancelled by the user.
 	 * @see    #conceal(File, IImageSource, File, File, StreamConcealer.ILengthEncoder, int,
@@ -294,7 +299,7 @@ public class FileConcealer
 			{
 				image = ImageIO.read(carrierFile);
 				if (image == null)
-					throw new FileException(ErrorId.INPUT_FORMAT_NOT_SUPPORTED, carrierFile);
+					throw new FileException(ErrorId.UNRECOGNISED_IMAGE_FILE, carrierFile);
 			}
 			catch (SecurityException e)
 			{
@@ -303,10 +308,6 @@ public class FileConcealer
 			catch (IOException e)
 			{
 				throw new FileException(ErrorId.ERROR_READING_FILE, carrierFile);
-			}
-			catch (Exception e)
-			{
-				// ignore
 			}
 		}
 
@@ -359,14 +360,17 @@ public class FileConcealer
 	//------------------------------------------------------------------
 
 	/**
-	 * Recovers concealed data (the <i>payload</i>) from a specified image file and writes the recovered
-	 * data to a specified file.
+	 * Recovers concealed data (the <i>payload</i>) from the specified image file and writes the recovered data to the
+	 * specified file.
 	 *
-	 * @param  inFile         the image file from which the concealed data will be recovered.
-	 * @param  outFile        the file to which the recovered data will be written.
-	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
+	 * @param  inFile
+	 *           the image file from which the concealed data will be recovered.
+	 * @param  outFile
+	 *           the file to which the recovered data will be written.
+	 * @param  lengthDecoder
+	 *           the object that will decode the length of the payload from an array of bytes.
 	 * @throws AppException
-	 *           if an error occurred during the recovery operation.
+	 *           if an error occurs during the recovery operation.
 	 * @throws TaskCancelledException
 	 *           if the recovery operation was cancelled by the user.
 	 * @see    #recover(File, OutputStream, StreamConcealer.ILengthDecoder)
@@ -515,12 +519,15 @@ public class FileConcealer
 	//------------------------------------------------------------------
 
 	/**
-	 * Recovers concealed data (the <i>payload</i>) from a specified image file and writes the recovered
-	 * data to a specified output stream.
+	 * Recovers concealed data (the <i>payload</i>) from the specified image file and writes the recovered data to the
+	 * specified output stream.
 	 *
-	 * @param  inFile         the image file from which the concealed data will be recovered.
-	 * @param  outStream      the output stream to which the recovered data will be written.
-	 * @param  lengthDecoder  the object that will decode the length of the payload from an array of bytes.
+	 * @param  inFile
+	 *           the image file from which the concealed data will be recovered.
+	 * @param  outStream
+	 *           the output stream to which the recovered data will be written.
+	 * @param  lengthDecoder
+	 *           the object that will decode the length of the payload from an array of bytes.
 	 * @throws FileException
 	 *           if an error occurs when reading the input file or recovering the concealed data.
 	 * @throws StreamConcealer.OutputException
@@ -554,7 +561,7 @@ public class FileConcealer
 		{
 			image = ImageIO.read(inFile);
 			if (image == null)
-				throw new FileException(ErrorId.INPUT_FORMAT_NOT_SUPPORTED, inFile);
+				throw new FileException(ErrorId.UNRECOGNISED_IMAGE_FILE, inFile);
 		}
 		catch (SecurityException e)
 		{
@@ -563,10 +570,6 @@ public class FileConcealer
 		catch (IOException e)
 		{
 			throw new FileException(ErrorId.ERROR_READING_FILE, inFile);
-		}
-		catch (Exception e)
-		{
-			// ignore
 		}
 
 		// Update progress view
@@ -642,9 +645,8 @@ public class FileConcealer
 		FILE_IS_TOO_LONG
 		("The file is too long to be concealed in an image."),
 
-		INPUT_FORMAT_NOT_SUPPORTED
-		("The input file may not be an image file or it may be an image file whose format is not\n" +
-			"supported by this implementation of Java."),
+		UNRECOGNISED_IMAGE_FILE
+		("The file was not recognised as an image file."),
 
 		PNG_OUTPUT_NOT_SUPPORTED
 		("This implementation of Java does not support the writing of PNG files.");
@@ -705,13 +707,13 @@ public class FileConcealer
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Returns an image for use as a carrier to conceal a payload of a specified length.
+		 * Returns an image for use as a carrier to conceal a payload of the specified length.
 		 *
-		 * @param  payloadLength  the length (in bytes) of the payload that the image will be used to
-		 *                        conceal.
+		 * @param  payloadLength
+		 *           the length (in bytes) of the payload that the image will be used to conceal.
 		 * @return an image for use as a carrier to conceal a payload of length {@code payloadLength}.
 		 * @throws AppException
-		 *           if an error occurred in the production of the image.
+		 *           if an error occurs in the production of the image.
 		 */
 
 		BufferedImage getImage(

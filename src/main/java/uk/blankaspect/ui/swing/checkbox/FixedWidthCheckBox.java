@@ -2,7 +2,7 @@
 
 FixedWidthCheckBox.java
 
-Fixed-width check box class.
+Class: fixed-width check box.
 
 \*====================================================================*/
 
@@ -23,7 +23,7 @@ import uk.blankaspect.common.misc.MaxValueMap;
 //----------------------------------------------------------------------
 
 
-// FIXED-WIDTH CHECK BOX CLASS
+// CLASS: FIXED-WIDTH CHECK BOX
 
 
 public abstract class FixedWidthCheckBox
@@ -41,7 +41,8 @@ public abstract class FixedWidthCheckBox
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	protected FixedWidthCheckBox(String text)
+	protected FixedWidthCheckBox(
+		String	text)
 	{
 		super(text);
 		MaxValueMap.add(getKey(), this);
@@ -61,6 +62,7 @@ public abstract class FixedWidthCheckBox
 //  Instance methods : MaxValueMap.IEntry interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public int getValue()
 	{
 		return getPreferredSize().width;
@@ -68,7 +70,9 @@ public abstract class FixedWidthCheckBox
 
 	//------------------------------------------------------------------
 
-	public void setValue(int value)
+	@Override
+	public void setValue(
+		int	value)
 	{
 		setIconTextGap(MIN_ICON_TEXT_GAP + value - getPreferredSize().width);
 	}

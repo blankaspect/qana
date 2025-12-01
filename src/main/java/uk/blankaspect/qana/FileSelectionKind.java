@@ -2,7 +2,7 @@
 
 FileSelectionKind.java
 
-File-selection kind enumeration.
+Enumeration: kind of file selection.
 
 \*====================================================================*/
 
@@ -22,14 +22,18 @@ import java.awt.event.KeyEvent;
 
 import java.io.File;
 
+import java.util.Arrays;
+
 import javax.swing.JFileChooser;
 
 import uk.blankaspect.common.misc.IStringKeyed;
 
+import uk.blankaspect.ui.swing.filechooser.FileChooserUtils;
+
 //----------------------------------------------------------------------
 
 
-// FILE-SELECTION KIND ENUMERATION
+// ENUMERATION: KIND OF FILE SELECTION
 
 
 enum FileSelectionKind
@@ -48,7 +52,8 @@ enum FileSelectionKind
 	)
 	{
 		@Override
-		protected void initFileChooser(JFileChooser fileChooser)
+		protected void initFileChooser(
+			JFileChooser	fileChooser)
 		{
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		}
@@ -62,7 +67,8 @@ enum FileSelectionKind
 	)
 	{
 		@Override
-		protected void initFileChooser(JFileChooser fileChooser)
+		protected void initFileChooser(
+			JFileChooser	fileChooser)
 		{
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		}
@@ -76,7 +82,8 @@ enum FileSelectionKind
 	)
 	{
 		@Override
-		protected void initFileChooser(JFileChooser fileChooser)
+		protected void initFileChooser(
+			JFileChooser	fileChooser)
 		{
 			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			fileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
@@ -92,7 +99,8 @@ enum FileSelectionKind
 	)
 	{
 		@Override
-		protected void initFileChooser(JFileChooser fileChooser)
+		protected void initFileChooser(
+			JFileChooser	fileChooser)
 		{
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		}
@@ -106,7 +114,8 @@ enum FileSelectionKind
 	)
 	{
 		@Override
-		protected void initFileChooser(JFileChooser fileChooser)
+		protected void initFileChooser(
+			JFileChooser	fileChooser)
 		{
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		}
@@ -120,7 +129,8 @@ enum FileSelectionKind
 	)
 	{
 		@Override
-		protected void initFileChooser(JFileChooser fileChooser)
+		protected void initFileChooser(
+			JFileChooser	fileChooser)
 		{
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		}
@@ -131,12 +141,22 @@ enum FileSelectionKind
 	private static final	String	SELECT_DIRECTORY_STR	= "Select directory";
 
 ////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	String			key;
+	private	String			title;
+	private	FileKind		fileKind;
+	private	JFileChooser	fileChooser;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	private FileSelectionKind(String   key,
-							  String   title,
-							  FileKind fileKind)
+	private FileSelectionKind(
+		String		key,
+		String		title,
+		FileKind	fileKind)
 	{
 		this.key = key;
 		this.title = title;
@@ -149,14 +169,10 @@ enum FileSelectionKind
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static FileSelectionKind forKey(String key)
+	public static FileSelectionKind forKey(
+		String	key)
 	{
-		for (FileSelectionKind value : values())
-		{
-			if (value.key.equals(key))
-				return value;
-		}
-		return null;
+		return Arrays.stream(values()).filter(value -> value.key.equals(key)).findFirst().orElse(null);
 	}
 
 	//------------------------------------------------------------------
@@ -165,7 +181,8 @@ enum FileSelectionKind
 //  Abstract methods
 ////////////////////////////////////////////////////////////////////////
 
-	protected abstract void initFileChooser(JFileChooser fileChooser);
+	protected abstract void initFileChooser(
+		JFileChooser	fileChooser);
 
 	//------------------------------------------------------------------
 
@@ -173,6 +190,7 @@ enum FileSelectionKind
 //  Instance methods : IStringKeyed interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public String getKey()
 	{
 		return key;
@@ -189,15 +207,13 @@ enum FileSelectionKind
 		if (fileChooser == null)
 		{
 			AppConfig config = AppConfig.INSTANCE;
-			File directory = config.isSaveFileSelectionPathnames()
-																? config.getFileSelectionDirectory(this)
-																: null;
+			File directory = config.isSaveFileSelectionPathnames() ? config.getFileSelectionDirectory(this) : null;
 			fileChooser = new JFileChooser(directory);
 			fileChooser.setDialogTitle(title);
 			initFileChooser(fileChooser);
 		}
 		if (fileKind != null)
-			fileChooser.setFileFilter(fileKind.getFileFilter());
+			FileChooserUtils.setFilter(fileChooser, fileKind.getFileFilter());
 		return fileChooser;
 	}
 
@@ -207,21 +223,12 @@ enum FileSelectionKind
 	{
 		AppConfig config = AppConfig.INSTANCE;
 		String pathname = config.isSaveFileSelectionPathnames()
-													? Utils.getPathname(fileChooser.getCurrentDirectory())
-													: null;
+								? Utils.getPathname(fileChooser.getCurrentDirectory())
+								: null;
 		config.setFileSelectionPathname(this, pathname);
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	String			key;
-	private	String			title;
-	private	FileKind		fileKind;
-	private	JFileChooser	fileChooser;
 
 }
 

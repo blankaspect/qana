@@ -46,6 +46,8 @@ import uk.blankaspect.ui.swing.colour.Colours;
 import uk.blankaspect.ui.swing.font.FontKey;
 import uk.blankaspect.ui.swing.font.FontUtils;
 
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
 import uk.blankaspect.ui.swing.text.TextRendering;
 
 //----------------------------------------------------------------------
@@ -63,12 +65,12 @@ public class BitSelectionPanel
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	NUM_ROWS	= 1;
+	private static final	int		NUM_ROWS	= 1;
 
-	private static final	int	HORIZONTAL_MARGIN		= 2;
-	private static final	int	INNER_VERTICAL_MARGIN	= 2;
-	private static final	int	OUTER_VERTICAL_MARGIN	= 2;
-	private static final	int	GRID_LINE_WIDTH			= 1;
+	private static final	int		HORIZONTAL_MARGIN		= 2;
+	private static final	int		INNER_VERTICAL_MARGIN	= 2;
+	private static final	int		OUTER_VERTICAL_MARGIN	= 2;
+	private static final	int		GRID_LINE_WIDTH			= 1;
 
 	private static final	Color	BACKGROUND_COLOUR					= new Color(254, 254, 250);
 	private static final	Color	TEXT_COLOUR							= Colours.FOREGROUND;
@@ -90,31 +92,16 @@ public class BitSelectionPanel
 
 	private static final	KeyAction.KeyCommandPair[]	KEY_COMMANDS	=
 	{
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0),
-			Command.TOGGLE_SELECTED
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0),
-			Command.SELECT_LEFT_UNIT
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0),
-			Command.SELECT_RIGHT_UNIT
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0),
-			Command.SELECT_LEFT_MAX
-		),
-		new KeyAction.KeyCommandPair
-		(
-			KeyStroke.getKeyStroke(KeyEvent.VK_END, 0),
-			Command.SELECT_RIGHT_MAX
-		)
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0),
+						  Command.TOGGLE_SELECTED),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0),
+						  Command.SELECT_LEFT_UNIT),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0),
+						  Command.SELECT_RIGHT_UNIT),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0),
+						  Command.SELECT_LEFT_MAX),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0),
+						  Command.SELECT_RIGHT_MAX)
 	};
 
 ////////////////////////////////////////////////////////////////////////
@@ -136,8 +123,9 @@ public class BitSelectionPanel
 	 * @throws IllegalArgumentException
 	 */
 
-	public BitSelectionPanel(int numBits,
-							 int selectedMask)
+	public BitSelectionPanel(
+		int	numBits,
+		int	selectedMask)
 	{
 		// Call alternative constructor
 		this(numBits, (1 << Integer.SIZE) - 1, selectedMask);
@@ -149,9 +137,10 @@ public class BitSelectionPanel
 	 * @throws IllegalArgumentException
 	 */
 
-	public BitSelectionPanel(int numBits,
-							 int enabledMask,
-							 int selectedMask)
+	public BitSelectionPanel(
+		int	numBits,
+		int	enabledMask,
+		int	selectedMask)
 	{
 		// Validate arguments
 		if ((numBits <= 0) || (numBits > Integer.SIZE))
@@ -165,8 +154,8 @@ public class BitSelectionPanel
 		this.enabledMask = enabledMask;
 		this.selectedMask = selectedMask;
 		FontMetrics fontMetrics = getFontMetrics(getFont());
-		String str = "0".repeat(NumberUtils.getNumDecDigitsInt(numBits - 1));
-		cellWidth = GRID_LINE_WIDTH + 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(str);
+		String text = "0".repeat(NumberUtils.getNumDecDigitsInt(numBits - 1));
+		cellWidth = GRID_LINE_WIDTH + 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(text);
 		cellHeight = GRID_LINE_WIDTH + 2 * INNER_VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
 
 		// Set properties
@@ -180,13 +169,15 @@ public class BitSelectionPanel
 		addFocusListener(new FocusListener()
 		{
 			@Override
-			public void focusGained(FocusEvent event)
+			public void focusGained(
+				FocusEvent	event)
 			{
 				repaint();
 			}
 
 			@Override
-			public void focusLost(FocusEvent event)
+			public void focusLost(
+				FocusEvent	event)
 			{
 				repaint();
 			}
@@ -196,7 +187,8 @@ public class BitSelectionPanel
 		addMouseListener(new MouseAdapter()
 		{
 			@Override
-			public void mousePressed(MouseEvent event)
+			public void mousePressed(
+				MouseEvent	event)
 			{
 				if (SwingUtilities.isLeftMouseButton(event))
 				{
@@ -227,24 +219,17 @@ public class BitSelectionPanel
 ////////////////////////////////////////////////////////////////////////
 
 	@Override
-	public void actionPerformed(ActionEvent event)
+	public void actionPerformed(
+		ActionEvent	event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.TOGGLE_SELECTED))
-			onToggleSelectedBit();
-
-		else if (command.equals(Command.SELECT_LEFT_UNIT))
-			onSelectLeftUnit();
-
-		else if (command.equals(Command.SELECT_RIGHT_UNIT))
-			onSelectRightUnit();
-
-		else if (command.equals(Command.SELECT_LEFT_MAX))
-			onSelectLeftMax();
-
-		else if (command.equals(Command.SELECT_RIGHT_MAX))
-			onSelectRightMax();
+		switch (event.getActionCommand())
+		{
+			case Command.TOGGLE_SELECTED   -> onToggleSelectedBit();
+			case Command.SELECT_LEFT_UNIT  -> onSelectLeftUnit();
+			case Command.SELECT_RIGHT_UNIT -> onSelectRightUnit();
+			case Command.SELECT_LEFT_MAX   -> onSelectLeftMax();
+			case Command.SELECT_RIGHT_MAX  -> onSelectRightMax();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -263,40 +248,41 @@ public class BitSelectionPanel
 	//------------------------------------------------------------------
 
 	@Override
-	protected void paintComponent(Graphics gr)
+	protected void paintComponent(
+		Graphics	gr)
 	{
 		// Create copy of graphics context
-		gr = gr.create();
+		Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 		// Draw background
-		Rectangle rect = gr.getClipBounds();
-		gr.setColor(getBackground());
-		gr.fillRect(rect.x, rect.y, rect.width, rect.height);
+		Rectangle rect = gr2d.getClipBounds();
+		gr2d.setColor(getBackground());
+		gr2d.fillRect(rect.x, rect.y, rect.width, rect.height);
 
 		// Draw cell backgrounds
 		int x = GRID_LINE_WIDTH;
 		int y = OUTER_VERTICAL_MARGIN + GRID_LINE_WIDTH;
 		for (int i = numBits - 1; i >= 0; i--)
 		{
-			gr.setColor(isBitEnabled(i)
+			gr2d.setColor(isBitEnabled(i)
 								? isBitSelected(i)
 										? isFocusOwner()
 												? FOCUSED_SELECTED_BACKGROUND_COLOUR
 												: SELECTED_BACKGROUND_COLOUR
 										: BACKGROUND_COLOUR
 								: DISABLED_BACKGROUND_COLOUR);
-			gr.fillRect(x, y, cellWidth - 1, cellHeight - 1);
+			gr2d.fillRect(x, y, cellWidth - 1, cellHeight - 1);
 			x += cellWidth;
 		}
 
 		// Draw horizontal grid lines
-		gr.setColor(BORDER_COLOUR);
+		gr2d.setColor(BORDER_COLOUR);
 		int x1 = 0;
 		int x2 = getWidth() - 1;
 		y = OUTER_VERTICAL_MARGIN;
 		for (int i = 0; i <= NUM_ROWS; i++)
 		{
-			gr.drawLine(x1, y, x2, y);
+			gr2d.drawLine(x1, y, x2, y);
 			y += cellHeight;
 		}
 
@@ -306,34 +292,34 @@ public class BitSelectionPanel
 		int y2 = y1 + cellHeight;
 		for (int i = 0; i <= numBits; i++)
 		{
-			gr.drawLine(x, y1, x, y2);
+			gr2d.drawLine(x, y1, x, y2);
 			x += cellWidth;
 		}
 
 		// Set rendering hints for text antialiasing and fractional metrics
-		TextRendering.setHints((Graphics2D)gr);
+		TextRendering.setHints(gr2d);
 
 		// Draw text
-		gr.setColor(TEXT_COLOUR);
-		FontMetrics fontMetrics = gr.getFontMetrics();
+		gr2d.setColor(TEXT_COLOUR);
+		FontMetrics fontMetrics = gr2d.getFontMetrics();
+		int digitWidth = fontMetrics.charWidth('0');
 		x = GRID_LINE_WIDTH;
 		y = OUTER_VERTICAL_MARGIN + GRID_LINE_WIDTH + INNER_VERTICAL_MARGIN + fontMetrics.getAscent();
 		for (int i = numBits - 1; i >= 0; i--)
 		{
-			String str = Integer.toString(i);
-			int strWidth = fontMetrics.stringWidth(str);
-			gr.drawString(str, x + (cellWidth - strWidth) / 2, y);
+			String text = Integer.toString(i);
+			gr2d.drawString(text, x + (cellWidth - ((i < 10) ? 1 : 2) * digitWidth) / 2, y);
 			x += cellWidth;
 		}
 
 		// Draw focus indicator
 		if (isFocusOwner())
 		{
-			gr.setColor(FOCUSED_BORDER_COLOUR);
+			gr2d.setColor(FOCUSED_BORDER_COLOUR);
 			x = (numBits - activeIndex - 1) * cellWidth;
 			y = OUTER_VERTICAL_MARGIN;
-			gr.drawRect(x, y, cellWidth, cellHeight);
-			gr.drawRect(++x, ++y, cellWidth - 2, cellHeight - 2);
+			gr2d.drawRect(x, y, cellWidth, cellHeight);
+			gr2d.drawRect(++x, ++y, cellWidth - 2, cellHeight - 2);
 		}
 	}
 
@@ -350,21 +336,24 @@ public class BitSelectionPanel
 
 	//------------------------------------------------------------------
 
-	private boolean isBitEnabled(int index)
+	private boolean isBitEnabled(
+		int	index)
 	{
 		return ((enabledMask & 1 << index) != 0);
 	}
 
 	//------------------------------------------------------------------
 
-	private boolean isBitSelected(int index)
+	private boolean isBitSelected(
+		int	index)
 	{
 		return ((selectedMask & 1 << index) != 0);
 	}
 
 	//------------------------------------------------------------------
 
-	private void setActiveIndex(int index)
+	private void setActiveIndex(
+		int	index)
 	{
 		if (activeIndex != index)
 		{

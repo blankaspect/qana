@@ -18,11 +18,11 @@ package uk.blankaspect.common.crypto;
 // IMPORTS
 
 
+import java.util.Arrays;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import java.util.stream.Stream;
 
 import uk.blankaspect.common.exception2.UnexpectedRuntimeException;
 
@@ -677,10 +677,7 @@ public class Scrypt
 		public static CoreHashNumRounds forNumRounds(
 			int	numRounds)
 		{
-			return Stream.of(values())
-					.filter(value -> value.value == numRounds)
-					.findFirst()
-					.orElse(null);
+			return Arrays.stream(values()).filter(value -> value.value == numRounds).findFirst().orElse(null);
 		}
 
 		//--------------------------------------------------------------

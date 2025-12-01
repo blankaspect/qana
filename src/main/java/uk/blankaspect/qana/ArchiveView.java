@@ -76,6 +76,8 @@ import uk.blankaspect.ui.swing.font.FontUtils;
 
 import uk.blankaspect.ui.swing.menu.FMenuItem;
 
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
 import uk.blankaspect.ui.swing.text.TextRendering;
 import uk.blankaspect.ui.swing.text.TextUtils;
 
@@ -116,8 +118,7 @@ class ArchiveView
 
 	private static final	KeyAction.KeyCommandPair[]	KEY_COMMANDS	=
 	{
-		new KeyAction.KeyCommandPair(KeyStroke.getKeyStroke(KeyEvent.VK_CONTEXT_MENU, 0),
-									 Command.SHOW_CONTEXT_MENU)
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_CONTEXT_MENU, 0), Command.SHOW_CONTEXT_MENU)
 	};
 
 ////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ class ArchiveView
 
 		public SortingDirection getOpposite()
 		{
-			return ((this == ASCENDING) ? DESCENDING : ASCENDING);
+			return (this == ASCENDING) ? DESCENDING : ASCENDING;
 		}
 
 		//--------------------------------------------------------------
@@ -380,9 +381,7 @@ class ArchiveView
 		@Override
 		public void actionPerformed(ActionEvent event)
 		{
-			String command = event.getActionCommand();
-
-			if (command.equals(Command.SHOW_CONTEXT_MENU))
+			if (event.getActionCommand().equals(Command.SHOW_CONTEXT_MENU))
 				onShowContextMenu();
 		}
 
@@ -688,59 +687,58 @@ class ArchiveView
 		protected void paintComponent(Graphics gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(getBackground());
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(getBackground());
+			gr2d.fillRect(0, 0, width, height);
 
 			// Set rendering hints for text antialiasing and fractional metrics
-			TextRendering.setHints((Graphics2D)gr);
+			TextRendering.setHints(gr2d);
 
 			// Get limited-width text and x coordinate
 			--width;
-			FontMetrics fontMetrics = gr.getFontMetrics();
+			FontMetrics fontMetrics = gr2d.getFontMetrics();
 			TextUtils.RemovalMode removalMode = (id.alignment == SwingConstants.TRAILING)
-																		? TextUtils.RemovalMode.START
-																		: TextUtils.RemovalMode.END;
+															? TextUtils.RemovalMode.START
+															: TextUtils.RemovalMode.END;
 			String str = TextUtils.getLimitedWidthString(id.text, fontMetrics,
-														 width - 2 * CELL_HORIZONTAL_MARGIN -
-																						SORTING_ICON_WIDTH,
+														 width - 2 * CELL_HORIZONTAL_MARGIN - SORTING_ICON_WIDTH,
 														 removalMode);
 			int x = (id.alignment == SwingConstants.LEADING)
-										? CELL_HORIZONTAL_MARGIN
-										: width - CELL_HORIZONTAL_MARGIN - fontMetrics.stringWidth(str);
+								? CELL_HORIZONTAL_MARGIN
+								: width - CELL_HORIZONTAL_MARGIN - fontMetrics.stringWidth(str);
 
 			// Draw text
-			gr.setColor(Colours.Table.FOREGROUND.getColour());
-			gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
+			gr2d.setColor(Colours.Table.FOREGROUND.getColour());
+			gr2d.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
 
 			// Fill horizontal margin
 			--height;
-			gr.setColor(getBackground());
-			gr.fillRect((id.alignment == SwingConstants.LEADING) ? width - CELL_HORIZONTAL_MARGIN : 0, 0,
-						CELL_HORIZONTAL_MARGIN, height);
+			gr2d.setColor(getBackground());
+			gr2d.fillRect((id.alignment == SwingConstants.LEADING) ? width - CELL_HORIZONTAL_MARGIN : 0, 0,
+																   CELL_HORIZONTAL_MARGIN, height);
 
 			// Draw sorting indicator
 			ArchiveDocument.SortingOrder sortingOrder = ArchiveDocument.getSortingOrder();
 			if (sortingOrder.key == id)
 			{
 				x = (id.alignment == SwingConstants.LEADING)
-													? width - CELL_HORIZONTAL_MARGIN - SORTING_ICON_WIDTH
-													: CELL_HORIZONTAL_MARGIN;
-				gr.drawImage(sortingOrder.direction.icon.getImage(), x,
-							 (height - sortingOrder.direction.icon.getIconHeight()) / 2, null);
+								? width - CELL_HORIZONTAL_MARGIN - SORTING_ICON_WIDTH
+								: CELL_HORIZONTAL_MARGIN;
+				gr2d.drawImage(sortingOrder.direction.icon.getImage(), x,
+							   (height - sortingOrder.direction.icon.getIconHeight()) / 2, null);
 			}
 
 			// Draw border
-			gr.setColor(borderColour);
-			gr.drawLine(0, 0, width, 0);
-			gr.drawLine(width, 0, width, height);
-			gr.drawLine(0, height, width, height);
+			gr2d.setColor(borderColour);
+			gr2d.drawLine(0, 0, width, 0);
+			gr2d.drawLine(width, 0, width, height);
+			gr2d.drawLine(0, height, width, height);
 		}
 
 		//--------------------------------------------------------------
@@ -844,56 +842,55 @@ class ArchiveView
 		protected void paintComponent(Graphics gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(getBackground());
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(getBackground());
+			gr2d.fillRect(0, 0, width, height);
 
 			// Draw text
 			--width;
 			if ((text != null) && !text.isEmpty())
 			{
 				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints((Graphics2D)gr);
+				TextRendering.setHints(gr2d);
 
 				// Get limited-width text and x coordinate
-				FontMetrics fontMetrics = gr.getFontMetrics();
+				FontMetrics fontMetrics = gr2d.getFontMetrics();
 				TextUtils.RemovalMode removalMode = (alignment == SwingConstants.TRAILING)
-																		? TextUtils.RemovalMode.START
-																		: TextUtils.RemovalMode.END;
-				String str = TextUtils.getLimitedWidthString(text, fontMetrics,
-															 width - 2 * CELL_HORIZONTAL_MARGIN,
+															? TextUtils.RemovalMode.START
+															: TextUtils.RemovalMode.END;
+				String str = TextUtils.getLimitedWidthString(text, fontMetrics, width - 2 * CELL_HORIZONTAL_MARGIN,
 															 removalMode);
 				int x = (alignment == SwingConstants.LEADING)
-										? CELL_HORIZONTAL_MARGIN
-										: width - CELL_HORIZONTAL_MARGIN - fontMetrics.stringWidth(str);
+								? CELL_HORIZONTAL_MARGIN
+								: width - CELL_HORIZONTAL_MARGIN - fontMetrics.stringWidth(str);
 
 				// Draw text
-				gr.setColor(getForeground());
-				gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
+				gr2d.setColor(getForeground());
+				gr2d.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
 			}
 
 			// Fill horizontal margin
 			--height;
-			gr.setColor(getBackground());
-			gr.fillRect((alignment == SwingConstants.LEADING) ? width - CELL_HORIZONTAL_MARGIN : 0,
-						GRID_LINE_WIDTH, CELL_HORIZONTAL_MARGIN, height - 1);
+			gr2d.setColor(getBackground());
+			gr2d.fillRect((alignment == SwingConstants.LEADING) ? width - CELL_HORIZONTAL_MARGIN : 0, GRID_LINE_WIDTH,
+						  CELL_HORIZONTAL_MARGIN, height - 1);
 
 			// Draw grid
-			gr.setColor(Colours.Table.GRID.getColour());
-			gr.drawLine(width, 0, width, height);
-			gr.drawLine(0, height, width, height);
+			gr2d.setColor(Colours.Table.GRID.getColour());
+			gr2d.drawLine(width, 0, width, height);
+			gr2d.drawLine(0, height, width, height);
 
 			// Draw focused border
 			if (hasFocus)
 			{
-				gr.setColor(Colours.Table.FOCUSED_CELL_BORDER.getColour());
-				gr.drawRect(0, 0, width - 1, height - 1);
+				gr2d.setColor(Colours.Table.FOCUSED_CELL_BORDER.getColour());
+				gr2d.drawRect(0, 0, width - 1, height - 1);
 			}
 		}
 
@@ -1133,11 +1130,10 @@ class ArchiveView
 	//  Instance methods : ActionListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void actionPerformed(ActionEvent event)
 		{
-			String command = event.getActionCommand();
-
-			if (command.equals(Command.PASTE))
+			if (event.getActionCommand().equals(Command.PASTE))
 				onPaste();
 		}
 
@@ -1236,32 +1232,32 @@ class ArchiveView
 		protected void paintComponent(Graphics gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(BACKGROUND_COLOUR);
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(BACKGROUND_COLOUR);
+			gr2d.fillRect(0, 0, width, height);
 
 			// Draw icon
-			gr.drawImage(Icons.DIRECTORY.getImage(), HORIZONTAL_MARGIN,
-						 (height - Icons.DIRECTORY.getIconHeight()) / 2, null);
+			gr2d.drawImage(Icons.DIRECTORY.getImage(), HORIZONTAL_MARGIN,
+						   (height - Icons.DIRECTORY.getIconHeight()) / 2, null);
 
 			// Draw text
 			if (pathname != null)
 			{
 				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints((Graphics2D)gr);
+				TextRendering.setHints(gr2d);
 
 				// Draw text
-				FontMetrics fontMetrics = gr.getFontMetrics();
+				FontMetrics fontMetrics = gr2d.getFontMetrics();
 				int x = HORIZONTAL_MARGIN + Icons.DIRECTORY.getIconWidth() + ICON_TEXT_GAP;
 				String str = TextUtils.getLimitedWidthPathname(pathname, fontMetrics, width - x - HORIZONTAL_MARGIN);
-				gr.setColor(TEXT_COLOUR);
-				gr.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
+				gr2d.setColor(TEXT_COLOUR);
+				gr2d.drawString(str, x, FontUtils.getBaselineOffset(height, fontMetrics));
 			}
 		}
 

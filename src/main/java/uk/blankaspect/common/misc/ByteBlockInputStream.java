@@ -119,7 +119,7 @@ public class ByteBlockInputStream
 			}
 			offset += readLength;
 		}
-		return (offset - startOffset);
+		return offset - startOffset;
 	}
 
 	//------------------------------------------------------------------
@@ -152,7 +152,7 @@ public class ByteBlockInputStream
 	public int read()
 	{
 		byte[] buffer = new byte[1];
-		return ((read(buffer, 0, 1) < 0) ? -1 : buffer[0] & 0xFF);
+		return (read(buffer, 0, 1) < 0) ? -1 : buffer[0] & 0xFF;
 	}
 
 	//------------------------------------------------------------------
@@ -302,7 +302,7 @@ public class ByteBlockInputStream
 
 		public int getEndOffset()
 		{
-			return (offset + length);
+			return offset + length;
 		}
 
 		//--------------------------------------------------------------

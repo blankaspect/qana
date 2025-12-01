@@ -121,8 +121,8 @@ class FileEraser
 			pathname2 = pathname2.substring(0, pathname2.length() - 1);
 
 		int length1 = pathname1.length();
-		return ((length1 < pathname2.length()) && pathname2.startsWith(pathname1) &&
-				 (pathname2.charAt(length1) == PATHNAME_SEPARATOR_CHAR));
+		return (length1 < pathname2.length()) && pathname2.startsWith(pathname1)
+				&& (pathname2.charAt(length1) == PATHNAME_SEPARATOR_CHAR);
 	}
 
 	//------------------------------------------------------------------

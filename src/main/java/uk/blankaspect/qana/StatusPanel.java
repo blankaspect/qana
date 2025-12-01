@@ -39,6 +39,8 @@ import uk.blankaspect.common.crypto.FortunaCipher;
 
 import uk.blankaspect.ui.swing.icon.DialogIcon;
 
+import uk.blankaspect.ui.swing.misc.GuiUtils;
+
 import uk.blankaspect.ui.swing.text.TextRendering;
 import uk.blankaspect.ui.swing.text.TextUtils;
 
@@ -59,7 +61,7 @@ class StatusPanel
 
 	public static final		Color	DEFAULT_TEXT_COLOUR	= Color.BLACK;
 
-	private static final	int	VERTICAL_MARGIN	= 1;
+	private static final	int		VERTICAL_MARGIN	= 1;
 
 	private static final	ImageIcon[]	ICONS	=
 	{
@@ -139,40 +141,38 @@ class StatusPanel
 		protected void paintComponent(Graphics gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(getBackground());
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(getBackground());
+			gr2d.fillRect(0, 0, width, height);
 
 			// Draw icon
 			if (icon != null)
-				gr.drawImage(icon.getImage(), HORIZONTAL_MARGIN,
-							 (getHeight() - icon.getIconHeight()) / 2, null);
+				gr2d.drawImage(icon.getImage(), HORIZONTAL_MARGIN, (getHeight() - icon.getIconHeight()) / 2, null);
 
 			// Draw text
 			else if (text != null)
 			{
 				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints((Graphics2D)gr);
+				TextRendering.setHints(gr2d);
 
 				// Draw text
-				FontMetrics fontMetrics = gr.getFontMetrics();
+				FontMetrics fontMetrics = gr2d.getFontMetrics();
 				int maxWidth = width - 2 * HORIZONTAL_MARGIN - SEPARATOR_WIDTH;
-				String str = TextUtils.getLimitedWidthString(text, fontMetrics, maxWidth,
-															 TextUtils.RemovalMode.END);
-				gr.setColor(AppConfig.INSTANCE.getStatusTextColour());
-				gr.drawString(str, HORIZONTAL_MARGIN, VERTICAL_MARGIN + fontMetrics.getAscent());
+				String str = TextUtils.getLimitedWidthString(text, fontMetrics, maxWidth, TextUtils.RemovalMode.END);
+				gr2d.setColor(AppConfig.INSTANCE.getStatusTextColour());
+				gr2d.drawString(str, HORIZONTAL_MARGIN, VERTICAL_MARGIN + fontMetrics.getAscent());
 			}
 
 			// Draw separator
 			int x = width - SEPARATOR_WIDTH;
-			gr.setColor(LINE_COLOUR);
-			gr.drawLine(x, 0, x, height - 1);
+			gr2d.setColor(LINE_COLOUR);
+			gr2d.drawLine(x, 0, x, height - 1);
 		}
 
 		//--------------------------------------------------------------

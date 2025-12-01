@@ -2,7 +2,7 @@
 
 IByteDataInputStream.java
 
-Byte data input stream interface.
+Interface: byte-data input stream.
 
 \*====================================================================*/
 
@@ -25,7 +25,7 @@ import uk.blankaspect.common.misc.IDataInput;
 //----------------------------------------------------------------------
 
 
-// BYTE DATA INPUT STREAM INTERFACE
+// INTERFACE: BYTE-DATA INPUT STREAM
 
 
 public interface IByteDataInputStream
@@ -36,9 +36,10 @@ public interface IByteDataInputStream
 //  Methods
 ////////////////////////////////////////////////////////////////////////
 
-	int read(byte[] buffer,
-			 int    offset,
-			 int    length)
+	int read(
+		byte[]	buffer,
+		int		offset,
+		int		length)
 		throws AppException;
 
 	//------------------------------------------------------------------

@@ -71,7 +71,7 @@ public class ByteDataList
 	public ByteData getData()
 		throws AppException
 	{
-		return ((outIndex < dataBlocks.size()) ? dataBlocks.get(outIndex++) : null);
+		return (outIndex < dataBlocks.size()) ? dataBlocks.get(outIndex++) : null;
 	}
 
 	//------------------------------------------------------------------

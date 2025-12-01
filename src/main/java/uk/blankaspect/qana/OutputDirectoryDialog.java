@@ -61,6 +61,8 @@ import uk.blankaspect.ui.swing.label.FLabel;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -92,58 +94,19 @@ class OutputDirectoryDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point	location;
+	private static	File	directory;
 
-	// ERROR IDENTIFIERS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		NO_DIRECTORY
-		("No directory was specified."),
-
-		NOT_A_DIRECTORY
-		("The pathname does not denote a directory.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
+	private	boolean			accepted;
+	private	FPathnameField	directoryField;
+	private	JFileChooser	directoryChooser;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -273,11 +236,22 @@ class OutputDirectoryDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -318,18 +292,15 @@ class OutputDirectoryDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.CHOOSE_DIRECTORY))
-			onChooseDirectory();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.CHOOSE_DIRECTORY -> onChooseDirectory();
+			case Command.ACCEPT           -> onAccept();
+			case Command.CLOSE            -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -368,7 +339,7 @@ class OutputDirectoryDialog
 
 	private File getDirectory()
 	{
-		return (accepted ? directory : null);
+		return accepted ? directory : null;
 	}
 
 	//------------------------------------------------------------------
@@ -432,19 +403,59 @@ class OutputDirectoryDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point	location;
-	private static	File	directory;
 
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
+	// ERROR IDENTIFIERS
 
-	private	boolean			accepted;
-	private	FPathnameField	directoryField;
-	private	JFileChooser	directoryChooser;
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		NO_DIRECTORY
+		("No directory was specified."),
+
+		NOT_A_DIRECTORY
+		("The pathname does not denote a directory.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

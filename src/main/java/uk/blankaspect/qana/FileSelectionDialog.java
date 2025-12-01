@@ -69,6 +69,8 @@ import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 import uk.blankaspect.ui.swing.text.TextRendering;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -262,11 +264,22 @@ class FileSelectionDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -309,15 +322,14 @@ class FileSelectionDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.ACCEPT -> onAccept();
+			case Command.CLOSE  -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -326,6 +338,7 @@ class FileSelectionDialog
 //  Instance methods : ListDataListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void intervalAdded(ListDataEvent event)
 	{
 		// do nothing
@@ -333,6 +346,7 @@ class FileSelectionDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void intervalRemoved(ListDataEvent event)
 	{
 		// do nothing
@@ -340,6 +354,7 @@ class FileSelectionDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void contentsChanged(ListDataEvent event)
 	{
 		listLengthField.setLength(inputFilePanel.getNumFiles());
@@ -353,7 +368,7 @@ class FileSelectionDialog
 
 	private List<FileSelectionPanel.SelectedFile> getFiles()
 	{
-		return (accepted ? inputFilePanel.getFiles() : null);
+		return accepted ? inputFilePanel.getFiles() : null;
 	}
 
 	//------------------------------------------------------------------
@@ -450,7 +465,7 @@ class FileSelectionDialog
 					str = ARCHIVE_STR;
 					break;
 			}
-			return (title ? StringUtils.firstCharToUpperCase(str) : str);
+			return title ? StringUtils.firstCharToUpperCase(str) : str;
 		}
 
 		//--------------------------------------------------------------
@@ -517,23 +532,23 @@ class FileSelectionDialog
 		protected void paintComponent(Graphics gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(getBackground());
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(getBackground());
+			gr2d.fillRect(0, 0, width, height);
 
 			// Set rendering hints for text antialiasing and fractional metrics
-			TextRendering.setHints((Graphics2D)gr);
+			TextRendering.setHints(gr2d);
 
 			// Draw text
-			gr.setColor(TEXT_COLOUR);
-			FontMetrics fontMetrics = gr.getFontMetrics();
-			gr.drawString(text, width - fontMetrics.stringWidth(text), fontMetrics.getAscent());
+			gr2d.setColor(TEXT_COLOUR);
+			FontMetrics fontMetrics = gr2d.getFontMetrics();
+			gr2d.drawString(text, width - fontMetrics.stringWidth(text), fontMetrics.getAscent());
 		}
 
 		//--------------------------------------------------------------

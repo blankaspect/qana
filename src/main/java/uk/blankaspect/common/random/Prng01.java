@@ -90,6 +90,23 @@ public class Prng01
 	private static final	int[]	CA_RULE	= { 0, 1, 1, 1, 1, 0, 0, 0 };
 
 ////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	int	seedIndex	= ((int)System.nanoTime() & 0x7FFFFFFF) % CA_NUM_SEED_BITS;
+	private static	int	seedCells;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	int[]	mt;
+	private	int		mtIndex;
+	private	int[]	seed;
+	private	double	normalNextValue;
+	private	boolean	hasNormalNextValue;
+
+////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
@@ -128,7 +145,7 @@ public class Prng01
 
 	public static long intArrayToLong(int[] values)
 	{
-		return (((long)values[0] << 32) | ((long)values[1] & 0xFFFFFFFFL));
+		return ((long)values[0] << 32) | ((long)values[1] & 0xFFFFFFFFL);
 	}
 
 	//------------------------------------------------------------------
@@ -286,7 +303,7 @@ public class Prng01
 
 	public int nextInt()
 	{
-		return (nextInt32() & 0x7FFFFFFF);
+		return nextInt32() & 0x7FFFFFFF;
 	}
 
 	//------------------------------------------------------------------
@@ -317,7 +334,7 @@ public class Prng01
 
 	public int nextInt(IntegerRange range)
 	{
-		return (range.lowerBound + nextInt(range.getInterval()));
+		return range.lowerBound + nextInt(range.getInterval());
 	}
 
 	//------------------------------------------------------------------
@@ -352,7 +369,7 @@ public class Prng01
 
 	public long nextInt64()
 	{
-		return (((nextInt32() & 0xFFFFFFFFL) << 32) | (nextInt32() & 0xFFFFFFFFL));
+		return ((nextInt32() & 0xFFFFFFFFL) << 32) | (nextInt32() & 0xFFFFFFFFL);
 	}
 
 	//------------------------------------------------------------------
@@ -365,18 +382,19 @@ public class Prng01
 
 	public long nextLong()
 	{
-		return (((nextInt32() & 0x7FFFFFFFL) << 32) | (nextInt32() & 0xFFFFFFFFL));
+		return ((nextInt32() & 0x7FFFFFFFL) << 32) | (nextInt32() & 0xFFFFFFFFL);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns the next double value from the random sequence.  The value is obtained by converting a 64-bit integer
-	 * value to an IEEE 754 double-format bit field.  The 64-bit value is deemed to represent a binary fraction of the
-	 * form 0.b[63]...b[0].  It is normalised by shifting it to the left until the msb is 1.  The msb is then discarded;
-	 * the remaining bits are right-shifted into bits 51..0, and the exponent is set in bits 62..52.
+	 * Returns the next double value in the interval [0, 1) from the pseudo-random sequence.  The value is obtained by
+	 * converting a 64-bit integer value to an IEEE 754 double-format bit field.  The 64-bit value is deemed to
+	 * represent a binary fraction of the form 0.b[63]...b[0].  It is normalised by shifting it to the left until the
+	 * msb is 1.  The msb is then discarded because the significand has an implied leading '1' bit; the remaining bits
+	 * are right-shifted into bits 51..0, and the exponent is set in bits 62..52.
 	 *
-	 * @return the next double value from the random sequence.
+	 * @return the next double value in the interval [0, 1).
 	 */
 
 	public double nextDouble()
@@ -384,7 +402,7 @@ public class Prng01
 		// Get a random 64-bit integer
 		long value = nextInt64();
 
-		// Convert the integer to an 11-bit exponent and a normalised 52-bit mantissa
+		// Convert the integer to an 11-bit exponent and a normalised 52-bit significand
 		if (value != 0)
 		{
 			long exponent = 1022;
@@ -406,7 +424,7 @@ public class Prng01
 
 	public double nextDouble(DoubleRange range)
 	{
-		return (range.lowerBound + nextDouble() * range.getInterval());
+		return range.lowerBound + nextDouble() * range.getInterval();
 	}
 
 	//------------------------------------------------------------------
@@ -482,14 +500,14 @@ public class Prng01
 		double factor = StrictMath.sqrt(-2.0 * StrictMath.log(s) / s);
 		normalNextValue = v1 * factor;
 		hasNormalNextValue = true;
-		return (v2 * factor);
+		return v2 * factor;
 	}
 
 	//------------------------------------------------------------------
 
 	public double nextNormal(double mean)
 	{
-		return (nextNormal() + mean);
+		return nextNormal() + mean;
 	}
 
 	//------------------------------------------------------------------
@@ -497,7 +515,7 @@ public class Prng01
 	public double nextNormal(double mean,
 							 double sd)
 	{
-		return (nextNormal() * sd + mean);
+		return nextNormal() * sd + mean;
 	}
 
 	//------------------------------------------------------------------
@@ -507,7 +525,7 @@ public class Prng01
 		double x = 0.0;
 		while (x == 0.0)
 			x = nextDouble();
-		return (StrictMath.log(x) / -lambda);
+		return StrictMath.log(x) / -lambda;
 	}
 
 	//------------------------------------------------------------------
@@ -542,23 +560,6 @@ public class Prng01
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class variables
-////////////////////////////////////////////////////////////////////////
-
-	private static	int	seedIndex	= ((int)System.nanoTime() & 0x7FFFFFFF) % CA_NUM_SEED_BITS;
-	private static	int	seedCells;
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	int[]	mt;
-	private	int		mtIndex;
-	private	int[]	seed;
-	private	double	normalNextValue;
-	private	boolean	hasNormalNextValue;
 
 }
 

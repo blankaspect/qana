@@ -536,13 +536,11 @@ public class Aes256
 	@Override
 	public boolean equals(Object obj)
 	{
-		if (obj instanceof Aes256)
-		{
-			Aes256 aes = (Aes256)obj;
-			return (Arrays.deepEquals(encryptionKeys, aes.encryptionKeys) &&
-					 Arrays.deepEquals(decryptionKeys, aes.decryptionKeys));
-		}
-		return false;
+		if (this == obj)
+			return true;
+
+		return (obj instanceof Aes256 other) && Arrays.deepEquals(encryptionKeys, other.encryptionKeys)
+				&& Arrays.deepEquals(decryptionKeys, other.decryptionKeys);
 	}
 
 	//------------------------------------------------------------------
@@ -556,7 +554,7 @@ public class Aes256
 	@Override
 	public int hashCode()
 	{
-		return (Arrays.deepHashCode(encryptionKeys) ^ Arrays.deepHashCode(decryptionKeys));
+		return Arrays.deepHashCode(encryptionKeys) ^ Arrays.deepHashCode(decryptionKeys);
 	}
 
 	//------------------------------------------------------------------

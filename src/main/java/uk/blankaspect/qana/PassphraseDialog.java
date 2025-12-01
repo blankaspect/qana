@@ -55,6 +55,8 @@ import uk.blankaspect.ui.swing.label.FLabel;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -87,11 +89,23 @@ class PassphraseDialog
 
 	private static final	KeyAction.KeyCommandPair[]	KEY_COMMANDS	=
 	{
-		new KeyAction.KeyCommandPair(KeyStroke.getKeyStroke(KeyEvent.VK_CONTEXT_MENU, 0),
-									 Command.SHOW_CONTEXT_MENU),
-		new KeyAction.KeyCommandPair(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-									 Command.CLOSE)
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_CONTEXT_MENU, 0), Command.SHOW_CONTEXT_MENU),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),       Command.CLOSE)
 	};
+
+////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	Point	location;
+
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
+
+	private	boolean			accepted;
+	private	PassphrasePanel	passphrasePanel;
+	private	JButton			okButton;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -215,11 +229,22 @@ class PassphraseDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -261,18 +286,15 @@ class PassphraseDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.SHOW_CONTEXT_MENU))
-			onShowContextMenu();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.SHOW_CONTEXT_MENU -> onShowContextMenu();
+			case Command.ACCEPT            -> onAccept();
+			case Command.CLOSE             -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -281,6 +303,7 @@ class PassphraseDialog
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void changedUpdate(DocumentEvent event)
 	{
 		// do nothing
@@ -288,6 +311,7 @@ class PassphraseDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void insertUpdate(DocumentEvent event)
 	{
 		updateComponents();
@@ -295,6 +319,7 @@ class PassphraseDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void removeUpdate(DocumentEvent event)
 	{
 		updateComponents();
@@ -306,6 +331,7 @@ class PassphraseDialog
 //  Instance methods : MouseListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void mouseClicked(MouseEvent event)
 	{
 		// do nothing
@@ -313,6 +339,7 @@ class PassphraseDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseEntered(MouseEvent event)
 	{
 		// do nothing
@@ -320,6 +347,7 @@ class PassphraseDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseExited(MouseEvent event)
 	{
 		// do nothing
@@ -327,6 +355,7 @@ class PassphraseDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mousePressed(MouseEvent event)
 	{
 		showContextMenu(event);
@@ -334,6 +363,7 @@ class PassphraseDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseReleased(MouseEvent event)
 	{
 		showContextMenu(event);
@@ -347,7 +377,7 @@ class PassphraseDialog
 
 	private String getPassphrase()
 	{
-		return (accepted ? passphrasePanel.getPassphrase() : null);
+		return accepted ? passphrasePanel.getPassphrase() : null;
 	}
 
 	//------------------------------------------------------------------
@@ -392,20 +422,6 @@ class PassphraseDialog
 	}
 
 	//------------------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////
-//  Class variables
-////////////////////////////////////////////////////////////////////////
-
-	private static	Point	location;
-
-////////////////////////////////////////////////////////////////////////
-//  Instance variables
-////////////////////////////////////////////////////////////////////////
-
-	private	boolean			accepted;
-	private	PassphrasePanel	passphrasePanel;
-	private	JButton			okButton;
 
 }
 

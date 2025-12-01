@@ -399,7 +399,7 @@ public class UnsignedIntegerComboBox
 
 		public int getFieldWidth()
 		{
-			return (getColumns() * getColumnWidth());
+			return getColumns() * getColumnWidth();
 		}
 
 		//--------------------------------------------------------------

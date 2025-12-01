@@ -273,7 +273,7 @@ public class FileEncrypter
 	 * @param  kdfExecutor
 	 *           the executor of the key-derivation function, which is ignored if it is {@code null}.
 	 * @throws AppException
-	 *           if an error occurred during the encryption operation.
+	 *           if an error occurs during the encryption operation.
 	 * @throws TaskCancelledException
 	 *           if the encryption operation was cancelled by the user.
 	 * @see    #decrypt(File, File, byte[])
@@ -512,7 +512,7 @@ public class FileEncrypter
 	 * @param  kdfExecutor
 	 *           the executor of the key-derivation function, which is ignored if it is {@code null}.
 	 * @throws AppException
-	 *           if an error occurred during the decryption operation.
+	 *           if an error occurs during the decryption operation.
 	 * @throws TaskCancelledException
 	 *           if the decryption operation was cancelled by the user.
 	 * @see    #encrypt(File, File, byte[], byte[])
@@ -751,7 +751,7 @@ public class FileEncrypter
 	 * @param  kdfExecutor
 	 *           the executor of the key-derivation function, which is ignored if it is {@code null}.
 	 * @throws AppException
-	 *           if an error occurred during the decryption operation.
+	 *           if an error occurs during the decryption operation.
 	 * @throws TaskCancelledException
 	 *           if the decryption operation was cancelled by the user.
 	 * @see    #encrypt(File, File, byte[], byte[])

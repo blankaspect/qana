@@ -2,7 +2,7 @@
 
 FixedWidthPanel.java
 
-Fixed-width panel class.
+Class: fixed-width panel.
 
 \*====================================================================*/
 
@@ -28,7 +28,7 @@ import uk.blankaspect.common.misc.MaxValueMap;
 //----------------------------------------------------------------------
 
 
-// FIXED-WIDTH PANEL CLASS
+// CLASS: FIXED-WIDTH PANEL
 
 
 public abstract class FixedWidthPanel
@@ -40,7 +40,8 @@ public abstract class FixedWidthPanel
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	protected FixedWidthPanel(LayoutManager layout)
+	protected FixedWidthPanel(
+		LayoutManager	layout)
 	{
 		super(layout);
 		MaxValueMap.add(getKey(), this);
@@ -60,6 +61,7 @@ public abstract class FixedWidthPanel
 //  Instance methods : MaxValueMap.IEntry interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public int getValue()
 	{
 		return getPreferredSize().width;
@@ -67,7 +69,9 @@ public abstract class FixedWidthPanel
 
 	//------------------------------------------------------------------
 
-	public void setValue(int value)
+	@Override
+	public void setValue(
+		int	value)
 	{
 		setPreferredSize(new Dimension(value, getPreferredSize().height));
 	}

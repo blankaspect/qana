@@ -128,8 +128,8 @@ class FileTransferHandler
 	{
 		while (component != null)
 		{
-			if (component instanceof IFileImporter)
-				return (IFileImporter)component;
+			if (component instanceof IFileImporter fileImporter)
+				return fileImporter;
 			component = component.getParent();
 		}
 		return null;

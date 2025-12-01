@@ -96,6 +96,8 @@ import uk.blankaspect.ui.swing.text.TextUtils;
 
 import uk.blankaspect.ui.swing.textfield.ConstrainedTextField;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -356,10 +358,6 @@ class KeyEditorDialog
 		gridBag.setConstraints(preferredCipherField, gbc);
 		cipherInnerPanel.add(preferredCipherField);
 
-		// Update widths of labels and panels
-		Label.update();
-		Panel.update();
-
 
 		//----  Name panel
 
@@ -586,12 +584,26 @@ class KeyEditorDialog
 		// Set content pane
 		setContentPane(mainPanel);
 
+		// Update widths of labels and panels
+		Label.update();
+		Panel.update();
+
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
+			@Override
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
 			@Override
 			public void windowClosing(
 				WindowEvent	event)
@@ -647,25 +659,15 @@ class KeyEditorDialog
 		// Execute command
 		try
 		{
-			String command = event.getActionCommand();
-
-			if (command.equals(Command.ADD))
-				onAdd();
-
-			else if (command.equals(Command.RENAME))
-				onRename();
-
-			else if (command.equals(Command.EDIT_PROPERTIES))
-				onEditProperties();
-
-			else if (command.equals(Command.DELETE))
-				onDelete();
-
-			else if (command.equals(Command.ACCEPT))
-				onAccept();
-
-			else if (command.equals(Command.CLOSE))
-				onClose();
+			switch (event.getActionCommand())
+			{
+				case Command.ADD             -> onAdd();
+				case Command.RENAME          -> onRename();
+				case Command.EDIT_PROPERTIES -> onEditProperties();
+				case Command.DELETE          -> onDelete();
+				case Command.ACCEPT          -> onAccept();
+				case Command.CLOSE           -> onClose();
+			}
 		}
 		catch (CancelledException e)
 		{
@@ -1199,30 +1201,30 @@ class KeyEditorDialog
 			Graphics	gr)
 		{
 			// Create copy of graphics context
-			gr = gr.create();
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
 
 			// Get dimensions
 			int width = getWidth();
 			int height = getHeight();
 
 			// Draw background
-			gr.setColor(BACKGROUND_COLOUR);
-			gr.fillRect(0, 0, width, height);
+			gr2d.setColor(BACKGROUND_COLOUR);
+			gr2d.fillRect(0, 0, width, height);
 
 			// Draw text
 			if (text != null)
 			{
 				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints((Graphics2D)gr);
+				TextRendering.setHints(gr2d);
 
 				// Draw text
-				gr.setColor(TEXT_COLOUR);
-				gr.drawString(text, HORIZONTAL_MARGIN, VERTICAL_MARGIN + gr.getFontMetrics().getAscent());
+				gr2d.setColor(TEXT_COLOUR);
+				gr2d.drawString(text, HORIZONTAL_MARGIN, VERTICAL_MARGIN + gr2d.getFontMetrics().getAscent());
 			}
 
 			// Draw border
-			gr.setColor(BORDER_COLOUR);
-			gr.drawRect(0, 0, width - 1, height - 1);
+			gr2d.setColor(BORDER_COLOUR);
+			gr2d.drawRect(0, 0, width - 1, height - 1);
 		}
 
 		//--------------------------------------------------------------

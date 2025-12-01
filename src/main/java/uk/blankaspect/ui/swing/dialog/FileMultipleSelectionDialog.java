@@ -90,6 +90,8 @@ import uk.blankaspect.ui.swing.misc.GuiUtils;
 
 import uk.blankaspect.ui.swing.transfer.DataImporter;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -122,10 +124,10 @@ public class FileMultipleSelectionDialog
 	private static final	String	SELECT_STR						= "Select";
 	private static final	String	SELECT_FILE_OR_DIRECTORY_STR	= "Select file or directory";
 
-	private static final	KeyStroke	DELETE_KEY	= KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,
-																			 KeyEvent.SHIFT_DOWN_MASK);
-	private static final	KeyStroke	PASTE_KEY	= KeyStroke.getKeyStroke(KeyEvent.VK_V,
-																			 KeyEvent.CTRL_DOWN_MASK);
+	private static final	KeyStroke	DELETE_KEY	=
+			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, KeyEvent.SHIFT_DOWN_MASK);
+	private static final	KeyStroke	PASTE_KEY	=
+			KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK);
 
 	// Commands
 	private interface Command
@@ -139,12 +141,9 @@ public class FileMultipleSelectionDialog
 
 	private static final	KeyAction.KeyCommandPair[]	KEY_COMMANDS	=
 	{
-		new KeyAction.KeyCommandPair(DELETE_KEY,
-									 Command.REMOVE),
-		new KeyAction.KeyCommandPair(PASTE_KEY,
-									 Command.PASTE_FILES),
-		new KeyAction.KeyCommandPair(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-									 Command.CLOSE)
+		KeyAction.command(DELETE_KEY,                                    Command.REMOVE),
+		KeyAction.command(PASTE_KEY,                                     Command.PASTE_FILES),
+		KeyAction.command(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), Command.CLOSE)
 	};
 
 ////////////////////////////////////////////////////////////////////////
@@ -161,6 +160,7 @@ public class FileMultipleSelectionDialog
 	private	String					key;
 	private	SelectionMode			selectionMode;
 	private	Set<Capability>			capabilities;
+	private	Point					location;
 	private	boolean					accepted;
 	private	FileListModel			fileListModel;
 	private	SelectionList<String>	fileList;
@@ -334,11 +334,22 @@ public class FileMultipleSelectionDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -351,7 +362,7 @@ public class FileMultipleSelectionDialog
 		pack();
 
 		// Set location of dialog
-		Point location = locations.get(key);
+		location = locations.get(key);
 		if (location == null)
 			location = GuiUtils.getComponentLocation(this, owner);
 		setLocation(location);
@@ -391,26 +402,19 @@ public class FileMultipleSelectionDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
 		try
 		{
-			String command = event.getActionCommand();
-
-			if (command.equals(Command.ADD))
-				onAdd();
-
-			else if (command.equals(Command.REMOVE))
-				onRemove();
-
-			else if (command.equals(Command.PASTE_FILES))
-				onPasteFiles();
-
-			else if (command.equals(Command.ACCEPT))
-				onAccept();
-
-			else if (command.equals(Command.CLOSE))
-				onClose();
+			switch (event.getActionCommand())
+			{
+				case Command.ADD         -> onAdd();
+				case Command.REMOVE      -> onRemove();
+				case Command.PASTE_FILES -> onPasteFiles();
+				case Command.ACCEPT      -> onAccept();
+				case Command.CLOSE       -> onClose();
+			}
 		}
 		catch (AppException e)
 		{
@@ -424,10 +428,10 @@ public class FileMultipleSelectionDialog
 //  Instance methods : ListSelectionListener interface
 ////////////////////////////////////////////////////////////////////////
 
-	public void valueChanged(ListSelectionEvent e)
+	@Override
+	public void valueChanged(ListSelectionEvent event)
 	{
-		removeButton.setEnabled(capabilities.contains(Capability.REMOVE) &&
-								 !fileList.isSelectionEmpty());
+		removeButton.setEnabled(capabilities.contains(Capability.REMOVE) && !fileList.isSelectionEmpty());
 	}
 
 	//------------------------------------------------------------------
@@ -436,6 +440,7 @@ public class FileMultipleSelectionDialog
 //  Instance methods : MouseListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void mouseClicked(MouseEvent event)
 	{
 		// do nothing
@@ -443,6 +448,7 @@ public class FileMultipleSelectionDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseEntered(MouseEvent event)
 	{
 		// do nothing
@@ -450,6 +456,7 @@ public class FileMultipleSelectionDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseExited(MouseEvent event)
 	{
 		// do nothing
@@ -457,6 +464,7 @@ public class FileMultipleSelectionDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mousePressed(MouseEvent event)
 	{
 		showContextMenu(event);
@@ -464,6 +472,7 @@ public class FileMultipleSelectionDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void mouseReleased(MouseEvent event)
 	{
 		showContextMenu(event);
@@ -484,7 +493,7 @@ public class FileMultipleSelectionDialog
 
 	public List<String> getPathnames()
 	{
-		return (accepted ? fileListModel.pathnames : null);
+		return accepted ? fileListModel.pathnames : null;
 	}
 
 	//------------------------------------------------------------------
@@ -610,7 +619,7 @@ public class FileMultipleSelectionDialog
 			fileChooser.rescanCurrentDirectory();
 			if (fileChooser.showDialog(this, SELECT_STR) == JFileChooser.APPROVE_OPTION)
 			{
-				addFiles(Collections.singletonList(fileChooser.getSelectedFile()));
+				addFiles(List.of(fileChooser.getSelectedFile()));
 				fileListModel.update();
 			}
 		}
@@ -775,6 +784,7 @@ public class FileMultipleSelectionDialog
 	//  Instance methods : AppException.IId interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getMessage()
 		{
 			return message;
@@ -821,6 +831,7 @@ public class FileMultipleSelectionDialog
 	//  Instance methods : ListModel interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public String getElementAt(int index)
 		{
 			return pathnames.get(index);
@@ -828,6 +839,7 @@ public class FileMultipleSelectionDialog
 
 		//--------------------------------------------------------------
 
+		@Override
 		public int getSize()
 		{
 			return pathnames.size();
@@ -835,6 +847,7 @@ public class FileMultipleSelectionDialog
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void addListDataListener(ListDataListener listener)
 		{
 			if (listeners == null)
@@ -844,6 +857,7 @@ public class FileMultipleSelectionDialog
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void removeListDataListener(ListDataListener listener)
 		{
 			if (listeners != null)
@@ -926,6 +940,7 @@ public class FileMultipleSelectionDialog
 	//  Instance methods : Runnable interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void run()
 		{
 			addFiles(files);
@@ -980,8 +995,7 @@ public class FileMultipleSelectionDialog
 				}
 				catch (AppException e)
 				{
-					JOptionPane.showMessageDialog(support.getComponent(), e, getTitle(),
-												  JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(support.getComponent(), e, getTitle(), JOptionPane.ERROR_MESSAGE);
 				}
 			}
 			return false;

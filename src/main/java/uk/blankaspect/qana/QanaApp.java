@@ -31,14 +31,13 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import java.util.stream.Stream;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -335,8 +334,7 @@ public class QanaApp
 
 	public ArchiveDocument getArchiveDocument()
 	{
-		Document document = getDocument();
-		return (document instanceof ArchiveDocument) ? (ArchiveDocument)document : null;
+		return (getDocument() instanceof ArchiveDocument archiveDocument) ? archiveDocument : null;
 	}
 
 	//------------------------------------------------------------------
@@ -344,16 +342,14 @@ public class QanaApp
 	public ArchiveDocument getArchiveDocument(
 		int	index)
 	{
-		Document document = getDocument(index);
-		return (document instanceof ArchiveDocument) ? (ArchiveDocument)document : null;
+		return (getDocument(index) instanceof ArchiveDocument archiveDocument) ? archiveDocument : null;
 	}
 
 	//------------------------------------------------------------------
 
 	public TextDocument getTextDocument()
 	{
-		Document document = getDocument();
-		return (document instanceof TextDocument) ? (TextDocument)document : null;
+		return (getDocument() instanceof TextDocument textDocument) ? textDocument : null;
 	}
 
 	//------------------------------------------------------------------
@@ -361,8 +357,7 @@ public class QanaApp
 	public TextDocument getTextDocument(
 		int	index)
 	{
-		Document document = getDocument(index);
-		return (document instanceof TextDocument) ? (TextDocument)document : null;
+		return (getDocument(index) instanceof TextDocument textDocument) ? textDocument : null;
 	}
 
 	//------------------------------------------------------------------
@@ -397,8 +392,7 @@ public class QanaApp
 
 	public ArchiveView getArchiveView()
 	{
-		View view = getView();
-		return (view instanceof ArchiveView) ? (ArchiveView)view : null;
+		return (getView() instanceof ArchiveView archiveView) ? archiveView : null;
 	}
 
 	//------------------------------------------------------------------
@@ -406,16 +400,14 @@ public class QanaApp
 	public ArchiveView getArchiveView(
 		int	index)
 	{
-		View view = getView(index);
-		return (view instanceof ArchiveView) ? (ArchiveView)view : null;
+		return (getView(index) instanceof ArchiveView archiveView) ? archiveView : null;
 	}
 
 	//------------------------------------------------------------------
 
 	public TextView getTextView()
 	{
-		View view = getView();
-		return (view instanceof TextView) ? (TextView)view : null;
+		return (getView() instanceof TextView textView) ? textView : null;
 	}
 
 	//------------------------------------------------------------------
@@ -423,8 +415,7 @@ public class QanaApp
 	public TextView getTextView(
 		int	index)
 	{
-		View view = getView(index);
-		return (view instanceof TextView) ? (TextView)view : null;
+		return (getView(index) instanceof TextView textView) ? textView : null;
 	}
 
 	//------------------------------------------------------------------
@@ -592,10 +583,10 @@ public class QanaApp
 		String	title)
 	{
 		String[] optionStrs = Utils.getOptionStrings(AppConstants.REPLACE_STR);
-		return (!file.exists() ||
-				(JOptionPane.showOptionDialog(mainWindow, Utils.getPathname(file) + AppConstants.ALREADY_EXISTS_STR,
-											  title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
-											  optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION));
+		return !file.exists()
+				|| (JOptionPane.showOptionDialog(mainWindow, Utils.getPathname(file) + AppConstants.ALREADY_EXISTS_STR,
+												 title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
+												 optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION);
 	}
 
 	//------------------------------------------------------------------
@@ -832,11 +823,11 @@ public class QanaApp
 		KeyList.Key	key)
 	{
 		String[] optionStrs = Utils.getOptionStrings(PROCEED_STR);
-		return ((key.getKind() != KeyKind.TEMPORARY) ||
-				!AppConfig.INSTANCE.isWarnTemporaryKey() ||
-				(JOptionPane.showOptionDialog(mainWindow, TEMP_KEY_MESSAGE_STR, TEMP_KEY_STR,
-											  JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
-											  optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION));
+		return (key.getKind() != KeyKind.TEMPORARY)
+				|| !AppConfig.INSTANCE.isWarnTemporaryKey()
+				|| (JOptionPane.showOptionDialog(mainWindow, TEMP_KEY_MESSAGE_STR, TEMP_KEY_STR,
+												 JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
+												 optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION);
 	}
 
 	//------------------------------------------------------------------
@@ -1283,7 +1274,7 @@ public class QanaApp
 		}
 
 		// Create list of files from command-line arguments
-		List<File> files = Stream.of(args).map(arg -> new File(PathnameUtils.parsePathname(arg))).toList();
+		List<File> files = Arrays.stream(args).map(arg -> new File(PathnameUtils.parsePathname(arg))).toList();
 
 		// Read TX port number from file
 		int txPort = PortNumber.getValue(NAME_KEY);
@@ -1314,9 +1305,9 @@ public class QanaApp
 					if (!pathnames.isEmpty())
 					{
 						pendingFiles.addAll(pathnames.stream()
-														.filter(pathname -> !pathname.isEmpty())
-														.map(pathname -> new File(pathname))
-														.toList());
+								.filter(pathname -> !pathname.isEmpty())
+								.map(File::new)
+								.toList());
 					}
 				});
 			});
@@ -1357,8 +1348,10 @@ public class QanaApp
 			}
 		}
 		if (lookAndFeelName != null)
+		{
 			showWarningMessage(SHORT_NAME + " : " + CONFIG_ERROR_STR,
 							   LAF_ERROR1_STR + lookAndFeelName + LAF_ERROR2_STR);
+		}
 
 		// Select all text when a text field gains focus
 		if (config.isSelectTextOnFocusGained())
@@ -1440,9 +1433,9 @@ public class QanaApp
 		JFileChooser fileChooser = FileSelectionKind.OPEN_ARCHIVE.getFileChooser();
 		fileChooser.setSelectedFile(new File(""));
 		fileChooser.rescanCurrentDirectory();
-		return ((fileChooser.showOpenDialog(mainWindow) == JFileChooser.APPROVE_OPTION)
-																			? fileChooser.getSelectedFile()
-																			: null);
+		return (fileChooser.showOpenDialog(mainWindow) == JFileChooser.APPROVE_OPTION)
+				? fileChooser.getSelectedFile()
+				: null;
 	}
 
 	//------------------------------------------------------------------
@@ -1460,10 +1453,9 @@ public class QanaApp
 		else
 			fileChooser.setSelectedFile(file.getAbsoluteFile());
 		fileChooser.rescanCurrentDirectory();
-		return ((fileChooser.showSaveDialog(mainWindow) == JFileChooser.APPROVE_OPTION)
-												? Utils.appendSuffix(fileChooser.getSelectedFile(),
-																	 FileKind.ARCHIVE.getFilenameSuffix())
-												: null);
+		return (fileChooser.showSaveDialog(mainWindow) == JFileChooser.APPROVE_OPTION)
+				? Utils.appendSuffix(fileChooser.getSelectedFile(), FileKind.ARCHIVE.getFilenameSuffix())
+				: null;
 	}
 
 	//------------------------------------------------------------------
@@ -1551,8 +1543,8 @@ public class QanaApp
 								DecryptDialog.Result result = DecryptDialog.showDialog(mainWindow, file);
 								if (result == null)
 									throw new CancelledException();
-								inFile = result.inFile;
-								outFile = result.outFile;
+								inFile = result.inFile();
+								outFile = result.outFile();
 							}
 
 							// Decrypt file
@@ -1586,8 +1578,8 @@ public class QanaApp
 						EncryptDialog.Result result = EncryptDialog.showDialog(mainWindow, file);
 						if (result == null)
 							throw new CancelledException();
-						inFile = result.inFile;
-						outFile = result.outFile;
+						inFile = result.inFile();
+						outFile = result.outFile();
 					}
 
 					// Encrypt file
@@ -1899,8 +1891,8 @@ public class QanaApp
 			EncryptDialog.Result result = EncryptDialog.showDialog(mainWindow, null);
 			if (result != null)
 			{
-				inFile = result.inFile;
-				outFile = result.outFile;
+				inFile = result.inFile();
+				outFile = result.outFile();
 			}
 		}
 
@@ -1933,8 +1925,8 @@ public class QanaApp
 			DecryptDialog.Result result = DecryptDialog.showDialog(mainWindow, null);
 			if (result != null)
 			{
-				inFile = result.inFile;
-				outFile = result.outFile;
+				inFile = result.inFile();
+				outFile = result.outFile();
 			}
 		}
 
@@ -1987,7 +1979,7 @@ public class QanaApp
 		if (result != null)
 		{
 			// Get key
-			KeyList.Key key = getKey(CONCEAL_FILE_STR, result.inFile.getName());
+			KeyList.Key key = getKey(CONCEAL_FILE_STR, result.inFile().getName());
 
 			// Conceal file
 			if ((key != null) && confirmUseTemporaryKey(key))
@@ -1996,18 +1988,20 @@ public class QanaApp
 				key.checkAllowedCipher(Utils.getCipher(key));
 
 				// Generate name of output file
-				File outFile = (result.outFile == null)
-									? new File(result.inFile.getAbsoluteFile().getParentFile(),
-											   result.inFile.getName() + AppConstants.PNG_FILENAME_EXTENSION)
-									: result.outFile;
+				File outFile = (result.outFile() == null)
+									? new File(result.inFile().getAbsoluteFile().getParentFile(),
+											   result.inFile().getName() + AppConstants.PNG_FILENAME_EXTENSION)
+									: result.outFile();
 
 				// Conceal file
 				if (confirmWriteFile(outFile, CONCEAL_FILE_STR))
+				{
 					TaskProgressDialog.showDialog2(mainWindow, CONCEAL_FILE_STR,
-												   new Task.ConcealFile(result.inFile, result.carrierFile,
-																		outFile, result.maxNumBits,
-																		result.setTimestamp,
-																		result.addRandomBits, key));
+												   new Task.ConcealFile(result.inFile(), result.carrierFile(),
+																		outFile, result.maxNumBits(),
+																		result.setTimestamp(), result.addRandomBits(),
+																		key));
+				}
 			}
 		}
 	}
@@ -2021,15 +2015,17 @@ public class QanaApp
 		RecoverDialog.Result result = RecoverDialog.showDialog(mainWindow, true);
 
 		// Recover file
-		if ((result != null) && confirmWriteFile(result.outFile, RECOVER_FILE_STR))
+		if ((result != null) && confirmWriteFile(result.outFile(), RECOVER_FILE_STR))
 		{
 			// Get key
-			KeyList.Key key = getKey(RECOVER_FILE_STR, result.inFile.getName());
+			KeyList.Key key = getKey(RECOVER_FILE_STR, result.inFile().getName());
 
 			// Recover file
 			if (key != null)
+			{
 				TaskProgressDialog.showDialog2(mainWindow, RECOVER_FILE_STR,
-											   new Task.RecoverFile(result.inFile, result.outFile, key));
+											   new Task.RecoverFile(result.inFile(), result.outFile(), key));
+			}
 		}
 	}
 
@@ -2262,7 +2258,7 @@ public class QanaApp
 			if (result != null)
 			{
 				// Get key
-				KeyList.Key key = getKey(RECOVER_TEXT_STR, result.inFile.getName());
+				KeyList.Key key = getKey(RECOVER_TEXT_STR, result.inFile().getName());
 
 				// Recover text
 				if (key != null)
@@ -2270,7 +2266,7 @@ public class QanaApp
 					TextDocument document = new TextDocument(++newTextDocumentIndex);
 					addDocument(document);
 					TaskProgressDialog.showDialog2(mainWindow, RECOVER_TEXT_STR,
-												   new Task.RecoverText(document, result.inFile, key));
+												   new Task.RecoverText(document, result.inFile(), key));
 				}
 			}
 		}
@@ -2362,14 +2358,14 @@ public class QanaApp
 			try
 			{
 				// File
-				if (result.file != null)
-					BinaryFile.write(result.file, new RandomDataInputStream(result.length, true));
+				if (result.file() != null)
+					BinaryFile.write(result.file(), new RandomDataInputStream(result.length(), true));
 
 				// Image file
-				else if (result.imageFile != null)
+				else if (result.imageFile() != null)
 				{
-					RandomDataInputStream inStream = new RandomDataInputStream(result.length, false);
-					new FileConcealer().conceal(inStream, getCarrierImageSource(), null, result.imageFile,
+					RandomDataInputStream inStream = new RandomDataInputStream(result.length(), false);
+					new FileConcealer().conceal(inStream, getCarrierImageSource(), null, result.imageFile(),
 												(int)inStream.getLength(), getLengthEncoder(),
 												CarrierImage.NUM_CARRIER_BITS, null);
 				}
@@ -2377,7 +2373,7 @@ public class QanaApp
 				// Text
 				else
 				{
-					RandomDataInputStream inStream = new RandomDataInputStream(result.length, false);
+					RandomDataInputStream inStream = new RandomDataInputStream(result.length(), false);
 					int length = (int)inStream.getLength();
 					byte[] buffer = new byte[length];
 					int blockLength = 0;
@@ -2552,7 +2548,7 @@ public class QanaApp
 
 		private String getCountString()
 		{
-			return (NUM_FILES_STR + completedStr + " = " + operationCounts.get(this));
+			return NUM_FILES_STR + completedStr + " = " + operationCounts.get(this);
 		}
 
 		//--------------------------------------------------------------
@@ -2721,7 +2717,7 @@ public class QanaApp
 			int	numPixels)
 		{
 			int maxLength = numPixels + (numPixels >>> 1);
-			return (Integer.SIZE - Integer.numberOfLeadingZeros(maxLength));
+			return Integer.SIZE - Integer.numberOfLeadingZeros(maxLength);
 		}
 
 		//--------------------------------------------------------------

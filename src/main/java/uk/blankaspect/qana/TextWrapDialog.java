@@ -79,6 +79,8 @@ import uk.blankaspect.ui.swing.text.TaggedText;
 
 import uk.blankaspect.ui.swing.textfield.ConstrainedTextField;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -94,8 +96,8 @@ class TextWrapDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	MIN_INDENT	= 0;
-	private static final	int	MAX_INDENT	= 999;
+	private static final	int		MIN_INDENT	= 0;
+	private static final	int		MAX_INDENT	= 999;
 
 	private static final	Color	HELP_PANEL_BACKGROUND_COLOUR	= Color.WHITE;
 	private static final	Color	HELP_PANEL_BORDER_COLOUR		= Colours.LINE_BORDER;
@@ -188,632 +190,41 @@ class TextWrapDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		LINE_LENGTH_OUT_OF_BOUNDS
-		("The line length must be between " + TextDocument.MIN_WRAP_LINE_LENGTH + " and " +
-			TextDocument.MAX_WRAP_LINE_LENGTH + "."),
-
-		INVALID_INDENT
-		("The indent is invalid."),
-
-		FIRST_INDENT_OUT_OF_BOUNDS
-		("The first indent is out of bounds.\n" +
-			"The absolute value of the indent must be between " + MIN_INDENT + " and " + MAX_INDENT + "."),
-
-		SECOND_INDENT_OUT_OF_BOUNDS
-		("The second indent is out of bounds.\n" +
-			"The absolute value of the indent must be between " + MIN_INDENT + " and " + MAX_INDENT + "."),
-
-		LINE_LENGTH_AND_FIRST_INDENT_OUT_OF_ORDER
-		("The first indent is greater than or equal to the line length."),
-
-		LINE_LENGTH_AND_SECOND_INDENT_OUT_OF_ORDER
-		("The second indent is greater than or equal to the line length.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
+	private static	Point			location;
+	private static	Point			helpDialogLocation;
+	private static	List<Integer>	lineLengths			= new ArrayList<>();
+	private static	int				lineLength;
+	private static	List<String>	indents				= new ArrayList<>();
+	private static	String			indent;
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// RESULT CLASS
-
-
-	public static class Result
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Result(int lineLength,
-					   int indent1,
-					   int indent2)
-		{
-			this.lineLength = lineLength;
-			this.indent1 = indent1;
-			this.indent2 = indent2;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		int	lineLength;
-		int	indent1;
-		int	indent2;
-
-	}
-
-	//==================================================================
-
-
-	// LINE LENGTH COMBO BOX CLASS
-
-
-	private static class LineLengthComboBox
-		extends UnsignedIntegerComboBox
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	FIELD_LENGTH	= 3;
-		private static final	int	MAX_NUM_ITEMS	= 32;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private LineLengthComboBox(List<Integer> items)
-		{
-			super(FIELD_LENGTH, MAX_NUM_ITEMS, items);
-			setComparator(Comparator.naturalOrder());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public int getValue()
-		{
-			return (isEmpty() ? 0 : super.getValue());
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// INDENT FIELD CLASS
-
-
-	private static class IndentField
-		extends ConstrainedTextField
-		implements EditableComboBox.IEditor
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	FIELD_LENGTH	= 11;
-
-		private static final	char	BASE_VALUE_PREFIX_CHAR	= '$';
-
-		private static final	String	VALID_CHARS	= "$+,-0123456789";
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private IndentField()
-		{
-			super(FIELD_LENGTH);
-			AppFont.TEXT_FIELD.apply(this);
-			GuiUtils.setTextComponentMargins(this);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * @throws NumberFormatException
-		 */
-
-		private static int parseRelativeValue(String str,
-											  int    baseValue)
-		{
-			int value = baseValue;
-			if (!str.isEmpty())
-			{
-				int index = 0;
-				switch (str.charAt(0))
-				{
-					case '+':
-						if ((str.length() < 2) || (str.charAt(1) < '0') || (str.charAt(1) > '9'))
-							throw new NumberFormatException();
-						++index;
-						break;
-
-					case '-':
-						break;
-
-					default:
-						throw new NumberFormatException();
-				}
-				value += Integer.parseInt(str.substring(index));
-			}
-			return value;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : EditableComboBox.IEditor interface
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public Component getEditorComponent()
-		{
-			return this;
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public Object getItem()
-		{
-			return getText();
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public void setItem(Object obj)
-		{
-			setText((obj == null) ? null : obj.toString());
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		public int getFieldWidth()
-		{
-			return (getColumns() * getColumnWidth());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		protected boolean acceptCharacter(char ch,
-										  int  index)
-		{
-			return (VALID_CHARS.indexOf(ch) >= 0);
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		protected int getColumnWidth()
-		{
-			return (FontUtils.getCharWidth('0', getFontMetrics(getFont())) + 1);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		/**
-		 * @throws NumberFormatException
-		 */
-
-		private IntegerPair getValue(int baseValue)
-		{
-			int value1 = 0;
-			int value2 = 0;
-
-			if (!isEmpty())
-			{
-				// Split string
-				List<String> strs = StringUtils.split(getText(), ',');
-				if (strs.size() > 2)
-					throw new NumberFormatException();
-
-				// Parse first component
-				String str = strs.get(0);
-				char ch = str.charAt(0);
-				if ((ch == '-') || (ch == '+'))
-					throw new NumberFormatException();
-				value1 = (ch == BASE_VALUE_PREFIX_CHAR) ? parseRelativeValue(str.substring(1), baseValue)
-														: Integer.parseInt(str);
-
-				// Parse second component
-				if (strs.size() == 1)
-					value2 = value1;
-				else
-				{
-					str = strs.get(1);
-					ch = str.charAt(0);
-					value2 = (ch == BASE_VALUE_PREFIX_CHAR)
-												? parseRelativeValue(str.substring(1), baseValue)
-												: ((ch == '+') || (ch == '-'))
-														? parseRelativeValue(str, value1)
-														: Integer.parseInt(str);
-				}
-			}
-
-			return IntegerPair.of(value1, value2);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// INDENT COMBO BOX CLASS
-
-
-	private static class IndentComboBox
-		extends EditableComboBox
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	MAX_NUM_ITEMS	= 32;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public IndentComboBox(List<String> items)
-		{
-			super(new IndentField(), MAX_NUM_ITEMS, items);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private IntegerPair getValue(int baseValue)
-		{
-			return ((IndentField)getEditor()).getValue(baseValue);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
+	private	boolean				accepted;
+	private	int					currentIndent;
+	private	LineLengthComboBox	lineLengthComboBox;
+	private	JCheckBox			indentCheckBox;
+	private	IndentComboBox		indentComboBox;
+	private	JButton				helpButton;
+	private	HelpDialog			helpDialog;
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : inner classes
+//  Static initialiser
 ////////////////////////////////////////////////////////////////////////
 
-
-	// HELP DIALOG CLASS
-
-
-	private class HelpDialog
-		extends JDialog
-		implements ActionListener
+	static
 	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	TITLE_STR	= WRAP_TEXT_STR + " : Help";
-
-	////////////////////////////////////////////////////////////////////
-	//  Member classes : inner classes
-	////////////////////////////////////////////////////////////////////
-
-
-		// TEXT PANEL CLASS
-
-
-		private class TextPanel
-			extends JComponent
+		Integer length = AppConfig.INSTANCE.getTextWrapDefaultLineLength();
+		if (length != null)
 		{
-
-		////////////////////////////////////////////////////////////////
-		//  Constants
-		////////////////////////////////////////////////////////////////
-
-			private static final	int	VERTICAL_MARGIN		= 3;
-			private static final	int	HORIZONTAL_MARGIN	= 6;
-
-		////////////////////////////////////////////////////////////////
-		//  Constructors
-		////////////////////////////////////////////////////////////////
-
-			private TextPanel()
-			{
-				AppFont.MAIN.apply(this);
-
-				String[] strs = HELP_TEXT_STRS;
-				char minusChar = getMinusChar(getFont());
-				if (minusChar != MINUS_CHARS[0])
-				{
-					for (String str : strs)
-						str.replace(MINUS_CHARS[0], minusChar);
-				}
-				text = new TaggedText('{', '}', FIELD_DEFS, STYLE_DEFS, V_PADDING_DEFS, H_PADDING_DEFS,
-									  strs);
-				setOpaque(true);
-				setFocusable(false);
-			}
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Instance methods : overriding methods
-		////////////////////////////////////////////////////////////////
-
-			@Override
-			public Dimension getPreferredSize()
-			{
-				return new Dimension(2 * HORIZONTAL_MARGIN + text.getWidth(),
-									 2 * VERTICAL_MARGIN + text.getHeight());
-			}
-
-			//----------------------------------------------------------
-
-			@Override
-			protected void paintComponent(Graphics gr)
-			{
-				// Fill background
-				Rectangle rect = gr.getClipBounds();
-				gr.setColor(HELP_PANEL_BACKGROUND_COLOUR);
-				gr.fillRect(rect.x, rect.y, rect.width, rect.height);
-
-				// Draw border
-				gr.setColor(HELP_PANEL_BORDER_COLOUR);
-				gr.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-
-				// Draw text
-				text.draw(gr, VERTICAL_MARGIN, HORIZONTAL_MARGIN);
-			}
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Instance methods
-		////////////////////////////////////////////////////////////////
-
-			public void updateText()
-			{
-				text.update(getGraphics());
-			}
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Instance variables
-		////////////////////////////////////////////////////////////////
-
-			private	TaggedText	text;
-
+			lineLengths.add(length);
+			lineLength = length;
 		}
-
-		//==============================================================
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private HelpDialog()
-		{
-			// Call superclass constructor
-			super(TextWrapDialog.this, TITLE_STR);
-
-			// Set icons
-			setIconImages(TextWrapDialog.this.getIconImages());
-
-
-			//----  Text panel
-
-			TextPanel textPanel = new TextPanel();
-
-
-			//----  Button panel
-
-			JPanel buttonPanel = new JPanel(new GridLayout(1, 0, 0, 0));
-			buttonPanel.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
-
-			// Button: close
-			JButton closeButton = new FButton(AppConstants.CLOSE_STR);
-			closeButton.setActionCommand(Command.CLOSE);
-			closeButton.addActionListener(this);
-			buttonPanel.add(closeButton);
-
-
-			//----  Main panel
-
-			GridBagLayout gridBag = new GridBagLayout();
-			GridBagConstraints gbc = new GridBagConstraints();
-
-			JPanel mainPanel = new JPanel(gridBag);
-
-			gbc.gridx = 0;
-			gbc.gridy = 0;
-			gbc.gridwidth = 1;
-			gbc.gridheight = 1;
-			gbc.weightx = 0.0;
-			gbc.weighty = 0.0;
-			gbc.anchor = GridBagConstraints.NORTH;
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.insets = new Insets(0, 0, 0, 0);
-			gridBag.setConstraints(textPanel, gbc);
-			mainPanel.add(textPanel);
-
-			gbc.gridx = 0;
-			gbc.gridy = 1;
-			gbc.gridwidth = 1;
-			gbc.gridheight = 1;
-			gbc.weightx = 0.0;
-			gbc.weighty = 0.0;
-			gbc.anchor = GridBagConstraints.NORTH;
-			gbc.fill = GridBagConstraints.NONE;
-			gbc.insets = new Insets(3, 0, 3, 0);
-			gridBag.setConstraints(buttonPanel, gbc);
-			mainPanel.add(buttonPanel);
-
-			// Add commands to action map
-			KeyAction.create(mainPanel, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,
-							 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), Command.CLOSE, this);
-
-
-			//----  Window
-
-			// Set content pane
-			setContentPane(mainPanel);
-
-			// Dispose of window explicitly
-			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-
-			// Handle window closing
-			addWindowListener(new WindowAdapter()
-			{
-				@Override
-				public void windowClosing(WindowEvent event)
-				{
-					onClose();
-				}
-			});
-
-			// Prevent dialog from being resized
-			setResizable(false);
-
-			// Resize dialog to its preferred size
-			pack();
-
-			// Resize dialog again after updating dimensions of tagged text
-			textPanel.updateText();
-			pack();
-
-			// Set location of dialog
-			if (helpDialogLocation == null)
-				helpDialogLocation = GuiUtils.getComponentLocation(this, TextWrapDialog.this);
-			setLocation(helpDialogLocation);
-
-			// Set default button
-			getRootPane().setDefaultButton(closeButton);
-
-			// Set focus
-			closeButton.requestFocusInWindow();
-
-			// Show dialog
-			setVisible(true);
-
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ActionListener interface
-	////////////////////////////////////////////////////////////////////
-
-		public void actionPerformed(ActionEvent event)
-		{
-			if (event.getActionCommand().equals(Command.CLOSE))
-				onClose();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private void close()
-		{
-			helpDialogLocation = getLocation();
-			setVisible(false);
-			dispose();
-		}
-
-		//--------------------------------------------------------------
-
-		private void onClose()
-		{
-			TextWrapDialog.this.closeHelpDialog();
-		}
-
-		//--------------------------------------------------------------
-
 	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -1017,11 +428,22 @@ class TextWrapDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -1075,21 +497,16 @@ class TextWrapDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.TOGGLE_INDENT))
-			onToggleIndent();
-
-		else if (command.equals(Command.HELP))
-			onHelp();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.TOGGLE_INDENT -> onToggleIndent();
+			case Command.HELP          -> onHelp();
+			case Command.ACCEPT        -> onAccept();
+			case Command.CLOSE         -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -1241,41 +658,628 @@ class TextWrapDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point			location;
-	private static	Point			helpDialogLocation;
-	private static	List<Integer>	lineLengths			= new ArrayList<>();
-	private static	int				lineLength;
-	private static	List<String>	indents				= new ArrayList<>();
-	private static	String			indent;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// ERROR IDENTIFIERS
 
-	static
+
+	private enum ErrorId
+		implements AppException.IId
 	{
-		Integer length = AppConfig.INSTANCE.getTextWrapDefaultLineLength();
-		if (length != null)
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		LINE_LENGTH_OUT_OF_BOUNDS
+		("The line length must be between " + TextDocument.MIN_WRAP_LINE_LENGTH + " and " +
+			TextDocument.MAX_WRAP_LINE_LENGTH + "."),
+
+		INVALID_INDENT
+		("The indent is invalid."),
+
+		FIRST_INDENT_OUT_OF_BOUNDS
+		("The first indent is out of bounds.\n" +
+			"The absolute value of the indent must be between " + MIN_INDENT + " and " + MAX_INDENT + "."),
+
+		SECOND_INDENT_OUT_OF_BOUNDS
+		("The second indent is out of bounds.\n" +
+			"The absolute value of the indent must be between " + MIN_INDENT + " and " + MAX_INDENT + "."),
+
+		LINE_LENGTH_AND_FIRST_INDENT_OUT_OF_ORDER
+		("The first indent is greater than or equal to the line length."),
+
+		LINE_LENGTH_AND_SECOND_INDENT_OUT_OF_ORDER
+		("The second indent is greater than or equal to the line length.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
 		{
-			lineLengths.add(length);
-			lineLength = length;
+			this.message = message;
 		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
 	}
 
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member records
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean				accepted;
-	private	int					currentIndent;
-	private	LineLengthComboBox	lineLengthComboBox;
-	private	JCheckBox			indentCheckBox;
-	private	IndentComboBox		indentComboBox;
-	private	JButton				helpButton;
-	private	HelpDialog			helpDialog;
+
+	// RECORD: RESULT
+
+
+	public record Result(
+		int lineLength,
+		int	indent1,
+		int	indent2)
+	{ }
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// LINE LENGTH COMBO BOX CLASS
+
+
+	private static class LineLengthComboBox
+		extends UnsignedIntegerComboBox
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	FIELD_LENGTH	= 3;
+		private static final	int	MAX_NUM_ITEMS	= 32;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private LineLengthComboBox(List<Integer> items)
+		{
+			super(FIELD_LENGTH, MAX_NUM_ITEMS, items);
+			setComparator(Comparator.naturalOrder());
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public int getValue()
+		{
+			return isEmpty() ? 0 : super.getValue();
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// INDENT FIELD CLASS
+
+
+	private static class IndentField
+		extends ConstrainedTextField
+		implements EditableComboBox.IEditor
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int		FIELD_LENGTH	= 11;
+
+		private static final	char	BASE_VALUE_PREFIX_CHAR	= '$';
+
+		private static final	String	VALID_CHARS	= "$+,-0123456789";
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private IndentField()
+		{
+			super(FIELD_LENGTH);
+			AppFont.TEXT_FIELD.apply(this);
+			GuiUtils.setTextComponentMargins(this);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * @throws NumberFormatException
+		 */
+
+		private static int parseRelativeValue(String str,
+											  int    baseValue)
+		{
+			int value = baseValue;
+			if (!str.isEmpty())
+			{
+				int index = 0;
+				switch (str.charAt(0))
+				{
+					case '+':
+						if ((str.length() < 2) || (str.charAt(1) < '0') || (str.charAt(1) > '9'))
+							throw new NumberFormatException();
+						++index;
+						break;
+
+					case '-':
+						break;
+
+					default:
+						throw new NumberFormatException();
+				}
+				value += Integer.parseInt(str.substring(index));
+			}
+			return value;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : EditableComboBox.IEditor interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public Component getEditorComponent()
+		{
+			return this;
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public Object getItem()
+		{
+			return getText();
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public void setItem(Object obj)
+		{
+			setText((obj == null) ? null : obj.toString());
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		public int getFieldWidth()
+		{
+			return getColumns() * getColumnWidth();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected boolean acceptCharacter(char ch,
+										  int  index)
+		{
+			return (VALID_CHARS.indexOf(ch) >= 0);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		protected int getColumnWidth()
+		{
+			return FontUtils.getCharWidth('0', getFontMetrics(getFont())) + 1;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		/**
+		 * @throws NumberFormatException
+		 */
+
+		private IntegerPair getValue(int baseValue)
+		{
+			int value1 = 0;
+			int value2 = 0;
+
+			if (!isEmpty())
+			{
+				// Split string
+				List<String> strs = StringUtils.split(getText(), ',');
+				if (strs.size() > 2)
+					throw new NumberFormatException();
+
+				// Parse first component
+				String str = strs.get(0);
+				char ch = str.charAt(0);
+				if ((ch == '-') || (ch == '+'))
+					throw new NumberFormatException();
+				value1 = (ch == BASE_VALUE_PREFIX_CHAR) ? parseRelativeValue(str.substring(1), baseValue)
+														: Integer.parseInt(str);
+
+				// Parse second component
+				if (strs.size() == 1)
+					value2 = value1;
+				else
+				{
+					str = strs.get(1);
+					ch = str.charAt(0);
+					value2 = (ch == BASE_VALUE_PREFIX_CHAR)
+												? parseRelativeValue(str.substring(1), baseValue)
+												: ((ch == '+') || (ch == '-'))
+														? parseRelativeValue(str, value1)
+														: Integer.parseInt(str);
+				}
+			}
+
+			return IntegerPair.of(value1, value2);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// INDENT COMBO BOX CLASS
+
+
+	private static class IndentComboBox
+		extends EditableComboBox
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	MAX_NUM_ITEMS	= 32;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public IndentComboBox(List<String> items)
+		{
+			super(new IndentField(), MAX_NUM_ITEMS, items);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private IntegerPair getValue(int baseValue)
+		{
+			return ((IndentField)getEditor()).getValue(baseValue);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// HELP DIALOG CLASS
+
+
+	private class HelpDialog
+		extends JDialog
+		implements ActionListener
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	TITLE_STR	= WRAP_TEXT_STR + " : Help";
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private HelpDialog()
+		{
+			// Call superclass constructor
+			super(TextWrapDialog.this, TITLE_STR);
+
+			// Set icons
+			setIconImages(TextWrapDialog.this.getIconImages());
+
+
+			//----  Text panel
+
+			TextPanel textPanel = new TextPanel();
+
+
+			//----  Button panel
+
+			JPanel buttonPanel = new JPanel(new GridLayout(1, 0, 0, 0));
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(3, 8, 3, 8));
+
+			// Button: close
+			JButton closeButton = new FButton(AppConstants.CLOSE_STR);
+			closeButton.setActionCommand(Command.CLOSE);
+			closeButton.addActionListener(this);
+			buttonPanel.add(closeButton);
+
+
+			//----  Main panel
+
+			GridBagLayout gridBag = new GridBagLayout();
+			GridBagConstraints gbc = new GridBagConstraints();
+
+			JPanel mainPanel = new JPanel(gridBag);
+
+			gbc.gridx = 0;
+			gbc.gridy = 0;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.weightx = 0.0;
+			gbc.weighty = 0.0;
+			gbc.anchor = GridBagConstraints.NORTH;
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.insets = new Insets(0, 0, 0, 0);
+			gridBag.setConstraints(textPanel, gbc);
+			mainPanel.add(textPanel);
+
+			gbc.gridx = 0;
+			gbc.gridy = 1;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.weightx = 0.0;
+			gbc.weighty = 0.0;
+			gbc.anchor = GridBagConstraints.NORTH;
+			gbc.fill = GridBagConstraints.NONE;
+			gbc.insets = new Insets(3, 0, 3, 0);
+			gridBag.setConstraints(buttonPanel, gbc);
+			mainPanel.add(buttonPanel);
+
+			// Add commands to action map
+			KeyAction.create(mainPanel, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT,
+							 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), Command.CLOSE, this);
+
+
+			//----  Window
+
+			// Set content pane
+			setContentPane(mainPanel);
+
+			// Dispose of window explicitly
+			setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+			// Handle window events
+			addWindowListener(new WindowAdapter()
+			{
+				@Override
+				public void windowOpened(
+					WindowEvent	event)
+				{
+					// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced
+					// downwards when its location is set.  The error in the y coordinate is the height of the title bar
+					// of the window.  The workaround is to set the location of the window again with an adjustment for
+					// the error.
+					LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+				}
+
+				@Override
+				public void windowClosing(
+					WindowEvent	event)
+				{
+					onClose();
+				}
+			});
+
+			// Prevent dialog from being resized
+			setResizable(false);
+
+			// Resize dialog to its preferred size
+			pack();
+
+			// Resize dialog again after updating dimensions of tagged text
+			textPanel.updateText();
+			pack();
+
+			// Set location of dialog
+			if (helpDialogLocation == null)
+				helpDialogLocation = GuiUtils.getComponentLocation(this, TextWrapDialog.this);
+			setLocation(helpDialogLocation);
+
+			// Set default button
+			getRootPane().setDefaultButton(closeButton);
+
+			// Set focus
+			closeButton.requestFocusInWindow();
+
+			// Show dialog
+			setVisible(true);
+
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ActionListener interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			if (event.getActionCommand().equals(Command.CLOSE))
+				onClose();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private void close()
+		{
+			helpDialogLocation = getLocation();
+			setVisible(false);
+			dispose();
+		}
+
+		//--------------------------------------------------------------
+
+		private void onClose()
+		{
+			TextWrapDialog.this.closeHelpDialog();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Member classes : inner classes
+	////////////////////////////////////////////////////////////////////
+
+
+		// TEXT PANEL CLASS
+
+
+		private class TextPanel
+			extends JComponent
+		{
+
+		////////////////////////////////////////////////////////////////
+		//  Constants
+		////////////////////////////////////////////////////////////////
+
+			private static final	int	VERTICAL_MARGIN		= 3;
+			private static final	int	HORIZONTAL_MARGIN	= 6;
+
+		////////////////////////////////////////////////////////////////
+		//  Instance variables
+		////////////////////////////////////////////////////////////////
+
+			private	TaggedText	text;
+
+		////////////////////////////////////////////////////////////////
+		//  Constructors
+		////////////////////////////////////////////////////////////////
+
+			private TextPanel()
+			{
+				AppFont.MAIN.apply(this);
+
+				String[] strs = HELP_TEXT_STRS;
+				char minusChar = getMinusChar(getFont());
+				if (minusChar != MINUS_CHARS[0])
+				{
+					for (String str : strs)
+						str.replace(MINUS_CHARS[0], minusChar);
+				}
+				text = new TaggedText('{', '}', FIELD_DEFS, STYLE_DEFS, V_PADDING_DEFS, H_PADDING_DEFS,
+									  strs);
+				setOpaque(true);
+				setFocusable(false);
+			}
+
+			//----------------------------------------------------------
+
+		////////////////////////////////////////////////////////////////
+		//  Instance methods : overriding methods
+		////////////////////////////////////////////////////////////////
+
+			@Override
+			public Dimension getPreferredSize()
+			{
+				return new Dimension(2 * HORIZONTAL_MARGIN + text.getWidth(),
+									 2 * VERTICAL_MARGIN + text.getHeight());
+			}
+
+			//----------------------------------------------------------
+
+			@Override
+			protected void paintComponent(Graphics gr)
+			{
+				// Fill background
+				Rectangle rect = gr.getClipBounds();
+				gr.setColor(HELP_PANEL_BACKGROUND_COLOUR);
+				gr.fillRect(rect.x, rect.y, rect.width, rect.height);
+
+				// Draw border
+				gr.setColor(HELP_PANEL_BORDER_COLOUR);
+				gr.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+
+				// Draw text
+				text.draw(gr, VERTICAL_MARGIN, HORIZONTAL_MARGIN);
+			}
+
+			//----------------------------------------------------------
+
+		////////////////////////////////////////////////////////////////
+		//  Instance methods
+		////////////////////////////////////////////////////////////////
+
+			public void updateText()
+			{
+				text.update(getGraphics());
+			}
+
+			//----------------------------------------------------------
+
+		}
+
+		//==============================================================
+
+	}
+
+	//==================================================================
 
 }
 

@@ -156,7 +156,7 @@ class TextView
 				}
 
 				// Import transferred data with the old transfer handler
-				return ((oldTransferHandler == null) ? false : oldTransferHandler.importData(support));
+				return (oldTransferHandler == null) ? false : oldTransferHandler.importData(support);
 			}
 
 			//----------------------------------------------------------

@@ -64,6 +64,8 @@ import uk.blankaspect.ui.swing.label.FLabel;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
+import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
+
 //----------------------------------------------------------------------
 
 
@@ -101,102 +103,42 @@ class JoinDialog
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Class variables
 ////////////////////////////////////////////////////////////////////////
 
+	private static	Point			location;
+	private static	File			inputDirectory;
+	private static	File			outputFile;
+	private static	JFileChooser	inputDirectoryChooser;
+	private static	JFileChooser	outputFileChooser;
 
-	// ERROR IDENTIFIERS
+////////////////////////////////////////////////////////////////////////
+//  Instance variables
+////////////////////////////////////////////////////////////////////////
 
+	private	boolean			accepted;
+	private	FPathnameField	inputDirectoryField;
+	private	FPathnameField	outputFileField;
+	private	JButton			joinButton;
 
-	private enum ErrorId
-		implements AppException.IId
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
 	{
+		inputDirectoryChooser = new JFileChooser();
+		inputDirectoryChooser.setDialogTitle(INPUT_DIRECTORY_TITLE_STR);
+		inputDirectoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		inputDirectoryChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		inputDirectoryChooser.setApproveButtonToolTipText(SELECT_DIRECTORY_STR);
 
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		DIRECTORY_DOES_NOT_EXIST
-		("The directory does not exist."),
-
-		NOT_A_FILE
-		("The output pathname does not denote a normal file."),
-
-		NOT_A_DIRECTORY
-		("The input pathname does not denote a directory."),
-
-		NO_INPUT_DIRECTORY
-		("No input directory was specified."),
-
-		NO_OUTPUT_FILE
-		("No output file was specified.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
+		outputFileChooser = new JFileChooser();
+		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
+		outputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
+		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
 	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// RESULT CLASS
-
-
-	public static class Result
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public Result(File inDirectory,
-					  File outFile)
-		{
-			this.inDirectory = inDirectory;
-			this.outFile = outFile;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		File	inDirectory;
-		File	outFile;
-
-	}
-
-	//==================================================================
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -358,11 +300,22 @@ class JoinDialog
 		// Dispose of window explicitly
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-		// Handle window closing
+		// Handle window events
 		addWindowListener(new WindowAdapter()
 		{
 			@Override
-			public void windowClosing(WindowEvent event)
+			public void windowOpened(
+				WindowEvent	event)
+			{
+				// WORKAROUND for a bug that has been observed on Linux/GNOME whereby a window is displaced downwards
+				// when its location is set.  The error in the y coordinate is the height of the title bar of the
+				// window.  The workaround is to set the location of the window again with an adjustment for the error.
+				LinuxWorkarounds.fixWindowYCoord(event.getWindow(), location);
+			}
+
+			@Override
+			public void windowClosing(
+				WindowEvent	event)
 			{
 				onClose();
 			}
@@ -403,21 +356,16 @@ class JoinDialog
 //  Instance methods : ActionListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void actionPerformed(ActionEvent event)
 	{
-		String command = event.getActionCommand();
-
-		if (command.equals(Command.CHOOSE_INPUT_DIRECTORY))
-			onChooseInputDirectory();
-
-		else if (command.equals(Command.CHOOSE_OUTPUT_FILE))
-			onChooseOutputFile();
-
-		else if (command.equals(Command.ACCEPT))
-			onAccept();
-
-		else if (command.equals(Command.CLOSE))
-			onClose();
+		switch (event.getActionCommand())
+		{
+			case Command.CHOOSE_INPUT_DIRECTORY -> onChooseInputDirectory();
+			case Command.CHOOSE_OUTPUT_FILE     -> onChooseOutputFile();
+			case Command.ACCEPT                 -> onAccept();
+			case Command.CLOSE                  -> onClose();
+		}
 	}
 
 	//------------------------------------------------------------------
@@ -426,6 +374,7 @@ class JoinDialog
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void changedUpdate(DocumentEvent event)
 	{
 		// do nothing
@@ -433,6 +382,7 @@ class JoinDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void insertUpdate(DocumentEvent event)
 	{
 		updateAcceptButton();
@@ -440,6 +390,7 @@ class JoinDialog
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void removeUpdate(DocumentEvent event)
 	{
 		updateAcceptButton();
@@ -485,7 +436,7 @@ class JoinDialog
 
 	private Result getResult()
 	{
-		return (accepted ? new Result(inputDirectory, outputFile) : null);
+		return accepted ? new Result(inputDirectory, outputFile) : null;
 	}
 
 	//------------------------------------------------------------------
@@ -592,42 +543,102 @@ class JoinDialog
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Class variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private static	Point			location;
-	private static	File			inputDirectory;
-	private static	File			outputFile;
-	private static	JFileChooser	inputDirectoryChooser;
-	private static	JFileChooser	outputFileChooser;
 
-////////////////////////////////////////////////////////////////////////
-//  Static initialiser
-////////////////////////////////////////////////////////////////////////
+	// ERROR IDENTIFIERS
 
-	static
+
+	private enum ErrorId
+		implements AppException.IId
 	{
-		inputDirectoryChooser = new JFileChooser();
-		inputDirectoryChooser.setDialogTitle(INPUT_DIRECTORY_TITLE_STR);
-		inputDirectoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		inputDirectoryChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		inputDirectoryChooser.setApproveButtonToolTipText(SELECT_DIRECTORY_STR);
 
-		outputFileChooser = new JFileChooser();
-		outputFileChooser.setDialogTitle(OUTPUT_FILE_TITLE_STR);
-		outputFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		outputFileChooser.setApproveButtonMnemonic(KeyEvent.VK_S);
-		outputFileChooser.setApproveButtonToolTipText(SELECT_FILE_STR);
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		DIRECTORY_DOES_NOT_EXIST
+		("The directory does not exist."),
+
+		NOT_A_FILE
+		("The output pathname does not denote a normal file."),
+
+		NOT_A_DIRECTORY
+		("The input pathname does not denote a directory."),
+
+		NO_INPUT_DIRECTORY
+		("No input directory was specified."),
+
+		NO_OUTPUT_FILE
+		("No output file was specified.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
 	}
 
+	//==================================================================
+
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private	boolean			accepted;
-	private	FPathnameField	inputDirectoryField;
-	private	FPathnameField	outputFileField;
-	private	JButton			joinButton;
+
+	// RESULT CLASS
+
+
+	public static class Result
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public Result(File inDirectory,
+					  File outFile)
+		{
+			this.inDirectory = inDirectory;
+			this.outFile = outFile;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		File	inDirectory;
+		File	outFile;
+
+	}
+
+	//==================================================================
 
 }
 

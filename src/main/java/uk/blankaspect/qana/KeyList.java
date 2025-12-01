@@ -326,7 +326,10 @@ class KeyList
 		@Override
 		public boolean equals(Object obj)
 		{
-			return (obj instanceof Key) && (compareTo((Key)obj) == 0);
+			if (this == obj)
+				return true;
+
+			return (obj instanceof Key other) && (compareTo(other) == 0);
 		}
 
 		//--------------------------------------------------------------
@@ -401,8 +404,8 @@ class KeyList
 			return ((preferredCipher >= 0)
 					&& (preferredCipher < FortunaCipher.values().length)
 					&& ((allowedCiphers & 1 << preferredCipher) != 0))
-															? FortunaCipher.values()[preferredCipher]
-															: null;
+							? FortunaCipher.values()[preferredCipher]
+							: null;
 		}
 
 		//--------------------------------------------------------------

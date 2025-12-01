@@ -50,8 +50,8 @@ class EraseDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	int	LIST_NUM_VIEWABLE_COLUMNS	= 48;
-	private static final	int	LIST_NUM_VIEWABLE_ROWS		= 24;
+	private static final	int		LIST_NUM_VIEWABLE_COLUMNS	= 48;
+	private static final	int		LIST_NUM_VIEWABLE_ROWS		= 24;
 
 	private static final	String	ERASE_FILES_STR		= "Erase files";
 	private static final	String	ERASE_STR			= "Erase";

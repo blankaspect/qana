@@ -135,354 +135,12 @@ class TextDocument
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// COMMANDS
-
-
-	enum Command
-		implements Action
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		UNDO
-		(
-			"undo",
-			"Undo",
-			KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		REDO
-		(
-			"redo",
-			"Redo",
-			KeyStroke.getKeyStroke(KeyEvent.VK_Y, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		CLEAR_EDIT_LIST
-		(
-			"clearEditList",
-			"Clear edit history" + AppConstants.ELLIPSIS_STR
-		),
-
-		CUT
-		(
-			"cut",
-			"Cut",
-			KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		COPY
-		(
-			"copy",
-			"Copy",
-			KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		COPY_ALL
-		(
-			"copyAll",
-			"Copy all",
-			KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
-		),
-
-		PASTE
-		(
-			"paste",
-			"Paste",
-			KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		PASTE_ALL
-		(
-			"pasteAll",
-			"Paste all",
-			KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
-		),
-
-		CLEAR
-		(
-			"clear",
-			"Clear",
-			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
-		),
-
-		SELECT_ALL
-		(
-			"selectAll",
-			"Select all",
-			KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		WRAP
-		(
-			"wrap",
-			"Wrap text" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		ENCRYPT
-		(
-			"encrypt",
-			"Encrypt text",
-			KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0)
-		),
-
-		DECRYPT
-		(
-			"decrypt",
-			"Decrypt text",
-			KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0)
-		),
-
-		CONCEAL
-		(
-			"conceal",
-			"Conceal text in image" + AppConstants.ELLIPSIS_STR
-		),
-
-		TOGGLE_WRAP_CIPHERTEXT_IN_XML
-		(
-			"toggleWrapCiphertextInXml",
-			"Wrap encrypted text in XML",
-			KeyStroke.getKeyStroke(KeyEvent.VK_F9, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		SET_KEY
-		(
-			"setKey",
-			"Set key" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK)
-		),
-
-		CLEAR_KEY
-		(
-			"clearKey",
-			"Clear key" + AppConstants.ELLIPSIS_STR,
-			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
-		);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Command(String key)
-		{
-			command = new uk.blankaspect.ui.swing.action.Command(this);
-			putValue(Action.ACTION_COMMAND_KEY, key);
-		}
-
-		//--------------------------------------------------------------
-
-		private Command(String key,
-						String name)
-		{
-			this(key);
-			putValue(Action.NAME, name);
-		}
-
-		//--------------------------------------------------------------
-
-		private Command(String    key,
-						String    name,
-						KeyStroke acceleratorKey)
-		{
-			this(key, name);
-			putValue(Action.ACCELERATOR_KEY, acceleratorKey);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		public static void setAllEnabled(boolean enabled)
-		{
-			for (Command command : values())
-				command.setEnabled(enabled);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : Action interface
-	////////////////////////////////////////////////////////////////////
-
-		public void addPropertyChangeListener(PropertyChangeListener listener)
-		{
-			command.addPropertyChangeListener(listener);
-		}
-
-		//--------------------------------------------------------------
-
-		public Object getValue(String key)
-		{
-			return command.getValue(key);
-		}
-
-		//--------------------------------------------------------------
-
-		public boolean isEnabled()
-		{
-			return command.isEnabled();
-		}
-
-		//--------------------------------------------------------------
-
-		public void putValue(String key,
-							 Object value)
-		{
-			command.putValue(key, value);
-		}
-
-		//--------------------------------------------------------------
-
-		public void removePropertyChangeListener(PropertyChangeListener listener)
-		{
-			command.removePropertyChangeListener(listener);
-		}
-
-		//--------------------------------------------------------------
-
-		public void setEnabled(boolean enabled)
-		{
-			command.setEnabled(enabled);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : ActionListener interface
-	////////////////////////////////////////////////////////////////////
-
-		public void actionPerformed(ActionEvent event)
-		{
-			TextDocument document = QanaApp.INSTANCE.getTextDocument();
-			if (document != null)
-				document.executeCommand(this);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		public void setSelected(boolean selected)
-		{
-			putValue(Action.SELECTED_KEY, selected);
-		}
-
-		//--------------------------------------------------------------
-
-		public void execute()
-		{
-			actionPerformed(null);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	uk.blankaspect.ui.swing.action.Command	command;
-
-	}
-
-	//==================================================================
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		ILLEGAL_CHARACTER
-		("The encrypted text contains an illegal character."),
-
-		MALFORMED_ENCRYPTED_TEXT
-		("The encrypted text is malformed."),
-
-		INSUFFICIENT_ENCRYPTED_TEXT
-		("The text is too short to have been encrypted by this program."),
-
-		NO_XML_WRAPPER
-		("The expected XML wrapper was not found."),
-
-		MALFORMED_XML_WRAPPER
-		("The XML wrapper was malformed."),
-
-		MALFORMED_END_OF_SENTENCE_PATTERN
-		("The end-of-sentence pattern is not a well-formed regular expression.\n(%1)"),
-
-		NO_ENCRYPTED_TEXT
-		("The text was not encrypted by this program."),
-
-		UNRECOGNISED_ENCRYPTION_ID
-		("The text was encrypted with an unrecognised algorithm."),
-
-		UNSUPPORTED_VERSION
-		("The version of the encrypted text (%1) is not supported by this version of " + QanaApp.SHORT_NAME + "."),
-
-		NO_ATTRIBUTE
-		("The required attribute is missing."),
-
-		INVALID_ATTRIBUTE
-		("The attribute is invalid."),
-
-		FAILED_TO_GET_FILE_TIMESTAMP
-		("Failed to get the timestamp of the file."),
-
-		FAILED_TO_SET_FILE_TIMESTAMP
-		("Failed to set the timestamp of the file."),
-
-		NOT_ENOUGH_MEMORY_TO_PERFORM_COMMAND
-		("There was not enough memory to perform the command.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
+	private	int			instanceIndex;
+	private	UndoManager	undoManager;
+	private	JTextArea	textArea;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -559,6 +217,7 @@ class TextDocument
 //  Instance methods : CaretListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void caretUpdate(CaretEvent event)
 	{
 		updateCommands();
@@ -570,6 +229,7 @@ class TextDocument
 //  Instance methods : DocumentListener interface
 ////////////////////////////////////////////////////////////////////////
 
+	@Override
 	public void changedUpdate(DocumentEvent event)
 	{
 		// do nothing
@@ -577,6 +237,7 @@ class TextDocument
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void insertUpdate(DocumentEvent event)
 	{
 		updateCommands();
@@ -584,6 +245,7 @@ class TextDocument
 
 	//------------------------------------------------------------------
 
+	@Override
 	public void removeUpdate(DocumentEvent event)
 	{
 		updateCommands();
@@ -614,7 +276,7 @@ class TextDocument
 	@Override
 	public String getName()
 	{
-		return (TEXT_STR + " " + instanceIndex);
+		return TEXT_STR + " " + instanceIndex;
 	}
 
 	//------------------------------------------------------------------
@@ -1328,8 +990,7 @@ class TextDocument
 		// Wrap text
 		if (result != null)
 		{
-			text = wrapText(text, endOfSentencePattern, result.lineLength, result.indent1,
-							result.indent2);
+			text = wrapText(text, endOfSentencePattern, result.lineLength(), result.indent1(), result.indent2());
 			textArea.replaceSelection(text);
 		}
 	}
@@ -1363,8 +1024,7 @@ class TextDocument
 
 		// Decrypt text
 		if (key != null)
-			TaskProgressDialog.showDialog(getWindow(), DECRYPT_TEXT_STR,
-										  new Task.DecryptText(this, key));
+			TaskProgressDialog.showDialog(getWindow(), DECRYPT_TEXT_STR, new Task.DecryptText(this, key));
 	}
 
 	//------------------------------------------------------------------
@@ -1387,9 +1047,9 @@ class TextDocument
 
 				// Conceal text
 				TaskProgressDialog.showDialog2(getWindow(), CONCEAL_TEXT_STR,
-											   new Task.ConcealText(this, result.carrierFile, result.outFile,
-																	result.maxNumBits, result.setTimestamp,
-																	result.addRandomBits, key));
+											   new Task.ConcealText(this, result.carrierFile(), result.outFile(),
+																	result.maxNumBits(), result.setTimestamp(),
+																	result.addRandomBits(), key));
 			}
 		}
 	}
@@ -1419,12 +1079,355 @@ class TextDocument
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	int			instanceIndex;
-	private	UndoManager	undoManager;
-	private	JTextArea	textArea;
+
+	// COMMANDS
+
+
+	enum Command
+		implements Action
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		UNDO
+		(
+			"undo",
+			"Undo",
+			KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		REDO
+		(
+			"redo",
+			"Redo",
+			KeyStroke.getKeyStroke(KeyEvent.VK_Y, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		CLEAR_EDIT_LIST
+		(
+			"clearEditList",
+			"Clear edit history" + AppConstants.ELLIPSIS_STR
+		),
+
+		CUT
+		(
+			"cut",
+			"Cut",
+			KeyStroke.getKeyStroke(KeyEvent.VK_X, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		COPY
+		(
+			"copy",
+			"Copy",
+			KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		COPY_ALL
+		(
+			"copyAll",
+			"Copy all",
+			KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
+		),
+
+		PASTE
+		(
+			"paste",
+			"Paste",
+			KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		PASTE_ALL
+		(
+			"pasteAll",
+			"Paste all",
+			KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
+		),
+
+		CLEAR
+		(
+			"clear",
+			"Clear",
+			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
+		),
+
+		SELECT_ALL
+		(
+			"selectAll",
+			"Select all",
+			KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		WRAP
+		(
+			"wrap",
+			"Wrap text" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		ENCRYPT
+		(
+			"encrypt",
+			"Encrypt text",
+			KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0)
+		),
+
+		DECRYPT
+		(
+			"decrypt",
+			"Decrypt text",
+			KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0)
+		),
+
+		CONCEAL
+		(
+			"conceal",
+			"Conceal text in image" + AppConstants.ELLIPSIS_STR
+		),
+
+		TOGGLE_WRAP_CIPHERTEXT_IN_XML
+		(
+			"toggleWrapCiphertextInXml",
+			"Wrap encrypted text in XML",
+			KeyStroke.getKeyStroke(KeyEvent.VK_F9, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		SET_KEY
+		(
+			"setKey",
+			"Set key" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK)
+		),
+
+		CLEAR_KEY
+		(
+			"clearKey",
+			"Clear key" + AppConstants.ELLIPSIS_STR,
+			KeyStroke.getKeyStroke(KeyEvent.VK_K, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)
+		);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	uk.blankaspect.ui.swing.action.Command	command;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Command(String key)
+		{
+			command = new uk.blankaspect.ui.swing.action.Command(this);
+			putValue(Action.ACTION_COMMAND_KEY, key);
+		}
+
+		//--------------------------------------------------------------
+
+		private Command(String key,
+						String name)
+		{
+			this(key);
+			putValue(Action.NAME, name);
+		}
+
+		//--------------------------------------------------------------
+
+		private Command(String    key,
+						String    name,
+						KeyStroke acceleratorKey)
+		{
+			this(key, name);
+			putValue(Action.ACCELERATOR_KEY, acceleratorKey);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		public static void setAllEnabled(boolean enabled)
+		{
+			for (Command command : values())
+				command.setEnabled(enabled);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : Action interface
+	////////////////////////////////////////////////////////////////////
+
+		public void addPropertyChangeListener(PropertyChangeListener listener)
+		{
+			command.addPropertyChangeListener(listener);
+		}
+
+		//--------------------------------------------------------------
+
+		public Object getValue(String key)
+		{
+			return command.getValue(key);
+		}
+
+		//--------------------------------------------------------------
+
+		public boolean isEnabled()
+		{
+			return command.isEnabled();
+		}
+
+		//--------------------------------------------------------------
+
+		public void putValue(String key,
+							 Object value)
+		{
+			command.putValue(key, value);
+		}
+
+		//--------------------------------------------------------------
+
+		public void removePropertyChangeListener(PropertyChangeListener listener)
+		{
+			command.removePropertyChangeListener(listener);
+		}
+
+		//--------------------------------------------------------------
+
+		public void setEnabled(boolean enabled)
+		{
+			command.setEnabled(enabled);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : ActionListener interface
+	////////////////////////////////////////////////////////////////////
+
+		public void actionPerformed(ActionEvent event)
+		{
+			TextDocument document = QanaApp.INSTANCE.getTextDocument();
+			if (document != null)
+				document.executeCommand(this);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		public void setSelected(boolean selected)
+		{
+			putValue(Action.SELECTED_KEY, selected);
+		}
+
+		//--------------------------------------------------------------
+
+		public void execute()
+		{
+			actionPerformed(null);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		ILLEGAL_CHARACTER
+		("The encrypted text contains an illegal character."),
+
+		MALFORMED_ENCRYPTED_TEXT
+		("The encrypted text is malformed."),
+
+		INSUFFICIENT_ENCRYPTED_TEXT
+		("The text is too short to have been encrypted by this program."),
+
+		NO_XML_WRAPPER
+		("The expected XML wrapper was not found."),
+
+		MALFORMED_XML_WRAPPER
+		("The XML wrapper was malformed."),
+
+		MALFORMED_END_OF_SENTENCE_PATTERN
+		("The end-of-sentence pattern is not a well-formed regular expression.\n(%1)"),
+
+		NO_ENCRYPTED_TEXT
+		("The text was not encrypted by this program."),
+
+		UNRECOGNISED_ENCRYPTION_ID
+		("The text was encrypted with an unrecognised algorithm."),
+
+		UNSUPPORTED_VERSION
+		("The version of the encrypted text (%1) is not supported by this version of " + QanaApp.SHORT_NAME + "."),
+
+		NO_ATTRIBUTE
+		("The required attribute is missing."),
+
+		INVALID_ATTRIBUTE
+		("The attribute is invalid."),
+
+		FAILED_TO_GET_FILE_TIMESTAMP
+		("Failed to get the timestamp of the file."),
+
+		FAILED_TO_SET_FILE_TIMESTAMP
+		("Failed to set the timestamp of the file."),
+
+		NOT_ENOUGH_MEMORY_TO_PERFORM_COMMAND
+		("There was not enough memory to perform the command.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(String message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

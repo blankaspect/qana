@@ -144,7 +144,7 @@ class Utils
 		{
 			if (file1 == null)
 				return (file2 == null);
-			return ((file2 != null) && file1.getCanonicalPath().equals(file2.getCanonicalPath()));
+			return (file2 != null) && file1.getCanonicalPath().equals(file2.getCanonicalPath());
 		}
 		catch (IOException e)
 		{
