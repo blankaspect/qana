@@ -2,7 +2,7 @@
 
 KeyEditorDialog.java
 
-Key editor dialog class.
+Class: key-editor dialog.
 
 \*====================================================================*/
 
@@ -101,7 +101,7 @@ import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
 //----------------------------------------------------------------------
 
 
-// KEY EDITOR DIALOG CLASS
+// CLASS: KEY-EDITOR DIALOG
 
 
 class KeyEditorDialog
@@ -870,6 +870,8 @@ class KeyEditorDialog
 			kdfParamFields.get(kdfUse).setText(isSelection ? str : null);
 		}
 
+		nameField.setText(isSelection ? key.getName() : null);
+
 		allowedCiphersField.setText(isSelection ? getAllowedCiphersString(key.getAllowedCiphers()) : null);
 		FortunaCipher cipher = isSelection ? key.getPreferredCipher() : null;
 		preferredCipherField.setText((cipher == null) ? null : cipher.toString());
@@ -905,8 +907,7 @@ class KeyEditorDialog
 		if (key.getKey() == null)
 		{
 			// Get passphrase
-			String passphrase =
-							PassphraseDialog.showDialog(this, KEY1_STR + "'" + key.getName() + "'");
+			String passphrase = PassphraseDialog.showDialog(this, KEY1_STR + "'" + key.getName() + "'");
 			if (passphrase == null)
 				throw new CancelledException();
 
@@ -936,8 +937,8 @@ class KeyEditorDialog
 			if (passphrase != null)
 			{
 				// Get key properties
-				KeyPropertiesDialog.Result result = KeyPropertiesDialog.showDialog(this, keyStr, kdfParamMap,
-																				   allowedCiphers, preferredCipher);
+				KeyPropertiesDialog.Result result =
+						KeyPropertiesDialog.showDialog(this, keyStr, kdfParamMap, allowedCiphers, preferredCipher);
 				if (result != null)
 				{
 					// Set properties

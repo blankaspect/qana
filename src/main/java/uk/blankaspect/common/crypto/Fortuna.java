@@ -218,7 +218,8 @@ public abstract class Fortuna
 	/**
 	 * Sets the encryption key of this PRNG's cipher.
 	 *
-	 * @param key  the key that will be set as the cipher's encryption key.
+	 * @param key
+	 *          the key that will be set as the cipher's encryption key.
 	 */
 
 	protected abstract void setCipherKey(
@@ -238,8 +239,10 @@ public abstract class Fortuna
 	 * Encrypts the value of the block counter with this PRNG's cipher and stores the result in the specified
 	 * buffer.
 	 *
-	 * @param buffer  the buffer in which the encrypted data will be stored.
-	 * @param offset  the offset in {@code buffer} at which the first byte of encrypted data will be stored.
+	 * @param buffer
+	 *          the buffer in which the encrypted data will be stored.
+	 * @param offset
+	 *          the offset in {@code buffer} at which the first byte of encrypted data will be stored.
 	 */
 
 	protected abstract void encryptCounter(
@@ -255,7 +258,8 @@ public abstract class Fortuna
 	/**
 	 * Adds the specified byte of random data to the entropy pools of this PRNG.
 	 *
-	 * @param b  the byte of random data that will be added to the entropy pools.
+	 * @param b
+	 *          the byte of random data that will be added to the entropy pools.
 	 */
 
 	@Override
@@ -270,9 +274,12 @@ public abstract class Fortuna
 	/**
 	 * Adds the specified number of bytes of random data to the entropy pools of this PRNG.
 	 *
-	 * @param data    the random data that will be added to the entropy pools.
-	 * @param offset  the offset of the start of the random data in {@code data}.
-	 * @param length  the number of bytes of random data to add.
+	 * @param data
+	 *          the random data that will be added to the entropy pools.
+	 * @param offset
+	 *          the offset of the start of the random data in {@code data}.
+	 * @param length
+	 *          the number of bytes of random data to add.
 	 */
 
 	@Override
@@ -803,7 +810,8 @@ public abstract class Fortuna
 		 * The exclusive-OR operation is applied to {@code data} in place.
 		 * <p>
 		 *
-		 * @param  data  the data to which the exclusive-OR operation will be applied.
+		 * @param  data
+		 *           the data to which the exclusive-OR operation will be applied.
 		 * @throws IllegalArgumentException
 		 *           if {@code data} is {@code null}.
 		 */
@@ -823,9 +831,12 @@ public abstract class Fortuna
 		 * The exclusive-OR operation is applied to {@code data} in place.
 		 * <p>
 		 *
-		 * @param  data    the data to which the exclusive-OR operation will be applied.
-		 * @param  offset  the start offset of the data in {@code data}.
-		 * @param  length  the number of bytes to which the exclusive-OR operation will be applied.
+		 * @param  data
+		 *           the data to which the exclusive-OR operation will be applied.
+		 * @param  offset
+		 *           the start offset of the data in {@code data}.
+		 * @param  length
+		 *           the number of bytes to which the exclusive-OR operation will be applied.
 		 * @throws IllegalArgumentException
 		 *           if
 		 *           <ul>

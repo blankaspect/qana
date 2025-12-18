@@ -90,8 +90,6 @@ import uk.blankaspect.common.resource.ResourceUtils;
 
 import uk.blankaspect.common.string.StringUtils;
 
-import uk.blankaspect.common.ui.progress.IProgressView;
-
 import uk.blankaspect.ui.swing.dialog.RunnableMessageDialog;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
@@ -526,11 +524,9 @@ public class QanaApp
 		Runnable	generator)
 	{
 		// Get window
-		Window window = null;
-		IProgressView progressView = Task.getProgressView();
-		window = (progressView instanceof Window) ? (Window)progressView : mainWindow;
+		Window window = (Task.getProgressView() instanceof Window progressWindow) ? progressWindow : mainWindow;
 
-		// If no window, run generator ...
+		// If there is no window, run generator ...
 		if (window == null)
 			generator.run();
 
@@ -896,121 +892,35 @@ public class QanaApp
 			{
 				switch (command)
 				{
-					case TIMER_EXPIRED:
-						onTimerExpired();
-						break;
-
-					case IMPORT_FILES:
-						onImportFiles();
-						break;
-
-					case CREATE_FILE:
-						onCreateFile();
-						break;
-
-					case OPEN_FILE:
-						onOpenFile();
-						break;
-
-					case REVERT_FILE:
-						onRevertFile();
-						break;
-
-					case CLOSE_FILE:
-						onCloseFile();
-						break;
-
-					case CLOSE_ALL_FILES:
-						onCloseAllFiles();
-						break;
-
-					case SAVE_FILE:
-						onSaveFile();
-						break;
-
-					case SAVE_FILE_AS:
-						onSaveFileAs();
-						break;
-
-					case ENCRYPT_FILE:
-						onEncryptFile();
-						break;
-
-					case DECRYPT_FILE:
-						onDecryptFile();
-						break;
-
-					case VALIDATE_FILE:
-						onValidateFile();
-						break;
-
-					case CONCEAL_FILE:
-						onConcealFile();
-						break;
-
-					case RECOVER_FILE:
-						onRecoverFile();
-						break;
-
-					case SPLIT_FILE:
-						onSplitFile();
-						break;
-
-					case JOIN_FILES:
-						onJoinFiles();
-						break;
-
-					case ERASE_FILES:
-						onEraseFiles();
-						break;
-
-					case EXIT:
-						onExit();
-						break;
-
-					case CREATE_TEXT:
-						onCreateText();
-						break;
-
-					case RECOVER_TEXT:
-						onRecoverText();
-						break;
-
-					case SET_GLOBAL_KEY:
-						onSetGlobalKey();
-						break;
-
-					case CLEAR_GLOBAL_KEY:
-						onClearGlobalKey();
-						break;
-
-					case TOGGLE_AUTO_USE_GLOBAL_KEY:
-						onToggleAutoUseGlobalKey();
-						break;
-
-					case EDIT_KEYS:
-						onEditKeys();
-						break;
-
-					case SHOW_ENTROPY_METRICS:
-						onShowEntropyMetrics();
-						break;
-
-					case GENERATE_GARBAGE:
-						onGenerateGarbage();
-						break;
-
-					case TOGGLE_SHOW_FULL_PATHNAMES:
-						onToggleShowFullPathnames();
-						break;
-
-					case MANAGE_FILE_ASSOCIATIONS:
-						onManageFileAssociations();
-						break;
-
-					case EDIT_PREFERENCES:
-						onEditPreferences();
-						break;
+					case TIMER_EXPIRED              -> onTimerExpired();
+					case IMPORT_FILES               -> onImportFiles();
+					case CREATE_FILE                -> onCreateFile();
+					case OPEN_FILE                  -> onOpenFile();
+					case REVERT_FILE                -> onRevertFile();
+					case CLOSE_FILE                 -> onCloseFile();
+					case CLOSE_ALL_FILES            -> onCloseAllFiles();
+					case SAVE_FILE                  -> onSaveFile();
+					case SAVE_FILE_AS               -> onSaveFileAs();
+					case ENCRYPT_FILE               -> onEncryptFile();
+					case DECRYPT_FILE               -> onDecryptFile();
+					case VALIDATE_FILE              -> onValidateFile();
+					case CONCEAL_FILE               -> onConcealFile();
+					case RECOVER_FILE               -> onRecoverFile();
+					case SPLIT_FILE                 -> onSplitFile();
+					case JOIN_FILES                 -> onJoinFiles();
+					case ERASE_FILES                -> onEraseFiles();
+					case EXIT                       -> onExit();
+					case CREATE_TEXT                -> onCreateText();
+					case RECOVER_TEXT               -> onRecoverText();
+					case SET_GLOBAL_KEY             -> onSetGlobalKey();
+					case CLEAR_GLOBAL_KEY           -> onClearGlobalKey();
+					case TOGGLE_AUTO_USE_GLOBAL_KEY -> onToggleAutoUseGlobalKey();
+					case EDIT_KEYS                  -> onEditKeys();
+					case SHOW_ENTROPY_METRICS       -> onShowEntropyMetrics();
+					case GENERATE_GARBAGE           -> onGenerateGarbage();
+					case TOGGLE_SHOW_FULL_PATHNAMES -> onToggleShowFullPathnames();
+					case MANAGE_FILE_ASSOCIATIONS   -> onManageFileAssociations();
+					case EDIT_PREFERENCES           -> onEditPreferences();
 				}
 			}
 			catch (AppException e)
@@ -1380,8 +1290,10 @@ public class QanaApp
 				int[] lengthBuffer = new int[1];
 				File directory = config.getSeedFileDirectory();
 				if (directory != null)
+				{
 					TaskProgressDialog.showDialog(mainWindow, READ_SEED_FILE_STR,
 												  new Task.ReadSeedFile(prng, directory, lengthBuffer));
+				}
 				if ((lengthBuffer[0] < Fortuna.RESEED_ENTROPY_THRESHOLD) && config.isWarnNotSeeded())
 					showWarningMessage(SHORT_NAME + " : " + READ_SEED_FILE_STR, PRNG_NOT_SEEDED_STR);
 			}
@@ -1395,8 +1307,10 @@ public class QanaApp
 			if (keyFile != null)
 			{
 				if (!keyFile.exists())
+				{
 					showWarningMessage(SHORT_NAME + " : " + KEY_DATABASE_STR,
 									   String.format(NO_KEY_DATABASE1_STR, Utils.getPathname(keyFile)));
+				}
 				else
 				{
 					try
@@ -1635,8 +1549,7 @@ public class QanaApp
 					buffer.append(fileOp.getCountString());
 				}
 			}
-			if ((numValidated > 0) &&
-				 (numValidated == FileOperation.operationCounts.get(FileOperation.VALIDATE)))
+			if ((numValidated > 0) && (numValidated == FileOperation.operationCounts.get(FileOperation.VALIDATE)))
 			{
 				buffer.append('\n');
 				buffer.append(ALL_VALID_STR);
@@ -1660,8 +1573,10 @@ public class QanaApp
 
 		// Generate name of output file
 		if (outFile == null)
+		{
 			outFile = new File(inFile.getAbsoluteFile().getParentFile(),
 							   inFile.getName() + FileKind.ENCRYPTED.getFilenameSuffix());
+		}
 
 		if (confirmWriteFile(outFile, ENCRYPT_FILE_STR))
 		{
@@ -2548,7 +2463,7 @@ public class QanaApp
 
 		private String getCountString()
 		{
-			return NUM_FILES_STR + completedStr + " = " + operationCounts.get(this);
+			return NUM_FILES_STR + completedStr + " : " + operationCounts.get(this);
 		}
 
 		//--------------------------------------------------------------
@@ -2914,7 +2829,7 @@ public class QanaApp
 				case KDF_PARAMS:
 					data = new byte[KDF_PARAM_DATA_SIZE];
 					NumberCodec.uIntToBytesLE(KdfUse.GENERATION.getKdfParameters().getEncodedValue(false), data);
-					FortunaAes256.createCombiner(salt, KDF_PARAM_DATA_SIZE).combine(data);
+					FortunaAes256.combiner(salt, KDF_PARAM_DATA_SIZE).combine(data);
 					state = RandomDataStreamState.RANDOM_DATA;
 					break;
 

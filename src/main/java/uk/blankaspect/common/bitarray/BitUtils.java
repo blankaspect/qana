@@ -52,12 +52,12 @@ public class BitUtils
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Returns a 32-bit mask for the specified length of a bit field.  A value of 0xFFFFFFFF is returned if the length
+	 * Returns a 32-bit mask for the specified length of a bit field.  A value of 0xFFFF_FFFF is returned if the length
 	 * is greater than 31.
 	 *
 	 * @param  length
 	 *           the length in bits of the bit field.
-	 * @return a bit mask corresponding to the length of the bit field, or 0xFFFFFFFF if {@code length} {@literal >=}
+	 * @return a bit mask corresponding to the length of the bit field, or 0xFFFF_FFFF if {@code length} {@literal >=}
 			   32.
 	 */
 
@@ -450,6 +450,82 @@ public class BitUtils
 			index += interval;
 		}
 		return outValue;
+	}
+
+	//------------------------------------------------------------------
+
+	/**
+	 * Returns a new array of bytes (the <i>destination</i>) whose bit values are obtained from the bits of the
+	 * specified array of bytes (the <i>source</i>) by using the specified array of indices to map bits of the source
+	 * array to the destination array.
+	 * <p>
+	 * The indices refer to the bits of the <b>destination</b>; that is, bit <i>n</i> of the source array is mapped to
+	 * bit <code>indices[<i>n</i>]</code> of the destination array.
+	 * </p>
+	 * <p>
+	 * No checks are performed on the array of indices: the number of indices may be different from the number of bits
+	 * in the source array, and duplicate indices are allowed.
+	 * </p>
+	 *
+	 * @param  source
+	 *           the source array of bytes.
+	 * @param  indices
+	 *           the indices of bits of the destination array to which bits of {@code source} are mapped.
+	 * @return an array of bytes whose bit values are obtained by mapping bits of {@code source} in the way described
+	 *         above.
+	 */
+
+	public static byte[] rearrangeBitsFromIndexed(
+		byte[]	source,
+		int[]	indices)
+	{
+		byte[] destination = new byte[source.length];
+		for (int i = 0; i < indices.length; i++)
+		{
+			int j = indices[i];
+			if ((source[j >>> 3] & 1 << (j & 0x07)) != 0)
+				destination[i >>> 3] |= 1 << (i & 0x07);
+		}
+		return destination;
+	}
+
+	//------------------------------------------------------------------
+
+	/**
+	 * Returns a new array of bytes (the <i>destination</i>) whose bit values are obtained from the bits of the
+	 * specified array of bytes (the <i>source</i>) by using the specified array of indices to map bits of the source
+	 * array to the destination array.
+	 * <p>
+	 * The indices refer to the bits of the <b>source</b>; that is, bit <code>indices[<i>n</i>]</code> of the source
+	 * array is mapped to bit <i>n</i> of the destination array.
+	 * </p>
+	 * <p>
+	 * No checks are performed on the array of indices: the number of indices may be different from the number of bits
+	 * in the source array, and duplicate indices are allowed.
+	 * </p>
+	 *
+	 * @param  source
+	 *           the source array of bytes.
+	 * @param  indices
+	 *           the indices of bits of {@code source} that are mapped to the destination array.
+	 * @return an array of bytes whose bit values are obtained by mapping bits of {@code source} in the way described
+	 *         above.
+	 */
+
+	public static byte[] rearrangeBitsToIndexed(
+		byte[]	source,
+		int[]	indices)
+	{
+		byte[] destination = new byte[source.length];
+		for (int i = 0; i < indices.length; i++)
+		{
+			if ((source[i >>> 3] & 1 << (i & 0x07)) != 0)
+			{
+				int j = indices[i];
+				destination[j >>> 3] |= 1 << (j & 0x07);
+			}
+		}
+		return destination;
 	}
 
 	//------------------------------------------------------------------

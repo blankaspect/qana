@@ -2,7 +2,7 @@
 
 StreamEncrypter.java
 
-Stream encrypter class.
+Class: stream encrypter.
 
 \*====================================================================*/
 
@@ -138,7 +138,7 @@ public class StreamEncrypter
 ////////////////////////////////////////////////////////////////////////
 
 	/** The size (in bytes) of the salt that is used to derive a content-encryption key. */
-	public static final		int		SALT_SIZE			= 32;
+	public static final		int		SALT_SIZE	= 32;
 
 	/** The size (in bytes) of the content-encryption key that is derived from a key and a salt with the {@linkplain
 		Scrypt scrypt} key-derivation function. */
@@ -156,18 +156,20 @@ public class StreamEncrypter
 	private static final	int		PADDING_SIZE	= 255;
 	private static final	int		MIN_LENGTH		= 512;
 
+	private static final	int		TIMESTAMP_NUM_BITS	= Long.SIZE;
+
 	private static final	int		SALT_FIELD_SIZE				= SALT_SIZE;
 	private static final	int		PARAMETERS_FIELD_SIZE		= 4;
 	private static final	int		CIPHER_FIELD_SIZE			= 2;
 	private static final	int		PADDING_LENGTH_FIELD_SIZE	= 1;
-	private static final	int		TIMESTAMP_FIELD_SIZE		= Long.SIZE / Byte.SIZE;
+	private static final	int		TIMESTAMP_FIELD_SIZE		= TIMESTAMP_NUM_BITS / Byte.SIZE;
 	private static final	int		HASH_VALUE_FIELD_SIZE		= HmacSha256.HASH_VALUE_SIZE;
 
 	private static final	int		METADATA1_SIZE	=
 			CIPHER_FIELD_SIZE + 3 * PADDING_LENGTH_FIELD_SIZE + TIMESTAMP_FIELD_SIZE + HASH_VALUE_FIELD_SIZE;
 	private static final	int		METADATA2_SIZE	= SALT_FIELD_SIZE + PARAMETERS_FIELD_SIZE;
 
-	private static final	int		BUFFER_LENGTH	= 1 << 13;  // 8192
+	private static final	int		BUFFER_LENGTH	= 1 << 16;  // 65536
 
 	private static final	int		COMBINER_BLOCK_SIZE	= 1 << 12;  // 4096
 
@@ -189,7 +191,8 @@ public class StreamEncrypter
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Creates an instance of {@link StreamEncrypter} with the specified kind of cipher but no KDF parameters or header.
+	 * Creates a new instance of {@link StreamEncrypter} with the specified kind of cipher but no KDF parameters or
+	 * header.
 	 * <p>
 	 * The absence of KDF parameters means that the {@link #encrypt(IInput, IOutput, long, long, byte[], byte[],
 	 * IProcedure1)} and {@link #decrypt(IInput, IOutput, long, byte[], IProcedure1)} methods and their overloaded
@@ -211,7 +214,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates an instance of {@link StreamEncrypter} with the specified kind of cipher and KDF parameters but no
+	 * Creates a new instance of {@link StreamEncrypter} with the specified kind of cipher and KDF parameters but no
 	 * header.
 	 *
 	 * @param cipher
@@ -235,7 +238,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates an instance of {@link StreamEncrypter} with the specified kind of cipher and header but no KDF
+	 * Creates a new instance of {@link StreamEncrypter} with the specified kind of cipher and header but no KDF
 	 * parameters.
 	 * <p>
 	 * The absence of KDF parameters means that the {@link #encrypt(IInput, IOutput, long, long, byte[], byte[],
@@ -262,7 +265,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Creates an instance of {@link StreamEncrypter} with the specified kind of cipher, KDF parameters and header.
+	 * Creates a new instance of {@link StreamEncrypter} with the specified kind of cipher, KDF parameters and header.
 	 *
 	 * @param cipher
 	 *          the kind of cipher that will be used by the pseudo-random number generator to generate a stream cipher
@@ -298,7 +301,7 @@ public class StreamEncrypter
 ////////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Reads data from the specified input, and stores it in a buffer.
+	 * Reads data from the specified input and stores it in a buffer.
 	 *
 	 * @param  input
 	 *           the input object from which data will be read.
@@ -319,7 +322,7 @@ public class StreamEncrypter
 	//------------------------------------------------------------------
 
 	/**
-	 * Reads data from the specified input up to a specifed length, and stores it in a buffer.
+	 * Reads data from the specified input up to a specifed length and stores it in a buffer.
 	 *
 	 * @param  input
 	 *           the input object from which data will be read.
@@ -366,7 +369,7 @@ public class StreamEncrypter
 	 *           the output object to whicg the data will be written.
 	 * @param  data
 	 *           the array of data to be written.
-	 * @throws IOException
+	 * @throws OutputException
 	 *           if an error occurs when writing to the output.
 	 */
 
@@ -391,7 +394,7 @@ public class StreamEncrypter
 	 *           the start offset of the data in {@code data}.
 	 * @param  length
 	 *           the number of bytes to write.
-	 * @throws IOException
+	 * @throws OutputException
 	 *           if an error occurs when writing to the output.
 	 */
 
@@ -433,22 +436,23 @@ public class StreamEncrypter
 		KdfParams	kdfParams)
 	{
 		return new ScryptSalsa20(kdfParams.numRounds)
-								.createKeyGenerator(key, salt, kdfParams, kdfParams.getNumThreads(), DERIVED_KEY_SIZE);
+				.createKeyGenerator(key, salt, kdfParams, kdfParams.getNumThreads(), DERIVED_KEY_SIZE);
 	}
 
 	//------------------------------------------------------------------
 
 	/**
-	 * Returns an array of bit indices that will be used for permuting the bits of the timestamp.
+	 * Returns an array of the specified number of zero-based indices, which have been permuted using the specified
+	 * pseudo-random number generator.
 	 *
 	 * @param  numIndices
-	 *           the number of indices required.
+	 *           the number of indices.
 	 * @param  prng
-	 *           the pseudo-random number generator that will generate the permutation of indices.
-	 * @return an array of bit indices whose length is {@code numIndices}.
+	 *           the pseudo-random number generator that will be used to generate the permutation of indices.
+	 * @return an array of permuted zero-based indices.
 	 */
 
-	private static int[] getBitIndices(
+	private static int[] permuteIndices(
 		int		numIndices,
 		Fortuna	prng)
 	{
@@ -735,7 +739,7 @@ public class StreamEncrypter
 		// Generate random padding lengths
 		byte[] randomDataPool = new byte[RANDOM_DATA_POOL_LENGTH];
 		int randomDataPoolIndex = 0;
-		Fortuna prng = cipher.createPrng(randomKey);
+		Fortuna prng = cipher.prng(randomKey);
 		int[] paddingLengths = new int[NUM_PADDINGS];
 		int paddingIndex = 0;
 		while (true)
@@ -764,7 +768,7 @@ public class StreamEncrypter
 
 		// Encode cipher ID
 		randomDataPoolIndex = 0;
-		int cipherId = cipher.getId();
+		int cipherId = cipher.id();
 		byte[] cipherData = new byte[CIPHER_FIELD_SIZE];
 		CRC32 crc = new CRC32();
 		while (true)
@@ -828,7 +832,7 @@ public class StreamEncrypter
 		write(output, cipherData);
 
 		// Create combiner from encryption key
-		Fortuna.XorCombiner combiner = cipher.createCombiner(encryptionKey, COMBINER_BLOCK_SIZE);
+		Fortuna.XorCombiner combiner = cipher.combiner(encryptionKey, COMBINER_BLOCK_SIZE);
 
 		// Encrypt and write padding lengths
 		for (int i = 0; i < NUM_PADDINGS; i++)
@@ -845,7 +849,7 @@ public class StreamEncrypter
 
 		// Rearrange bits of timestamp
 		byte[] timestampData = new byte[TIMESTAMP_FIELD_SIZE];
-		int[] indices = getBitIndices(Long.SIZE, combiner.getPrng());
+		int[] indices = permuteIndices(TIMESTAMP_NUM_BITS, combiner.getPrng());
 		for (int i = 0; i < indices.length; i++)
 		{
 			if ((timestamp & 1L << indices[i]) != 0)
@@ -1080,7 +1084,7 @@ public class StreamEncrypter
 			throw new InputException(ErrorId.UNRECOGNISED_CIPHER);
 
 		// Create combiner from encryption key
-		Fortuna.XorCombiner combiner = cipher.createCombiner(encryptionKey, COMBINER_BLOCK_SIZE);
+		Fortuna.XorCombiner combiner = cipher.combiner(encryptionKey, COMBINER_BLOCK_SIZE);
 
 		// Read and decrypt padding lengths
 		int[] paddingLengths = new int[NUM_PADDINGS];
@@ -1097,8 +1101,8 @@ public class StreamEncrypter
 		byte[] padding = new byte[paddingLengths[paddingIndex++]];
 		read(input, padding);
 
-		// Get indices of timestamp bits
-		int[] indices = getBitIndices(Long.SIZE, combiner.getPrng());
+		// Get permuted indices of timestamp bits
+		int[] indices = permuteIndices(TIMESTAMP_NUM_BITS, combiner.getPrng());
 
 		// Read and decrypt timestamp
 		byte[] timestampData = new byte[TIMESTAMP_FIELD_SIZE];
@@ -1151,10 +1155,16 @@ public class StreamEncrypter
 				while (true)
 				{
 					int outLength = decompressor.inflate(outBuffer);
-					if ((outLength == 0) && decompressor.needsInput())
-						break;
-					hash.update(outBuffer, 0, outLength);
-					write(output, outBuffer, 0, outLength);
+					if (outLength == 0)
+					{
+						if (decompressor.needsInput())
+							break;
+					}
+					else
+					{
+						hash.update(outBuffer, 0, outLength);
+						write(output, outBuffer, 0, outLength);
+					}
 				}
 			}
 			catch (DataFormatException e)
@@ -1293,7 +1303,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Reads data from the input up to the specified length and stores it in a buffer.
+		 * Reads data from the input up to the specified length and stores it in the specified buffer.
 		 *
 		 * @param  buffer
 		 *           the buffer in which the data will be stored.
@@ -1667,7 +1677,8 @@ public class StreamEncrypter
 		 * Returns {@code true} if the specified version number is within the interval defined by the minimum and
 		 * maximum supported version numbers of this header.
 		 *
-		 * @param  version  the version number that will be tested.
+		 * @param  version
+		 *           the version number that will be tested.
 		 * @return {@code true} if {@code version} is within the interval defined by minimum and maximum supported
 		 *         version numbers of this header; {@code false} otherwise.
 		 */
@@ -1788,8 +1799,7 @@ public class StreamEncrypter
 		/** The maximum value of the <i>p</i> parameter (parallelisation) of the scrypt algorithm. */
 		public static final		int	MAX_NUM_SUPERBLOCKS	= Scrypt.MAX_NUM_SUPERBLOCKS;
 
-		/** The minimum value of the <i>maximum number of threads</i> parameter.  The value of zero denotes the number
-			of available processors on the system. */
+		/** The minimum value of the <i>maximum number of threads</i> parameter. */
 		public static final		int	MIN_MAX_NUM_THREADS	= 0;
 
 		/** The maximum value of the <i>maximum number of threads</i> parameter. */
@@ -1834,7 +1844,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates a set of KDF parameters from their encoded form as bit fields in a 32-bit integer.
+		 * Creates a new instance of a set of KDF parameters from their encoded form as bit fields in a 32-bit integer.
 		 * <p>
 		 * The bit fields are as follows:
 		 * </p>
@@ -1847,21 +1857,25 @@ public class StreamEncrypter
 		 * bits <code>31:25</code> : maximum number of threads<br>
 		 * </p>
 		 * <p>
-		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the vector of
+		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the list of
 		 * supported values, [ 8, 12, 16, 20 ]; the encoded value of the other parameters is an offset from the
 		 * parameter's minimum value.
 		 * </p>
 		 *
-		 * @param encodedValue  the parameters encoded as bit fields in a 32-bit integer.
+		 * @param encodedValue
+		 *          the parameters encoded as bit fields in a 32-bit integer.
 		 */
 
 		public KdfParams(
 			int	encodedValue)
 		{
+			// Call superclass constructor
 			super(getFieldValue(encodedValue, MIN_COST, COST_FIELD_OFFSET, COST_FIELD_LENGTH),
 				  getFieldValue(encodedValue, MIN_NUM_BLOCKS, NUM_BLOCKS_FIELD_OFFSET, NUM_BLOCKS_FIELD_LENGTH),
 				  getFieldValue(encodedValue, MIN_NUM_SUPERBLOCKS, NUM_SUPERBLOCKS_FIELD_OFFSET,
 								NUM_SUPERBLOCKS_FIELD_LENGTH));
+
+			// Initialise instance variables
 			int index = getFieldValue(encodedValue, 0, NUM_ROUNDS_FIELD_OFFSET, NUM_ROUNDS_FIELD_LENGTH);
 			numRounds = Scrypt.CoreHashNumRounds.values()[index];
 			maxNumThreads = getFieldValue(encodedValue, MIN_MAX_NUM_THREADS, MAX_NUM_THREADS_FIELD_OFFSET,
@@ -1871,7 +1885,7 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Creates a set of KDF parameters with the specified value for each of the five parameters.
+		 * Creates a new instance of a set of KDF parameters with the specified value for each of the five parameters.
 		 *
 		 * @param numRounds
 		 *          the number of rounds of the Salsa20 core.
@@ -1882,7 +1896,16 @@ public class StreamEncrypter
 		 * @param numSuperblocks
 		 *          the number of parallel superblocks (scrypt parameter <i>p</i>).
 		 * @param maxNumThreads
-		 *          the maximum number of threads.
+		 *          the maximum number of threads.  If it is zero, the number of threads will be the greater of
+		 *          <ul>
+		 *            <li>
+		 *              the number of available processors on the system, {@link Runtime#availableProcessors()}, minus
+		 *              one, or.
+		 *            </li>
+		 *            <li>
+		 *              one.
+		 *            </li>
+		 *          </ul>
 		 */
 
 		public KdfParams(
@@ -1892,7 +1915,10 @@ public class StreamEncrypter
 			int							numSuperblocks,
 			int							maxNumThreads)
 		{
+			// Call superclass constructor
 			super(cost, numBlocks, numSuperblocks);
+
+			// Initialise instance variables
 			this.numRounds = numRounds;
 			this.maxNumThreads = maxNumThreads;
 		}
@@ -1904,7 +1930,7 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates a {@code KdfParams} object from a string representation of the KDF parameters.
+		 * Creates and returns a new instance of a set of KDF parameters from a string representation of the parameters.
 		 * <p>
 		 * The string consists of a decimal-number representation of each of the five parameters.  Successive parameters
 		 * are separated with a comma and optional spaces.
@@ -1914,11 +1940,10 @@ public class StreamEncrypter
 		 *           a string representation of the KDF parameters.
 		 * @return a {@code KdfParams} object.
 		 * @throws IllegalArgumentException
-		 *           if the string is malformed or the number of rounds of the Salsa20 core is not
-		 *           supported.
+		 *           if the string is malformed or the number of rounds of the Salsa20 core is not supported.
 		 * @throws ValueOutOfBoundsException
-		 *           if the value of the cost, number of blocks, number of parallel superblocks or number of
-		 *           threads is out of bounds.
+		 *           if the value of the cost, number of blocks, number of parallel superblocks or number of threads is
+		 *           out of bounds.
 		 * @see    #toString()
 		 */
 
@@ -1976,9 +2001,9 @@ public class StreamEncrypter
 	////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Creates a copy of this object.
+		 * Creates and returns a copy of this set of KDF parameters.
 		 *
-		 * @return a {@link KdfParams} object that is a copy of this object.
+		 * @return a {@link KdfParams} object that is a copy of this set of KDF parameters.
 		 */
 
 		@Override
@@ -1990,13 +2015,14 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Returns a string representation of this object that can be parsed by {@link #parseParams(String)}.
+		 * Returns a string representation of this set of KDF parameters that can be parsed by {@link
+		 * #parseParams(String)}.
 		 * <p>
 		 * The string consists of a decimal-number representation of each of the five parameters.  Successive parameters
 		 * are separated with a comma and optional spaces.
 		 * </p>
 		 *
-		 * @return a string representation of this object.
+		 * @return a string representation of this set of KDF parameters.
 		 * @see    #parseParams(String)
 		 */
 
@@ -2056,9 +2082,9 @@ public class StreamEncrypter
 		 * bits <code>31:25</code> : maximum number of threads<br>
 		 * </p>
 		 * <p>
-		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the
-		 * vector of supported values, [ 8, 12, 16, 20 ]; the encoded value of the other parameters is an
-		 * offset from the parameter's minimum value.
+		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the list of
+		 * supported values, [ 8, 12, 16, 20 ]; the encoded value of the other parameters is an offset from the
+		 * parameter's minimum value.
 		 * </p>
 		 *
 		 * @return all the parameters of this object encoded as bit fields in a 32-bit integer.
@@ -2073,8 +2099,8 @@ public class StreamEncrypter
 		//--------------------------------------------------------------
 
 		/**
-		 * Returns this set of KDF parameters encoded as bit fields in a 32-bit integer.  The <i>maximum
-		 * number of threads</i> parameter may be optionally included in the encoded value.
+		 * Returns this set of KDF parameters encoded as bit fields in a 32-bit integer.  The <i>maximum number of
+		 * threads</i> parameter may be optionally included in the encoded value.
 		 * <p style="margin-bottom: 0.25em;">
 		 * The bit fields are:
 		 * </p>
@@ -2109,16 +2135,16 @@ public class StreamEncrypter
 		 *     </tr>
 		 * </table>
 		 * <p>
-		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the
-		 * vector of supported values, [ 8, 12, 16, 20 ]; the encoded value of the other parameters is an
-		 * offset from the parameter's minimum value.
+		 * The encoded value of the number of rounds of the Salsa20 core is the index of the value in the list of
+		 * supported values, [ 8, 12, 16, 20 ]; the encoded value of the other parameters is an offset from the
+		 * parameter's minimum value.
 		 * </p>
 		 *
 		 * @param  includeNumThreads
 		 *           if {@code true}, include the maximum number of threads in the encoded value; if {@code false}, omit
 		 *           the maximum number of threads.
-		 * @return the parameters of this object encoded as bit fields in a 32-bit integer, with the maximum
-		 *         number of threads included or omitted according to {@code includeNumThreads}.
+		 * @return the parameters of this object encoded as bit fields in a 32-bit integer, with the maximum number of
+		 *         threads included or omitted according to {@code includeNumThreads}.
 		 * @see    #getEncodedValue()
 		 */
 
@@ -2134,8 +2160,10 @@ public class StreamEncrypter
 			data = BitUtils.setBitField(data, getNumSuperblocks() - MIN_NUM_SUPERBLOCKS, NUM_SUPERBLOCKS_FIELD_OFFSET,
 										NUM_SUPERBLOCKS_FIELD_LENGTH);
 			if (includeNumThreads)
+			{
 				data = BitUtils.setBitField(data, maxNumThreads - MIN_MAX_NUM_THREADS, MAX_NUM_THREADS_FIELD_OFFSET,
 											MAX_NUM_THREADS_FIELD_LENGTH);
+			}
 			return data;
 		}
 
@@ -2289,7 +2317,8 @@ public class StreamEncrypter
 		 * something more specific to the kind of data stream; eg, "file".
 		 * </p>
 		 *
-		 * @param description  the description that will be applied to data in the message of an exception.
+		 * @param description
+		 *          the description that will be applied to data in the message of an exception.
 		 */
 
 		public void setDataDescription(
@@ -2340,6 +2369,7 @@ public class StreamEncrypter
 		private InputStreamAdapter(
 			InputStream	inStream)
 		{
+			// Initialise instance variables
 			inputStream = inStream;
 		}
 
@@ -2415,6 +2445,7 @@ public class StreamEncrypter
 		private OutputStreamAdapter(
 			OutputStream	outStream)
 		{
+			// Initialise instance variables
 			outputStream = outStream;
 		}
 

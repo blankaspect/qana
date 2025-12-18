@@ -102,7 +102,6 @@ class MainWindow
 
 	private	TabbedPane	tabbedPanel;
 	private	StatusPanel	statusPanel;
-	private	JPopupMenu	contextMenu;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -635,8 +634,8 @@ class MainWindow
 					if (view != null)
 					{
 						int numSelected = view.getTable().getSelectedRowCount();
-						str = ((numSelected == 0) ? NO_STR : Integer.toString(numSelected)) + " " +
-													Utils.getFileString(numSelected) + " " + SELECTED_STR;
+						str = ((numSelected == 0) ? NO_STR : Integer.toString(numSelected))
+								+ " " + Utils.getFileString(numSelected) + " " + SELECTED_STR;
 					}
 					break;
 				}
@@ -660,41 +659,38 @@ class MainWindow
 		if (event.isPopupTrigger())
 		{
 			// Create context menu
-			if (contextMenu == null)
-			{
-				contextMenu = new JPopupMenu();
+			JPopupMenu contextMenu = new JPopupMenu();
 
-				contextMenu.add(new FMenuItem(AppCommand.ENCRYPT_FILE));
-				contextMenu.add(new FMenuItem(AppCommand.DECRYPT_FILE));
-				contextMenu.add(new FMenuItem(AppCommand.VALIDATE_FILE));
+			contextMenu.add(new FMenuItem(AppCommand.ENCRYPT_FILE));
+			contextMenu.add(new FMenuItem(AppCommand.DECRYPT_FILE));
+			contextMenu.add(new FMenuItem(AppCommand.VALIDATE_FILE));
 
-				contextMenu.addSeparator();
+			contextMenu.addSeparator();
 
-				contextMenu.add(new FMenuItem(AppCommand.CONCEAL_FILE));
-				contextMenu.add(new FMenuItem(AppCommand.RECOVER_FILE));
+			contextMenu.add(new FMenuItem(AppCommand.CONCEAL_FILE));
+			contextMenu.add(new FMenuItem(AppCommand.RECOVER_FILE));
 
-				contextMenu.addSeparator();
+			contextMenu.addSeparator();
 
-				contextMenu.add(new FMenuItem(AppCommand.SPLIT_FILE));
-				contextMenu.add(new FMenuItem(AppCommand.JOIN_FILES));
+			contextMenu.add(new FMenuItem(AppCommand.SPLIT_FILE));
+			contextMenu.add(new FMenuItem(AppCommand.JOIN_FILES));
 
-				contextMenu.addSeparator();
+			contextMenu.addSeparator();
 
-				contextMenu.add(new FMenuItem(AppCommand.ERASE_FILES));
+			contextMenu.add(new FMenuItem(AppCommand.ERASE_FILES));
 
-				contextMenu.addSeparator();
+			contextMenu.addSeparator();
 
-				JMenu submenu = new FMenu(DEFAULT_CIPHER_STR);
-				for (FortunaCipher cipher : FortunaCipher.values())
-					submenu.add(CipherAction.getMenuItem(CONTEXT_MENU_KEY, cipher));
-				contextMenu.add(submenu);
+			JMenu submenu = new FMenu(DEFAULT_CIPHER_STR);
+			for (FortunaCipher cipher : FortunaCipher.values())
+				submenu.add(CipherAction.getMenuItem(CONTEXT_MENU_KEY, cipher));
+			contextMenu.add(submenu);
 
-				contextMenu.addSeparator();
+			contextMenu.addSeparator();
 
-				contextMenu.add(new FMenuItem(AppCommand.SET_GLOBAL_KEY));
-				contextMenu.add(new FMenuItem(AppCommand.CLEAR_GLOBAL_KEY));
-				contextMenu.add(new FCheckBoxMenuItem(AppCommand.TOGGLE_AUTO_USE_GLOBAL_KEY));
-			}
+			contextMenu.add(new FMenuItem(AppCommand.SET_GLOBAL_KEY));
+			contextMenu.add(new FMenuItem(AppCommand.CLEAR_GLOBAL_KEY));
+			contextMenu.add(new FCheckBoxMenuItem(AppCommand.TOGGLE_AUTO_USE_GLOBAL_KEY));
 
 			// Update commands for menu items
 			QanaApp.INSTANCE.updateCommands();
@@ -1031,8 +1027,7 @@ class MainWindow
 			FRadioButtonMenuItem menuItem = menuItems.get(cipher);
 			if (menuItem == null)
 			{
-				menuItem = new FRadioButtonMenuItem(new CipherAction(cipher),
-													Utils.getCipher() == cipher);
+				menuItem = new FRadioButtonMenuItem(new CipherAction(cipher), Utils.getCipher() == cipher);
 				menuItems.put(cipher, menuItem);
 			}
 

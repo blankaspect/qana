@@ -139,15 +139,14 @@ class ArchiveDocument
 	private static final	String	ADD_CONFLICT_STR			= "The archive already contains a file with this path.";
 	private static final	String	EXTRACT_CONFLICT_STR		= "The file already exists.";
 	private static final	String	DO_WHAT_STR					= "What do you want to do?";
-	private static final	String	CONFIRM_DELETE_STR			= "Number of files to be deleted = %d\n" +
-																	"Do you want to delete the files?";
+	private static final	String	CONFIRM_DELETE_STR			=
+			"Number of files to be deleted : %d\nDo you want to delete the files?";
 	private static final	String	ALL_FILES_VALID_STR			= "All files were valid.";
-	private static final	String	NUM_PROCESSED_STR			= "Number of files processed = %d\n";
-	private static final	String	NUM_FAILED_VALIDATION_STR	= "Number of files that failed validation = %d\n" +
-																	"The invalid files have been selected.";
-	private static final	String	NONEXISTENT_FILES1_STR		= "Some of the files listed in the archive do not " +
-																	"exist.\nThose files have been removed from the " +
-																	"list.";
+	private static final	String	NUM_PROCESSED_STR			= "Number of files processed : %d\n";
+	private static final	String	NUM_FAILED_VALIDATION_STR	=
+			"Number of files that failed validation : %d\nThe invalid files have been selected.";
+	private static final	String	NONEXISTENT_FILES1_STR		=
+			"Some of the files listed in the archive do not exist.\nThose files have been removed from the list.";
 	private static final	String	NONEXISTENT_FILES2_STR		= "Non-existent files removed from archive";
 	private static final	String	NOT_ALL_DELETED_STR			= "Not all the selected files were deleted.";
 	private static final	String	NOT_DELETED_STR				= "Files that were not deleted";
@@ -1057,49 +1056,17 @@ class ArchiveDocument
 			{
 				switch (command)
 				{
-					case CHOOSE_ARCHIVE_DIRECTORY:
-						onChooseArchiveDirectory();
-						break;
-
-					case SELECT_ALL:
-						onSelectAll();
-						break;
-
-					case INVERT_SELECTION:
-						onInvertSelection();
-						break;
-
-					case ADD_FILES:
-						onAddFiles();
-						break;
-
-					case EXTRACT_FILES:
-						onExtractFiles();
-						break;
-
-					case VALIDATE_FILES:
-						onValidateFiles();
-						break;
-
-					case DELETE_FILES:
-						onDeleteFiles();
-						break;
-
-					case DISPLAY_FILE_LIST:
-						onDisplayFileList();
-						break;
-
-					case DISPLAY_FILE_MAP:
-						onDisplayFileMap();
-						break;
-
-					case SET_KEY:
-						onSetKey();
-						break;
-
-					case CLEAR_KEY:
-						onClearKey();
-						break;
+					case CHOOSE_ARCHIVE_DIRECTORY -> onChooseArchiveDirectory();
+					case SELECT_ALL               -> onSelectAll();
+					case INVERT_SELECTION         -> onInvertSelection();
+					case ADD_FILES                -> onAddFiles();
+					case EXTRACT_FILES            -> onExtractFiles();
+					case VALIDATE_FILES           -> onValidateFiles();
+					case DELETE_FILES             -> onDeleteFiles();
+					case DISPLAY_FILE_LIST        -> onDisplayFileList();
+					case DISPLAY_FILE_MAP         -> onDisplayFileMap();
+					case SET_KEY                  -> onSetKey();
+					case CLEAR_KEY                -> onClearKey();
 				}
 			}
 			catch (OutOfMemoryError e)

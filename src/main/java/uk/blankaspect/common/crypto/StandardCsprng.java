@@ -180,7 +180,7 @@ public class StandardCsprng
 		throws AppException
 	{
 		// Create the PRNG
-		prng = cipher.createPrng(CryptoUtils.getSeedFromNanoTime(cipher.getKeySize(), timerDivisor));
+		prng = cipher.prng(CryptoUtils.getSeedFromNanoTime(cipher.keySize(), timerDivisor));
 
 		// Create the entropy accumulator and set it as the supplier of entropy to the PRNG
 		entropyAccumulator = new EntropyAccumulator(entropySourceParams, timerDivisor);

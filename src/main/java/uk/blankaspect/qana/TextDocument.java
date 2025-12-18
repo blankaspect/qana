@@ -89,26 +89,26 @@ class TextDocument
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	public static final		int	MIN_MAX_EDIT_LIST_LENGTH		= 1;
-	public static final		int	MAX_MAX_EDIT_LIST_LENGTH		= 9999;
-	public static final		int	DEFAULT_MAX_EDIT_LIST_LENGTH	= 100;
+	public static final		int		MIN_MAX_EDIT_LIST_LENGTH		= 1;
+	public static final		int		MAX_MAX_EDIT_LIST_LENGTH		= 9999;
+	public static final		int		DEFAULT_MAX_EDIT_LIST_LENGTH	= 100;
 
-	public static final		int	MIN_WRAP_LINE_LENGTH		= 8;
-	public static final		int	MAX_WRAP_LINE_LENGTH		= 999;
-	public static final		int	DEFAULT_WRAP_LINE_LENGTH	= 80;
+	public static final		int		MIN_WRAP_LINE_LENGTH		= 8;
+	public static final		int		MAX_WRAP_LINE_LENGTH		= 999;
+	public static final		int		DEFAULT_WRAP_LINE_LENGTH	= 80;
 
-	public static final		int	MIN_NUM_SPACES_BETWEEN_SENTENCES		= 1;
-	public static final		int	MAX_NUM_SPACES_BETWEEN_SENTENCES		= 9;
-	public static final		int	DEFAULT_NUM_SPACES_BETWEEN_SENTENCES	= 2;
+	public static final		int		MIN_NUM_SPACES_BETWEEN_SENTENCES		= 1;
+	public static final		int		MAX_NUM_SPACES_BETWEEN_SENTENCES		= 9;
+	public static final		int		DEFAULT_NUM_SPACES_BETWEEN_SENTENCES	= 2;
 
 	public static final		String	DEFAULT_END_OF_SENTENCE_PATTERN	=
 			"(?:(?:\\p{L}|\\p{N}|['\"\u00BB\u201C)\\]>%])[.!?])|(?:(?:\\p{L}|\\p{N})[.!?]['\"\u00BB\u201C)\\]>%])";
 
-	private static final	int	ENCRYPTED_LINE_LENGTH	= 76;
+	private static final	int		ENCRYPTED_LINE_LENGTH	= 76;
 
-	private static final	int	VERSION					= 0;
-	private static final	int	MIN_SUPPORTED_VERSION	= 0;
-	private static final	int	MAX_SUPPORTED_VERSION	= 0;
+	private static final	int		VERSION					= 0;
+	private static final	int		MIN_SUPPORTED_VERSION	= 0;
+	private static final	int		MAX_SUPPORTED_VERSION	= 0;
 
 	private static final	String	TEXT_STR			= "Text";
 	private static final	String	ENCRYPT_TEXT_STR	= "Encrypt text";
@@ -812,73 +812,23 @@ class TextDocument
 			{
 				switch (command)
 				{
-					case UNDO:
-						onUndo();
-						break;
-
-					case REDO:
-						onRedo();
-						break;
-
-					case CLEAR_EDIT_LIST:
-						onClearEditList();
-						break;
-
-					case CUT:
-						onCut();
-						break;
-
-					case COPY:
-						onCopy();
-						break;
-
-					case COPY_ALL:
-						onCopyAll();
-						break;
-
-					case PASTE:
-						onPaste();
-						break;
-
-					case PASTE_ALL:
-						onPasteAll();
-						break;
-
-					case CLEAR:
-						onClear();
-						break;
-
-					case SELECT_ALL:
-						onSelectAll();
-						break;
-
-					case WRAP:
-						onWrap();
-						break;
-
-					case ENCRYPT:
-						onEncrypt();
-						break;
-
-					case DECRYPT:
-						onDecrypt();
-						break;
-
-					case CONCEAL:
-						onConceal();
-						break;
-
-					case TOGGLE_WRAP_CIPHERTEXT_IN_XML:
-						onToggleWrapCiphertextInXml();
-						break;
-
-					case SET_KEY:
-						onSetKey();
-						break;
-
-					case CLEAR_KEY:
-						onClearKey();
-						break;
+					case UNDO                          -> onUndo();
+					case REDO                          -> onRedo();
+					case CLEAR_EDIT_LIST               -> onClearEditList();
+					case CUT                           -> onCut();
+					case COPY                          -> onCopy();
+					case COPY_ALL                      -> onCopyAll();
+					case PASTE                         -> onPaste();
+					case PASTE_ALL                     -> onPasteAll();
+					case CLEAR                         -> onClear();
+					case SELECT_ALL                    -> onSelectAll();
+					case WRAP                          -> onWrap();
+					case ENCRYPT                       -> onEncrypt();
+					case DECRYPT                       -> onDecrypt();
+					case CONCEAL                       -> onConceal();
+					case TOGGLE_WRAP_CIPHERTEXT_IN_XML -> onToggleWrapCiphertextInXml();
+					case SET_KEY                       -> onSetKey();
+					case CLEAR_KEY                     -> onClearKey();
 				}
 			}
 			catch (OutOfMemoryError e)
@@ -1264,6 +1214,7 @@ class TextDocument
 	//  Instance methods : Action interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void addPropertyChangeListener(PropertyChangeListener listener)
 		{
 			command.addPropertyChangeListener(listener);
@@ -1271,6 +1222,7 @@ class TextDocument
 
 		//--------------------------------------------------------------
 
+		@Override
 		public Object getValue(String key)
 		{
 			return command.getValue(key);
@@ -1278,6 +1230,7 @@ class TextDocument
 
 		//--------------------------------------------------------------
 
+		@Override
 		public boolean isEnabled()
 		{
 			return command.isEnabled();
@@ -1285,6 +1238,7 @@ class TextDocument
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void putValue(String key,
 							 Object value)
 		{
@@ -1293,6 +1247,7 @@ class TextDocument
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void removePropertyChangeListener(PropertyChangeListener listener)
 		{
 			command.removePropertyChangeListener(listener);
@@ -1300,6 +1255,7 @@ class TextDocument
 
 		//--------------------------------------------------------------
 
+		@Override
 		public void setEnabled(boolean enabled)
 		{
 			command.setEnabled(enabled);
@@ -1311,6 +1267,7 @@ class TextDocument
 	//  Instance methods : ActionListener interface
 	////////////////////////////////////////////////////////////////////
 
+		@Override
 		public void actionPerformed(ActionEvent event)
 		{
 			TextDocument document = QanaApp.INSTANCE.getTextDocument();
