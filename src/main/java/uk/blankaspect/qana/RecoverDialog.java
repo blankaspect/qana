@@ -83,8 +83,6 @@ class RecoverDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	KEY	= RecoverDialog.class.getCanonicalName();
-
 	private static final	String	FILE_STR				= "file";
 	private static final	String	TEXT_STR				= "text";
 	private static final	String	INPUT_FILE_STR			= "Input file";
@@ -186,7 +184,6 @@ class RecoverDialog
 		// Panel: input file
 		inputFileField = new FPathnameField(inputFile);
 		inputFileField.getDocument().addDocumentListener(this);
-		FPathnameField.addObserver(KEY, inputFileField);
 		PathnamePanel inputFilePanel = new PathnamePanel(inputFileField, Command.CHOOSE_INPUT_FILE, this);
 
 		gbc.gridx = 1;
@@ -221,7 +218,6 @@ class RecoverDialog
 			// Panel: output file
 			outputFileField = new FPathnameField(outputFile);
 			outputFileField.getDocument().addDocumentListener(this);
-			FPathnameField.addObserver(KEY, outputFileField);
 			PathnamePanel outputFilePanel = new PathnamePanel(outputFileField, Command.CHOOSE_OUTPUT_FILE, this);
 
 			gbc.gridx = 1;
@@ -547,8 +543,6 @@ class RecoverDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		setVisible(false);
 		dispose();

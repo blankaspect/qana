@@ -36,8 +36,6 @@ import uk.blankaspect.common.exception.AppException;
 
 import uk.blankaspect.common.exception2.ExceptionUtils;
 
-import uk.blankaspect.common.filesystem.PathnameUtils;
-
 import uk.blankaspect.common.string.StringUtils;
 
 //----------------------------------------------------------------------
@@ -71,9 +69,10 @@ class Utils
 //  Class methods
 ////////////////////////////////////////////////////////////////////////
 
-	public static int indexOf(
-		Object		target,
-		Object[]	values)
+	@SuppressWarnings("unchecked")
+	public static <T> int indexOf(
+		T		target,
+		T...	values)
 	{
 		for (int i = 0; i < values.length; i++)
 		{
@@ -85,24 +84,8 @@ class Utils
 
 	//------------------------------------------------------------------
 
-	public static char getFileSeparatorChar()
-	{
-		return AppConfig.INSTANCE.isShowUnixPathnames() ? '/' : File.separatorChar;
-	}
-
-	//------------------------------------------------------------------
-
 	public static String getPathname(
 		File	file)
-	{
-		return getPathname(file, AppConfig.INSTANCE.isShowUnixPathnames());
-	}
-
-	//------------------------------------------------------------------
-
-	public static String getPathname(
-		File	file,
-		boolean	unixStyle)
 	{
 		String pathname = null;
 		if (file != null)
@@ -117,9 +100,6 @@ class Utils
 				System.err.println("- " + e);
 				pathname = file.getAbsolutePath();
 			}
-
-			if (unixStyle)
-				pathname = PathnameUtils.toUnixStyle(pathname, true);
 		}
 		return pathname;
 	}

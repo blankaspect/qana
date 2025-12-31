@@ -98,8 +98,6 @@ class GarbageGeneratorDialog
 
 	private static final	Insets	GENERATE_LENGTH_BUTTON_MARGINS	= new Insets(1, 4, 1, 4);
 
-	private static final	String	KEY	= GarbageGeneratorDialog.class.getCanonicalName();
-
 	private static final	String	TITLE_STR		= "Generate garbage";
 	private static final	String	LENGTH_STR		= "Length";
 	private static final	String	RANDOMISE_STR	= "Randomise";
@@ -220,7 +218,6 @@ class GarbageGeneratorDialog
 
 		// Panel: output pathname
 		outPathnameField = new FPathnameField(outputFile);
-		FPathnameField.addObserver(KEY, outPathnameField);
 		outPathnamePanel = new PathnamePanel(outPathnameField, Command.CHOOSE_OUTPUT_FILE, this);
 
 		gbc.gridx = 1;
@@ -276,7 +273,6 @@ class GarbageGeneratorDialog
 
 		// Panel: image pathname
 		imagePathnameField = new FPathnameField(imageFile);
-		FPathnameField.addObserver(KEY, imagePathnameField);
 		imagePathnamePanel = new PathnamePanel(imagePathnameField, Command.CHOOSE_IMAGE_FILE, this);
 
 		gbc.gridx = 1;
@@ -699,8 +695,6 @@ class GarbageGeneratorDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		lengthRangeIndex = lengthRangeComboBox.getSelectedIndex();
 		setVisible(false);
@@ -1016,7 +1010,7 @@ class GarbageGeneratorDialog
 	//  Constants
 	////////////////////////////////////////////////////////////////////
 
-		private static final	String	KEY	= RadioButton.class.getCanonicalName();
+		private static final	String	KEY	= GarbageGeneratorDialog.class.getCanonicalName();
 
 		private static final	Color	BACKGROUND_COLOUR	= new Color(252, 224, 128);
 

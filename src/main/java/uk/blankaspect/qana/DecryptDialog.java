@@ -85,8 +85,6 @@ class DecryptDialog
 
 	private static final	Insets	ARROW_BUTTON_MARGINS	= new Insets(2, 4, 2, 4);
 
-	private static final	String	KEY	= DecryptDialog.class.getCanonicalName();
-
 	private static final	String	TITLE_STR					= "Decrypt file";
 	private static final	String	INPUT_FILE_STR				= "Input file";
 	private static final	String	OUTPUT_FILE_STR				= "Output file";
@@ -192,7 +190,6 @@ class DecryptDialog
 			inputFileField.getDocument().addDocumentListener(this);
 		else
 			inputFileField.setEnabled(false);
-		FPathnameField.addObserver(KEY, inputFileField);
 		PathnamePanel inFilePanel = new PathnamePanel(inputFileField, Command.CHOOSE_INPUT_FILE,
 													  (inFile == null) ? this : null);
 
@@ -244,7 +241,6 @@ class DecryptDialog
 
 		// Panel: output file
 		outputFileField = new FPathnameField((inFile == null) ? outputFile : null);
-		FPathnameField.addObserver(KEY, outputFileField);
 		PathnamePanel outputFilePanel = new PathnamePanel(outputFileField, Command.CHOOSE_OUTPUT_FILE,
 														  this);
 
@@ -587,8 +583,6 @@ class DecryptDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		setVisible(false);
 		dispose();

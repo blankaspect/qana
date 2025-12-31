@@ -85,8 +85,6 @@ class SplitDialog
 
 	private static final	int		FILE_PART_LENGTH_FIELD_LENGTH	= 10;
 
-	private static final	String	KEY	= SplitDialog.class.getCanonicalName();
-
 	private static final	String	TITLE_STR					= "Split file";
 	private static final	String	INPUT_FILE_STR				= "Input file";
 	private static final	String	OUTPUT_DIRECTORY_STR		= "Output directory";
@@ -201,7 +199,6 @@ class SplitDialog
 		// Panel: input file
 		inputFileField = new FPathnameField(inputFile);
 		inputFileField.getDocument().addDocumentListener(this);
-		FPathnameField.addObserver(KEY, inputFileField);
 		PathnamePanel inFilePanel = new PathnamePanel(inputFileField, Command.CHOOSE_INPUT_FILE, this);
 
 		gbc.gridx = 1;
@@ -233,7 +230,6 @@ class SplitDialog
 
 		// Panel: output directory
 		outputDirectoryField = new FPathnameField(outputDirectory);
-		FPathnameField.addObserver(KEY, outputDirectoryField);
 		PathnamePanel outputDirectoryPanel =
 				new PathnamePanel(outputDirectoryField, Command.CHOOSE_OUTPUT_DIRECTORY, this);
 
@@ -767,8 +763,6 @@ class SplitDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		setVisible(false);
 		dispose();

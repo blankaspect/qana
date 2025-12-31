@@ -892,9 +892,15 @@ public class StreamEncrypter
 			{
 				int outLength = compressor.deflate(outBuffer);
 				if (outLength == 0)
-					break;
-				combiner.combine(outBuffer, 0, outLength);
-				write(output, outBuffer, 0, outLength);
+				{
+					if (compressor.needsInput())
+						break;
+				}
+				else
+				{
+					combiner.combine(outBuffer, 0, outLength);
+					write(output, outBuffer, 0, outLength);
+				}
 			}
 
 			// Increment offset
@@ -905,9 +911,9 @@ public class StreamEncrypter
 			for (IProgressListener listener : progressListeners)
 				listener.setProgress(progress);
 		}
+		compressor.finish();
 
 		// Write remaining compressed data
-		compressor.finish();
 		while (true)
 		{
 			int outLength = compressor.deflate(outBuffer);
@@ -1126,59 +1132,66 @@ public class StreamEncrypter
 
 		// Read and decrypt payload
 		Inflater decompressor = new Inflater(true);
-		byte[] inBuffer = new byte[BUFFER_LENGTH];
-		byte[] outBuffer = new byte[BUFFER_LENGTH];
-		length -= METADATA1_SIZE;
-		if (kdfParams != null)
-			length -= METADATA2_SIZE;
-		for (int i = 0; i < NUM_PADDINGS; i++)
-			length -= paddingLengths[i];
-		long offset = 0;
-		while (offset < length)
+		try
 		{
-			// Test whether task has been cancelled by a monitor
-			for (IProgressListener listener : progressListeners)
+			byte[] inBuffer = new byte[BUFFER_LENGTH];
+			byte[] outBuffer = new byte[BUFFER_LENGTH];
+			length -= METADATA1_SIZE;
+			if (kdfParams != null)
+				length -= METADATA2_SIZE;
+			for (int i = 0; i < NUM_PADDINGS; i++)
+				length -= paddingLengths[i];
+			long offset = 0;
+			while (offset < length)
 			{
-				if (listener.isTaskCancelled())
-					throw new TaskCancelledException();
-			}
-
-			// Read and decrypt block of data from input stream
-			int blockLength = (int)Math.min(length - offset, BUFFER_LENGTH);
-			read(input, inBuffer, 0, blockLength);
-			combiner.combine(inBuffer, 0, blockLength);
-
-			// Decompress data and write it to output stream
-			decompressor.setInput(inBuffer, 0, blockLength);
-			try
-			{
-				while (true)
+				// Test whether task has been cancelled by a monitor
+				for (IProgressListener listener : progressListeners)
 				{
-					int outLength = decompressor.inflate(outBuffer);
-					if (outLength == 0)
+					if (listener.isTaskCancelled())
+						throw new TaskCancelledException();
+				}
+
+				// Read and decrypt block of data from input stream
+				int blockLength = (int)Math.min(length - offset, BUFFER_LENGTH);
+				read(input, inBuffer, 0, blockLength);
+				combiner.combine(inBuffer, 0, blockLength);
+
+				// Decompress data and write it to output stream
+				decompressor.setInput(inBuffer, 0, blockLength);
+				try
+				{
+					while (true)
 					{
-						if (decompressor.needsInput())
-							break;
-					}
-					else
-					{
-						hash.update(outBuffer, 0, outLength);
-						write(output, outBuffer, 0, outLength);
+						int outLength = decompressor.inflate(outBuffer);
+						if (outLength == 0)
+						{
+							if (decompressor.needsInput())
+								break;
+						}
+						else
+						{
+							hash.update(outBuffer, 0, outLength);
+							write(output, outBuffer, 0, outLength);
+						}
 					}
 				}
-			}
-			catch (DataFormatException e)
-			{
-				throw new InputException(ErrorId.INCORRECT_KEY);
-			}
+				catch (DataFormatException e)
+				{
+					throw new InputException(ErrorId.INCORRECT_KEY);
+				}
 
-			// Increment offset
-			offset += blockLength;
+				// Increment offset
+				offset += blockLength;
 
-			// Update progress of task
-			double progress = (double)offset / (double)length;
-			for (IProgressListener listener : progressListeners)
-				listener.setProgress(progress);
+				// Update progress of task
+				double progress = (double)offset / (double)length;
+				for (IProgressListener listener : progressListeners)
+					listener.setProgress(progress);
+			}
+		}
+		finally
+		{
+			decompressor.end();
 		}
 
 		// Skip second padding

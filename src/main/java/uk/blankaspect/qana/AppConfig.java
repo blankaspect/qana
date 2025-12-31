@@ -155,7 +155,6 @@ class AppConfig
 		String	SELECTION_BACKGROUND					= "selectionBackground";
 		String	SELECTION_TEXT							= "selectionText";
 		String	SHOW_FULL_PATHNAMES						= "showFullPathnames";
-		String	SHOW_UNIX_PATHNAMES						= "showUnixPathnames";
 		String	SIZE									= "size";
 		String	SOURCE									= "source";
 		String	SPLIT									= "split";
@@ -505,11 +504,12 @@ class AppConfig
 	private void updateConfigDir()
 	{
 		String pathname = (file == null) ? null : file.getParent();
-		pathname = (pathname == null) ? "." : PathnameUtils.toUnixStyle(pathname, true);
-		while (pathname.endsWith("/"))
+		if (pathname == null)
+			pathname = "." ;
+		while (pathname.endsWith(File.separator))
 			pathname = pathname.substring(0, pathname.length() - 1);
 
-		cpKeyDatabasePathname = new CPKeyDatabasePathname((pathname.equals(".") ? "" : pathname + "/")
+		cpKeyDatabasePathname = new CPKeyDatabasePathname((pathname.equals(".") ? "" : pathname + File.separator)
 																+ CPKeyDatabasePathname.DEFAULT_FILENAME);
 		cpSeedFileDirectoryPathname = new CPSeedFileDirectoryPathname(pathname);
 	}
@@ -677,70 +677,6 @@ class AppConfig
 ////////////////////////////////////////////////////////////////////////
 //  Member classes : inner classes
 ////////////////////////////////////////////////////////////////////////
-
-
-	// PROPERTY CLASS: SHOW UNIX PATHNAMES
-
-
-	private class CPShowUnixPathnames
-		extends Property.BooleanProperty
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private CPShowUnixPathnames()
-		{
-			super(concatenateKeys(Key.GENERAL, Key.SHOW_UNIX_PATHNAMES));
-			value = false;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//------------------------------------------------------------------
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//  Instance methods : associated methods in enclosing class
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-	public boolean isShowUnixPathnames()
-	{
-		return cpShowUnixPathnames.getValue();
-	}
-
-	//------------------------------------------------------------------
-
-	public void setShowUnixPathnames(boolean value)
-	{
-		cpShowUnixPathnames.setValue(value);
-	}
-
-	//------------------------------------------------------------------
-
-	public void addShowUnixPathnamesObserver(Property.IObserver observer)
-	{
-		cpShowUnixPathnames.addObserver(observer);
-	}
-
-	//------------------------------------------------------------------
-
-	public void removeShowUnixPathnamesObserver(Property.IObserver observer)
-	{
-		cpShowUnixPathnames.removeObserver(observer);
-	}
-
-	//------------------------------------------------------------------
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-//  Instance variables : associated variables in enclosing class
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-	private	CPShowUnixPathnames	cpShowUnixPathnames	= new CPShowUnixPathnames();
-
-	//==================================================================
 
 
 	// PROPERTY CLASS: SELECT TEXT ON FOCUS GAINED
@@ -2390,7 +2326,7 @@ class AppConfig
 
 		private CPKeyDatabasePathname()
 		{
-			this(Utils.getPathname(new File(Utils.getPropertiesPathname(), DEFAULT_FILENAME), true));
+			this(Utils.getPathname(new File(Utils.getPropertiesPathname(), DEFAULT_FILENAME)));
 		}
 
 		//--------------------------------------------------------------
@@ -2712,7 +2648,7 @@ class AppConfig
 
 		private CPSeedFileDirectoryPathname()
 		{
-			this(Utils.getPathname(new File(Utils.getPropertiesPathname()), true));
+			this(Utils.getPathname(new File(Utils.getPropertiesPathname())));
 		}
 
 		//--------------------------------------------------------------

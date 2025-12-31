@@ -233,17 +233,17 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Interleaves the bits of a 32-bit integer value.  The effect of this method can be reversed with the {@link
-	 * #deinterleave(int, int, int, int) deinterleave} method.
+	 * Interleaves the bits of a 32-bit integer value.  This method is the inverse of the {@link #deinterleave(int, int,
+	 * int, int) deinterleave} method.
 	 *
 	 * @param  value
 	 *           the value whose bits will be interleaved.
 	 * @param  startIndex
-	 *           the index of the bit of {@code value} at which the interleaving is to start.
+	 *           the index of the bit of the <b>output</b> value at which the interleaving is to start.
 	 * @param  length
 	 *           the length of {@code value} in bits.
 	 * @param  interval
-	 *           the interval between input bits.
+	 *           the interval between successive output bits.
 	 * @return the input value with its bits interleaved.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -274,13 +274,12 @@ public class BitUtils
 		// Interleave bits of input value
 		int outValue = 0;
 		int index = startIndex;
-		int mask = 1;
 		for (int i = 0; i < length; i++)
 		{
 			index %= length;
-			if ((value & 1 << index) != 0)
-				outValue |= mask;
-			mask <<= 1;
+			if ((value & 1) != 0)
+				outValue |= 1 << index;
+			value >>= 1;
 			index += interval;
 		}
 		return outValue;
@@ -289,17 +288,17 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Interleaves the bits of a 64-bit integer value.  The effect of this method can be reversed with the{@link
-	 * #deinterleave(long, int, int, int) deinterleave} method.
+	 * Interleaves the bits of a 64-bit integer value.  This method is the inverse of the {@link #deinterleave(long,
+	 * int, int, int) deinterleave} method.
 	 *
 	 * @param  value
 	 *           the value whose bits will be interleaved.
 	 * @param  startIndex
-	 *           the index of the bit of {@code value} at which the interleaving is to start.
+	 *           the index of the bit of the <b>output</b> value at which the interleaving is to start.
 	 * @param  length
 	 *           the length of {@code value} in bits.
 	 * @param  interval
-	 *           the interval between input bits.
+	 *           the interval between successive output bits.
 	 * @return the input value with its bits interleaved.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -330,13 +329,12 @@ public class BitUtils
 		// Interleave bits of input value
 		long outValue = 0;
 		int index = startIndex;
-		long mask = 1;
 		for (int i = 0; i < length; i++)
 		{
 			index %= length;
-			if ((value & 1L << index) != 0)
-				outValue |= mask;
-			mask <<= 1;
+			if ((value & 1) != 0)
+				outValue |= 1L << index;
+			value >>= 1;
 			index += interval;
 		}
 		return outValue;
@@ -345,17 +343,17 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Deinterleaves the bits of a 32-bit integer value.  This method reverses the effect of the {@link #interleave(int,
-	 * int, int, int) interleave} method.
+	 * Deinterleaves the bits of a 32-bit integer value.  This method is the inverse of the {@link #interleave(int, int,
+	 * int, int) interleave} method.
 	 *
 	 * @param  value
 	 *           the value whose bits will be deinterleaved.
 	 * @param  startIndex
-	 *           the index of the bit of the <b>output</b> value at which the deinterleaving is to start.
+	 *           the index of the bit of {@code value} at which the deinterleaving is to start.
 	 * @param  length
 	 *           the length of {@code value} in bits.
 	 * @param  interval
-	 *           the interval between output bits.
+	 *           the interval between successive input bits.
 	 * @return the input value with its bits deinterleaved.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -386,12 +384,13 @@ public class BitUtils
 		// Deinterleave bits of input value
 		int outValue = 0;
 		int index = startIndex;
+		int mask = 1;
 		for (int i = 0; i < length; i++)
 		{
 			index %= length;
-			if ((value & 1) != 0)
-				outValue |= 1 << index;
-			value >>= 1;
+			if ((value & 1 << index) != 0)
+				outValue |= mask;
+			mask <<= 1;
 			index += interval;
 		}
 		return outValue;
@@ -400,17 +399,17 @@ public class BitUtils
 	//------------------------------------------------------------------
 
 	/**
-	 * Deinterleaves the bits of a 64-bit integer value.  This method reverses the effect of the {@link
-	 * #interleave(long, int, int, int) interleave} method.
+	 * Deinterleaves the bits of a 64-bit integer value.  This method is the inverse of the {@link #interleave(long,
+	 * int, int, int) interleave} method.
 	 *
 	 * @param  value
 	 *           the value whose bits will be deinterleaved.
 	 * @param  startIndex
-	 *           the index of the bit of the <b>output</b> value at which the deinterleaving is to start.
+	 *           the index of the bit of {@code value} at which the deinterleaving is to start.
 	 * @param  length
 	 *           the length of {@code value} in bits.
 	 * @param  interval
-	 *           the interval between output bits.
+	 *           the interval between successive input bits.
 	 * @return the input value with its bits deinterleaved.
 	 * @throws IllegalArgumentException
 	 *           if
@@ -441,12 +440,13 @@ public class BitUtils
 		// Deinterleave bits of input value
 		long outValue = 0;
 		int index = startIndex;
+		long mask = 1;
 		for (int i = 0; i < length; i++)
 		{
 			index %= length;
-			if ((value & 1) != 0)
-				outValue |= 1L << index;
-			value >>= 1;
+			if ((value & 1L << index) != 0)
+				outValue |= mask;
+			mask <<= 1;
 			index += interval;
 		}
 		return outValue;

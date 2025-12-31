@@ -78,8 +78,6 @@ class OutputDirectoryDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	KEY	= OutputDirectoryDialog.class.getCanonicalName();
-
 	private static final	String	OUTPUT_DIRECTORY_STR	= "Output directory";
 	private static final	String	DIRECTORY_STR			= "Directory";
 	private static final	String	SELECT_STR				= "Select";
@@ -155,7 +153,6 @@ class OutputDirectoryDialog
 
 		// Panel: directory
 		directoryField = new FPathnameField(directory);
-		FPathnameField.addObserver(KEY, directoryField);
 		PathnamePanel directoryPanel = new PathnamePanel(directoryField, Command.CHOOSE_DIRECTORY, this);
 
 		gbc.gridx = 1;
@@ -393,8 +390,6 @@ class OutputDirectoryDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		setVisible(false);
 		dispose();

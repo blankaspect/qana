@@ -30,8 +30,6 @@ import javax.swing.JOptionPane;
 
 import uk.blankaspect.common.filesystem.PathnameUtils;
 
-import uk.blankaspect.common.misc.SystemUtils;
-
 import uk.blankaspect.ui.swing.dialog.FileMultipleSelectionDialog;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
@@ -88,29 +86,6 @@ class EraseDialog
 ////////////////////////////////////////////////////////////////////////
 //  Instance methods : overriding methods
 ////////////////////////////////////////////////////////////////////////
-
-	@Override
-	protected String getPathname(File file)
-	{
-		String pathname = super.getPathname(file);
-		if ((pathname != null) && AppConfig.INSTANCE.isShowUnixPathnames())
-		{
-			try
-			{
-				String userHome = SystemUtils.userHomeDirectoryPathname();
-				if ((userHome != null) && pathname.startsWith(userHome))
-					pathname = PathnameUtils.USER_HOME_PREFIX + pathname.substring(userHome.length());
-			}
-			catch (SecurityException e)
-			{
-				// ignore
-			}
-			pathname = pathname.replace(File.separatorChar, '/');
-		}
-		return pathname;
-	}
-
-	//------------------------------------------------------------------
 
 	@Override
 	protected boolean accept(List<String> pathnames)

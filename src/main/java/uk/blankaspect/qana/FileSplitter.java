@@ -328,11 +328,7 @@ class FileSplitter
 
 		private static String createFilename(Fortuna prng)
 		{
-			boolean caseChanged = NumberUtils.setLower();
-			String str = NumberUtils.bytesToHexString(prng.getRandomBytes(FILENAME_LENGTH / 2));
-			if (caseChanged)
-				NumberUtils.setUpper();
-			return str;
+			return NumberUtils.bytesToHexString(prng.getRandomBytes(FILENAME_LENGTH / 2));
 		}
 
 		//--------------------------------------------------------------

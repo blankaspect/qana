@@ -81,8 +81,6 @@ class JoinDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	KEY	= JoinDialog.class.getCanonicalName();
-
 	private static final	String	TITLE_STR					= "Join files";
 	private static final	String	INPUT_DIRECTORY_STR			= "Input directory";
 	private static final	String	OUTPUT_FILE_STR				= "Output file";
@@ -181,7 +179,6 @@ class JoinDialog
 		// Panel: input directory
 		inputDirectoryField = new FPathnameField(inputDirectory);
 		inputDirectoryField.getDocument().addDocumentListener(this);
-		FPathnameField.addObserver(KEY, inputDirectoryField);
 		PathnamePanel inDirectoryPanel = new PathnamePanel(inputDirectoryField,
 														   Command.CHOOSE_INPUT_DIRECTORY, this);
 
@@ -215,7 +212,6 @@ class JoinDialog
 		// Panel: output file
 		outputFileField = new FPathnameField(outputFile);
 		outputFileField.getDocument().addDocumentListener(this);
-		FPathnameField.addObserver(KEY, outputFileField);
 		PathnamePanel outputFilePanel = new PathnamePanel(outputFileField, Command.CHOOSE_OUTPUT_FILE,
 														  this);
 
@@ -533,8 +529,6 @@ class JoinDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		setVisible(false);
 		dispose();

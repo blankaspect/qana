@@ -97,8 +97,6 @@ class ConcealDialog
 	private static final	int		MAX_MAX_NUM_BITS		= 7;
 	private static final	int		DEFAULT_MAX_NUM_BITS	= 2;
 
-	private static final	String	KEY	= ConcealDialog.class.getCanonicalName();
-
 	private static final	String	FILE_STR					= "file";
 	private static final	String	TEXT_STR					= "text";
 	private static final	String	PAYLOAD_FILE_STR			= "Payload file";
@@ -237,7 +235,6 @@ class ConcealDialog
 			// Panel: payload file
 			payloadFileField = new FPathnameField(payloadFile);
 			payloadFileField.getDocument().addDocumentListener(this);
-			FPathnameField.addObserver(KEY, payloadFileField);
 			PathnamePanel payloadFilePanel = new PathnamePanel(payloadFileField, Command.CHOOSE_PAYLOAD_FILE, this);
 
 			gbc.gridx = 1;
@@ -272,7 +269,6 @@ class ConcealDialog
 		// Panel: carrier file
 		carrierFileField = new FPathnameField(carrierFile);
 		carrierFileField.getDocument().addDocumentListener(this);
-		FPathnameField.addObserver(KEY, carrierFileField);
 		carrierFilePanel = new PathnamePanel(carrierFileField, Command.CHOOSE_CARRIER_FILE, this);
 
 		gbc.gridx = 1;
@@ -321,7 +317,6 @@ class ConcealDialog
 		// Panel: output file
 		outputFileField = new FPathnameField(outputFile);
 		outputFileField.getDocument().addDocumentListener(this);
-		FPathnameField.addObserver(KEY, outputFileField);
 		PathnamePanel outputFilePanel = new PathnamePanel(outputFileField, Command.CHOOSE_OUTPUT_FILE, this);
 
 		gbc.gridx = 1;
@@ -810,8 +805,6 @@ class ConcealDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		setVisible(false);
 		dispose();

@@ -63,7 +63,6 @@ import uk.blankaspect.common.crypto.StreamEncrypter;
 
 import uk.blankaspect.common.exception.AppException;
 import uk.blankaspect.common.exception.CancelledException;
-import uk.blankaspect.common.exception.ExceptionUtils;
 import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
@@ -1233,9 +1232,6 @@ public class QanaApp
 		AppConfig config = AppConfig.INSTANCE;
 		config.read();
 
-		// Set UNIX style for pathnames in file exceptions
-		ExceptionUtils.setUnixStyle(config.isShowUnixPathnames());
-
 		// Set text antialiasing
 		TextRendering.setAntialiasing(config.getTextAntialiasing());
 
@@ -2346,7 +2342,6 @@ public class QanaApp
 		if (PreferencesDialog.showDialog(mainWindow))
 		{
 			AppConfig config = AppConfig.INSTANCE;
-			ExceptionUtils.setUnixStyle(config.isShowUnixPathnames());
 			prng.getEntropyAccumulator().setTimerDivisor(config.getEntropyTimerDivisor());
 			prng.getEntropyAccumulator().setSources(config.getEntropySourceParams());
 		}

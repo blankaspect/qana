@@ -2,7 +2,7 @@
 
 TaggedText.java
 
-Tagged text class.
+Class: tagged text.
 
 \*====================================================================*/
 
@@ -26,6 +26,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ import uk.blankaspect.ui.swing.font.FontStyle;
 //----------------------------------------------------------------------
 
 
-// TAGGED TEXT CLASS
+// CLASS: TAGGED TEXT
 
 
 public class TaggedText
@@ -74,779 +75,34 @@ public class TaggedText
 	}
 
 ////////////////////////////////////////////////////////////////////////
-//  Enumerated types
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// TAG
-
-
-	private enum Tag
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		FIELD               ('f'),
-		VERTICAL_PADDING    ('v'),
-		STYLE               ('s'),
-		HORIZONTAL_PADDING  ('h');
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Tag(char key)
-		{
-			this.key = key;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Class methods
-	////////////////////////////////////////////////////////////////////
-
-		private static Tag get(char key)
-		{
-			for (Tag value : values())
-			{
-				if (value.key == key)
-					return value;
-			}
-			return null;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	char	key;
-
-	}
-
-	//==================================================================
-
-
-	// ERROR IDENTIFIERS
-
-
-	private enum ErrorId
-		implements AppException.IId
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		TAG_IDENTIFIER_EXPECTED
-		("A tag identifier was expected."),
-
-		UNCLOSED_TAG
-		("The tag is not closed."),
-
-		TAG_INDEX_OUT_OF_BOUNDS
-		("The tag index must be between " + MIN_TAG_INDEX + " and " + MAX_TAG_INDEX + "."),
-
-		VERTICAL_PADDING_TAG_NOT_ALONE
-		("A vertical padding tag must be the only element in a line.");
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ErrorId(String message)
-		{
-			this.message = message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : AppException.IId interface
-	////////////////////////////////////////////////////////////////////
-
-		public String getMessage()
-		{
-			return message;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	message;
-
-	}
-
-	//==================================================================
-
-////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
-////////////////////////////////////////////////////////////////////////
-
-
-	// FIELD DEFINITION CLASS
-
-
-	public static class FieldDef
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	Alignment	DEFAULT_ALIGNMENT	= Alignment.LEFT;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public FieldDef()
-		{
-			this(-1, DEFAULT_ALIGNMENT);
-		}
-
-		//--------------------------------------------------------------
-
-		public FieldDef(int index)
-		{
-			this(index, DEFAULT_ALIGNMENT);
-		}
-
-		//--------------------------------------------------------------
-
-		public FieldDef(int       index,
-						Alignment alignment)
-		{
-			this.index = index;
-			this.alignment = alignment;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int			index;
-		private	Alignment	alignment;
-
-	}
-
-	//==================================================================
-
-
-	// VERTICAL PADDING DEFINITION CLASS
-
-
-	public static class VPaddingDef
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public VPaddingDef(int   index,
-						   float height)
-		{
-			this(index, height, null);
-		}
-
-		//--------------------------------------------------------------
-
-		public VPaddingDef(int   index,
-						   float height,
-						   Color lineColour)
-		{
-			this.index = index;
-			this.height = height;
-			this.lineColour = lineColour;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int		index;
-		private	float	height;
-		private	Color	lineColour;
-
-	}
-
-	//==================================================================
-
-
-	// STYLE DEFINITION CLASS
-
-
-	public static class StyleDef
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	FontStyle	DEFAULT_FONT_STYLE	= FontStyle.PLAIN;
-		private static final	Color		DEFAULT_COLOUR		= Color.BLACK;
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public StyleDef()
-		{
-			this(-1, DEFAULT_FONT_STYLE, DEFAULT_COLOUR);
-		}
-
-		//--------------------------------------------------------------
-
-		public StyleDef(int       index,
-						FontStyle fontStyle)
-		{
-			this(index, fontStyle, DEFAULT_COLOUR);
-		}
-
-		//--------------------------------------------------------------
-
-		public StyleDef(int   index,
-						Color colour)
-		{
-			this(index, DEFAULT_FONT_STYLE, colour);
-		}
-
-		//--------------------------------------------------------------
-
-		public StyleDef(int       index,
-						FontStyle fontStyle,
-						Color     colour)
-		{
-			this.index = index;
-			this.fontStyle = fontStyle;
-			this.colour = colour;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int			index;
-		private	FontStyle	fontStyle;
-		private	Color		colour;
-
-	}
-
-	//==================================================================
-
-
-	// HORIZONTAL PADDING DEFINITION CLASS
-
-
-	public static class HPaddingDef
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		public HPaddingDef(int   index,
-						   float width)
-		{
-			this.index = index;
-			this.width = width;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int		index;
-		private	float	width;
-
-	}
-
-	//==================================================================
-
-
-	// PARSE EXCEPTION CLASS
-
-
-	public static class ParseException
-		extends RuntimeException
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	String	INDEX_STR	= "Index ";
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private ParseException(AppException.IId id,
-							   int              index)
-		{
-			this.id = id;
-			this.index = index;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public String toString()
-		{
-			return getException().toString();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		public AppException.IId getId()
-		{
-			return id;
-		}
-
-		//--------------------------------------------------------------
-
-		public int getLineNum()
-		{
-			return lineNum;
-		}
-
-		//--------------------------------------------------------------
-
-		public int getIndex()
-		{
-			return index;
-		}
-
-		//--------------------------------------------------------------
-
-		public AppException getException()
-		{
-			StringBuilder buffer = new StringBuilder(32);
-			buffer.append(INDEX_STR);
-			if (lineNum > 0)
-			{
-				buffer.append(lineNum);
-				buffer.append(':');
-			}
-			buffer.append(index);
-			buffer.append(": ");
-			buffer.append(id.getMessage());
-
-			return new AppException(buffer.toString());
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	AppException.IId	id;
-		private	int					lineNum;
-		private	int					index;
-
-	}
-
-	//==================================================================
-
-
-	// UNDEFINED TAG EXCEPTION CLASS
-
-
-	public static class UndefinedTagException
-		extends RuntimeException
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private UndefinedTagException(Tag tag,
-									  int index)
-		{
-			super(TAG_STR + tag.key + index);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// DUPLICATE DEFINITION EXCEPTION CLASS
-
-
-	public static class DuplicateDefinitionException
-		extends RuntimeException
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private DuplicateDefinitionException(Tag tag,
-											 int index)
-		{
-			super(TAG_STR + tag.key + index);
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// SPAN CLASS
-
-
-	private static class Span
-		extends Field.Element
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Span(int    index,
-					 String str)
-		{
-			super(index);
-			this.str = str;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		protected Field.Element.Kind getKind()
-		{
-			return Field.Element.Kind.SPAN;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	String	str;
-
-	}
-
-	//==================================================================
-
-
-	// HORIZONTAL PADDING CLASS
-
-
-	private static class HPadding
-		extends Field.Element
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private HPadding(int index)
-		{
-			super(index);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		protected Field.Element.Kind getKind()
-		{
-			return Field.Element.Kind.PADDING;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// FIELD CLASS
-
-
-	private static class Field
-		extends Line.Element
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Member classes : non-inner classes
-	////////////////////////////////////////////////////////////////////
-
-
-		// FIELD ELEMENT CLASS
-
-
-		private static abstract class Element
-		{
-
-		////////////////////////////////////////////////////////////////
-		//  Enumerated types
-		////////////////////////////////////////////////////////////////
-
-			private enum Kind
-			{
-				SPAN,
-				PADDING
-			}
-
-		////////////////////////////////////////////////////////////////
-		//  Constructors
-		////////////////////////////////////////////////////////////////
-
-			protected Element(int index)
-			{
-				this.index = index;
-			}
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Abstract methods
-		////////////////////////////////////////////////////////////////
-
-			protected abstract Kind getKind();
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Instance variables
-		////////////////////////////////////////////////////////////////
-
-			protected	int	index;
-			protected	int	width;
-
-		}
-
-		//==============================================================
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Field()
-		{
-			this(-1);
-		}
-
-		//--------------------------------------------------------------
-
-		private Field(int index)
-		{
-			super(index);
-			elements = new ArrayList<>();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		protected Line.Element.Kind getKind()
-		{
-			return Line.Element.Kind.FIELD;
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private boolean isEmpty()
-		{
-			return elements.isEmpty();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int				elementWidth;
-		private	int				width;
-		private	List<Element>	elements;
-
-	}
-
-	//==================================================================
-
-
-	// VERTICAL PADDING CLASS
-
-
-	private static class VPadding
-		extends Line.Element
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private VPadding(int index)
-		{
-			super(index);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		protected Line.Element.Kind getKind()
-		{
-			return Line.Element.Kind.PADDING;
-		}
-
-		//--------------------------------------------------------------
-
-	}
-
-	//==================================================================
-
-
-	// LINE CLASS
-
-
-	private static class Line
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Member classes : non-inner classes
-	////////////////////////////////////////////////////////////////////
-
-
-		// LINE ELEMENT CLASS
-
-
-		private static abstract class Element
-		{
-
-		////////////////////////////////////////////////////////////////
-		//  Enumerated types
-		////////////////////////////////////////////////////////////////
-
-			private enum Kind
-			{
-				FIELD,
-				PADDING
-			}
-
-		////////////////////////////////////////////////////////////////
-		//  Constructors
-		////////////////////////////////////////////////////////////////
-
-			protected Element(int index)
-			{
-				this.index = index;
-			}
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Abstract methods
-		////////////////////////////////////////////////////////////////
-
-			protected abstract Kind getKind();
-
-			//----------------------------------------------------------
-
-		////////////////////////////////////////////////////////////////
-		//  Instance variables
-		////////////////////////////////////////////////////////////////
-
-			protected	int	index;
-			protected	int	height;
-
-		}
-
-		//==============================================================
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private Line()
-		{
-			elements = new ArrayList<>();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private boolean isEmpty()
-		{
-			return elements.isEmpty();
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int				width;
-		private	int				height;
-		private	List<Element>	elements;
-
-	}
-
-	//==================================================================
+	private	char						tagPrefix;
+	private	char						tagSuffix;
+	private	Map<Integer, FieldDef>		fieldDefs;
+	private	Map<Integer, StyleDef>		styleDefs;
+	private	Map<Integer, VPaddingDef>	vPaddingDefs;
+	private	Map<Integer, HPaddingDef>	hPaddingDefs;
+	private	int							width;
+	private	int							height;
+	private	List<Line>					lines;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
 ////////////////////////////////////////////////////////////////////////
 
-	public TaggedText(char tagDelimiter)
+	public TaggedText(
+		char	tagDelimiter)
 	{
 		this(tagDelimiter, tagDelimiter);
 	}
 
 	//------------------------------------------------------------------
 
-	public TaggedText(char tagPrefix,
-					  char tagSuffix)
+	public TaggedText(
+		char	tagPrefix,
+		char	tagSuffix)
 	{
 		this.tagPrefix = tagPrefix;
 		this.tagSuffix = tagSuffix;
@@ -864,12 +120,13 @@ public class TaggedText
 	 * @throws ParseException
 	 */
 
-	public TaggedText(char              tagDelimiter,
-					  List<FieldDef>    fieldDefs,
-					  List<StyleDef>    styleDefs,
-					  List<VPaddingDef> vPaddingDefs,
-					  List<HPaddingDef> hPaddingDefs,
-					  String...         strs)
+	public TaggedText(
+		char				tagDelimiter,
+		List<FieldDef>		fieldDefs,
+		List<StyleDef>		styleDefs,
+		List<VPaddingDef>	vPaddingDefs,
+		List<HPaddingDef>	hPaddingDefs,
+		String...			strs)
 	{
 		this(tagDelimiter, tagDelimiter, fieldDefs, styleDefs, vPaddingDefs, hPaddingDefs, strs);
 	}
@@ -881,13 +138,14 @@ public class TaggedText
 	 * @throws ParseException
 	 */
 
-	public TaggedText(char              tagPrefix,
-					  char              tagSuffix,
-					  List<FieldDef>    fieldDefs,
-					  List<StyleDef>    styleDefs,
-					  List<VPaddingDef> vPaddingDefs,
-					  List<HPaddingDef> hPaddingDefs,
-					  String...         strs)
+	public TaggedText(
+		char				tagPrefix,
+		char				tagSuffix,
+		List<FieldDef>		fieldDefs,
+		List<StyleDef>		styleDefs,
+		List<VPaddingDef>	vPaddingDefs,
+		List<HPaddingDef>	hPaddingDefs,
+		String...			strs)
 	{
 		this(tagPrefix, tagSuffix);
 		setFieldDefs(fieldDefs);
@@ -928,7 +186,8 @@ public class TaggedText
 	 * @throws DuplicateDefinitionException
 	 */
 
-	public void setFieldDefs(List<FieldDef> defs)
+	public void setFieldDefs(
+		List<FieldDef>	defs)
 	{
 		fieldDefs.clear();
 		if (defs != null)
@@ -949,7 +208,8 @@ public class TaggedText
 	 * @throws DuplicateDefinitionException
 	 */
 
-	public void setStyleDefs(List<StyleDef> defs)
+	public void setStyleDefs(
+		List<StyleDef>	defs)
 	{
 		styleDefs.clear();
 		if (defs != null)
@@ -970,7 +230,8 @@ public class TaggedText
 	 * @throws DuplicateDefinitionException
 	 */
 
-	public void setVPaddingDefs(List<VPaddingDef> defs)
+	public void setVPaddingDefs(
+		List<VPaddingDef>	defs)
 	{
 		vPaddingDefs.clear();
 		if (defs != null)
@@ -991,7 +252,8 @@ public class TaggedText
 	 * @throws DuplicateDefinitionException
 	 */
 
-	public void setHPaddingDefs(List<HPaddingDef> defs)
+	public void setHPaddingDefs(
+		List<HPaddingDef>	defs)
 	{
 		hPaddingDefs.clear();
 		if (defs != null)
@@ -1012,7 +274,8 @@ public class TaggedText
 	 * @throws ParseException
 	 */
 
-	public void parse(String... strs)
+	public void parse(
+		String...	strs)
 	{
 		// Create list of lines
 		List<String> inLines = new ArrayList<>();
@@ -1041,7 +304,8 @@ public class TaggedText
 	 * @throws UndefinedTagException
 	 */
 
-	public void update(Component component)
+	public void update(
+		Component	component)
 	{
 		update(component, null);
 	}
@@ -1052,8 +316,9 @@ public class TaggedText
 	 * @throws UndefinedTagException
 	 */
 
-	public void update(Component component,
-					   Font      font)
+	public void update(
+		Component	component,
+		Font		font)
 	{
 		Graphics gr = component.getGraphics();
 		if (gr == null)
@@ -1082,7 +347,8 @@ public class TaggedText
 	 * @throws UndefinedTagException
 	 */
 
-	public void update(Graphics gr)
+	public void update(
+		Graphics	gr)
 	{
 		update(gr, null);
 	}
@@ -1093,8 +359,9 @@ public class TaggedText
 	 * @throws UndefinedTagException
 	 */
 
-	public void update(Graphics gr,
-					   Font     font)
+	public void update(
+		Graphics	gr,
+		Font		font)
 	{
 		// Create copy of graphics context
 		gr = gr.create();
@@ -1119,9 +386,10 @@ public class TaggedText
 
 	//------------------------------------------------------------------
 
-	public void draw(Graphics gr,
-					 int      verticalMargin,
-					 int      horizontalMargin)
+	public void draw(
+		Graphics	gr,
+		int			verticalMargin,
+		int			horizontalMargin)
 	{
 		// Create map of fonts for styles
 		Font font = gr.getFont();
@@ -1151,8 +419,9 @@ public class TaggedText
 					{
 						Field field = (Field)lineElement;
 						int x = x0;
-						FieldDef fieldDef = (lineElement.index < 0) ? new FieldDef()
-																	: fieldDefs.get(lineElement.index);
+						FieldDef fieldDef = (lineElement.index < 0)
+													? new FieldDef()
+													: fieldDefs.get(lineElement.index);
 						if (fieldDef != null)
 						{
 							switch (fieldDef.alignment)
@@ -1174,8 +443,8 @@ public class TaggedText
 								if (element.getKind() == Field.Element.Kind.SPAN)
 								{
 									StyleDef styleDef = (element.index < 0)
-																		? new StyleDef()
-																		: styleDefs.get(element.index);
+																? new StyleDef()
+																: styleDefs.get(element.index);
 									if (styleDef != null)
 									{
 										gr.setFont(fontMap.get(styleDef.fontStyle));
@@ -1213,7 +482,8 @@ public class TaggedText
 	 * @throws ParseException
 	 */
 
-	private Line parseLine(String str)
+	private Line parseLine(
+		String	str)
 	{
 		Line line = new Line();
 		Field field = new Field();
@@ -1311,8 +581,10 @@ public class TaggedText
 
 						case VERTICAL_PADDING:
 							if (!line.isEmpty())
+							{
 								throw new ParseException(ErrorId.VERTICAL_PADDING_TAG_NOT_ALONE,
 														 index - buffer.length());
+							}
 							line.elements.add(new VPadding(tagIndex));
 							break;
 
@@ -1342,7 +614,8 @@ public class TaggedText
 	 * @throws UndefinedTagException
 	 */
 
-	private void setDimensions(Map<FontStyle, FontMetrics> fontMetricsMap)
+	private void setDimensions(
+		Map<FontStyle, FontMetrics>	fontMetricsMap)
 	{
 		// Set widths and heights of field elements and line elements
 		int lineHeight = fontMetricsMap.get(FontStyle.PLAIN).getHeight();
@@ -1372,12 +645,12 @@ public class TaggedText
 								case SPAN:
 								{
 									StyleDef styleDef = (fieldElement.index < 0)
-																	? new StyleDef()
-																	: styleDefs.get(fieldElement.index);
+																? new StyleDef()
+																: styleDefs.get(fieldElement.index);
 									if (styleDef == null)
 										throw new UndefinedTagException(Tag.STYLE, fieldElement.index);
-									fieldElement.width = fontMetricsMap.get(styleDef.fontStyle).
-																	stringWidth(((Span)fieldElement).str);
+									fieldElement.width = fontMetricsMap.get(styleDef.fontStyle)
+															.stringWidth(((Span)fieldElement).str);
 									break;
 								}
 
@@ -1385,8 +658,7 @@ public class TaggedText
 								{
 									HPaddingDef paddingDef = hPaddingDefs.get(fieldElement.index);
 									if (paddingDef == null)
-										throw new UndefinedTagException(Tag.HORIZONTAL_PADDING,
-																		fieldElement.index);
+										throw new UndefinedTagException(Tag.HORIZONTAL_PADDING, fieldElement.index);
 									fieldElement.width = (int)Math.round(paddingDef.width * (float)em);
 									break;
 								}
@@ -1441,18 +713,785 @@ public class TaggedText
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Enumerated types
 ////////////////////////////////////////////////////////////////////////
 
-	private	char						tagPrefix;
-	private	char						tagSuffix;
-	private	Map<Integer, FieldDef>		fieldDefs;
-	private	Map<Integer, StyleDef>		styleDefs;
-	private	Map<Integer, VPaddingDef>	vPaddingDefs;
-	private	Map<Integer, HPaddingDef>	hPaddingDefs;
-	private	int							width;
-	private	int							height;
-	private	List<Line>					lines;
+
+	// ENUMERATION: TAGS
+
+
+	private enum Tag
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		FIELD               ('f'),
+		VERTICAL_PADDING    ('v'),
+		STYLE               ('s'),
+		HORIZONTAL_PADDING  ('h');
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	char	key;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Tag(
+			char	key)
+		{
+			this.key = key;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Class methods
+	////////////////////////////////////////////////////////////////////
+
+		private static Tag get(
+			char	key)
+		{
+			return Arrays.stream(values()).filter(value -> value.key == key).findFirst().orElse(null);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// ENUMERATION: ERROR IDENTIFIERS
+
+
+	private enum ErrorId
+		implements AppException.IId
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		TAG_IDENTIFIER_EXPECTED
+		("A tag identifier was expected."),
+
+		UNCLOSED_TAG
+		("The tag is not closed."),
+
+		TAG_INDEX_OUT_OF_BOUNDS
+		("The tag index must be between " + MIN_TAG_INDEX + " and " + MAX_TAG_INDEX + "."),
+
+		VERTICAL_PADDING_TAG_NOT_ALONE
+		("A vertical padding tag must be the only element in a line.");
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	message;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ErrorId(
+			String	message)
+		{
+			this.message = message;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : AppException.IId interface
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String getMessage()
+		{
+			return message;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+////////////////////////////////////////////////////////////////////////
+//  Member classes : non-inner classes
+////////////////////////////////////////////////////////////////////////
+
+
+	// CLASS: FIELD DEFINITION
+
+
+	public static class FieldDef
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	Alignment	DEFAULT_ALIGNMENT	= Alignment.LEFT;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int			index;
+		private	Alignment	alignment;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public FieldDef()
+		{
+			this(-1, DEFAULT_ALIGNMENT);
+		}
+
+		//--------------------------------------------------------------
+
+		public FieldDef(
+			int	index)
+		{
+			this(index, DEFAULT_ALIGNMENT);
+		}
+
+		//--------------------------------------------------------------
+
+		public FieldDef(
+			int			index,
+			Alignment	alignment)
+		{
+			this.index = index;
+			this.alignment = alignment;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: HORIZONTAL-PADDING DEFINITION
+
+
+	public static class HPaddingDef
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int		index;
+		private	float	width;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public HPaddingDef(
+			int		index,
+			float	width)
+		{
+			this.index = index;
+			this.width = width;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: VERTICAL-PADDING DEFINITION
+
+
+	public static class VPaddingDef
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int		index;
+		private	float	height;
+		private	Color	lineColour;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public VPaddingDef(
+			int		index,
+			float	height)
+		{
+			this(index, height, null);
+		}
+
+		//--------------------------------------------------------------
+
+		public VPaddingDef(
+			int		index,
+			float	height,
+			Color	lineColour)
+		{
+			this.index = index;
+			this.height = height;
+			this.lineColour = lineColour;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: STYLE DEFINITION
+
+
+	public static class StyleDef
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	FontStyle	DEFAULT_FONT_STYLE	= FontStyle.PLAIN;
+		private static final	Color		DEFAULT_COLOUR		= Color.BLACK;
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int			index;
+		private	FontStyle	fontStyle;
+		private	Color		colour;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		public StyleDef()
+		{
+			this(-1, DEFAULT_FONT_STYLE, DEFAULT_COLOUR);
+		}
+
+		//--------------------------------------------------------------
+
+		public StyleDef(
+			int			index,
+			FontStyle	fontStyle)
+		{
+			this(index, fontStyle, DEFAULT_COLOUR);
+		}
+
+		//--------------------------------------------------------------
+
+		public StyleDef(
+			int		index,
+			Color	colour)
+		{
+			this(index, DEFAULT_FONT_STYLE, colour);
+		}
+
+		//--------------------------------------------------------------
+
+		public StyleDef(
+			int			index,
+			FontStyle	fontStyle,
+			Color		colour)
+		{
+			this.index = index;
+			this.fontStyle = fontStyle;
+			this.colour = colour;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: PARSE EXCEPTION
+
+
+	public static class ParseException
+		extends RuntimeException
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	String	INDEX_STR	= "Index ";
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	AppException.IId	id;
+		private	int					lineNum;
+		private	int					index;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private ParseException(
+			AppException.IId	id,
+			int					index)
+		{
+			this.id = id;
+			this.index = index;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public String toString()
+		{
+			return getException().toString();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		public AppException.IId getId()
+		{
+			return id;
+		}
+
+		//--------------------------------------------------------------
+
+		public int getLineNum()
+		{
+			return lineNum;
+		}
+
+		//--------------------------------------------------------------
+
+		public int getIndex()
+		{
+			return index;
+		}
+
+		//--------------------------------------------------------------
+
+		public AppException getException()
+		{
+			StringBuilder buffer = new StringBuilder(32);
+			buffer.append(INDEX_STR);
+			if (lineNum > 0)
+			{
+				buffer.append(lineNum);
+				buffer.append(':');
+			}
+			buffer.append(index);
+			buffer.append(": ");
+			buffer.append(id.getMessage());
+
+			return new AppException(buffer.toString());
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: 'UNDEFINED TAG' EXCEPTION
+
+
+	public static class UndefinedTagException
+		extends RuntimeException
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private UndefinedTagException(
+			Tag	tag,
+			int	index)
+		{
+			super(TAG_STR + tag.key + index);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: 'DUPLICATE DEFINITION' EXCEPTION
+
+
+	public static class DuplicateDefinitionException
+		extends RuntimeException
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private DuplicateDefinitionException(
+			Tag	tag,
+			int	index)
+		{
+			super(TAG_STR + tag.key + index);
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: SPAN
+
+
+	private static class Span
+		extends Field.Element
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	String	str;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Span(
+			int		index,
+			String	str)
+		{
+			super(index);
+			this.str = str;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected Field.Element.Kind getKind()
+		{
+			return Field.Element.Kind.SPAN;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: HORIZONTAL PADDING
+
+
+	private static class HPadding
+		extends Field.Element
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private HPadding(
+			int	index)
+		{
+			super(index);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected Field.Element.Kind getKind()
+		{
+			return Field.Element.Kind.PADDING;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: VERTICAL PADDING
+
+
+	private static class VPadding
+		extends Line.Element
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private VPadding(
+			int	index)
+		{
+			super(index);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected Line.Element.Kind getKind()
+		{
+			return Line.Element.Kind.PADDING;
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: FIELD
+
+
+	private static class Field
+		extends Line.Element
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int				elementWidth;
+		private	int				width;
+		private	List<Element>	elements;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Field()
+		{
+			this(-1);
+		}
+
+		//--------------------------------------------------------------
+
+		private Field(
+			int	index)
+		{
+			super(index);
+			elements = new ArrayList<>();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		protected Line.Element.Kind getKind()
+		{
+			return Line.Element.Kind.FIELD;
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private boolean isEmpty()
+		{
+			return elements.isEmpty();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Member classes : non-inner classes
+	////////////////////////////////////////////////////////////////////
+
+
+		// CLASS: FIELD ELEMENT
+
+
+		private static abstract class Element
+		{
+
+		////////////////////////////////////////////////////////////////
+		//  Constants
+		////////////////////////////////////////////////////////////////
+
+			private enum Kind
+			{
+				SPAN,
+				PADDING
+			}
+
+		////////////////////////////////////////////////////////////////
+		//  Instance variables
+		////////////////////////////////////////////////////////////////
+
+			protected	int	index;
+			protected	int	width;
+
+		////////////////////////////////////////////////////////////////
+		//  Constructors
+		////////////////////////////////////////////////////////////////
+
+			protected Element(
+				int	index)
+			{
+				this.index = index;
+			}
+
+			//----------------------------------------------------------
+
+		////////////////////////////////////////////////////////////////
+		//  Abstract methods
+		////////////////////////////////////////////////////////////////
+
+			protected abstract Kind getKind();
+
+			//----------------------------------------------------------
+
+		}
+
+		//==============================================================
+
+	}
+
+	//==================================================================
+
+
+	// CLASS: LINE
+
+
+	private static class Line
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int				width;
+		private	int				height;
+		private	List<Element>	elements;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private Line()
+		{
+			elements = new ArrayList<>();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private boolean isEmpty()
+		{
+			return elements.isEmpty();
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Member classes : non-inner classes
+	////////////////////////////////////////////////////////////////////
+
+
+		// CLASS: LINE ELEMENT
+
+
+		private static abstract class Element
+		{
+
+		////////////////////////////////////////////////////////////////
+		//  Constants
+		////////////////////////////////////////////////////////////////
+
+			private enum Kind
+			{
+				FIELD,
+				PADDING
+			}
+
+		////////////////////////////////////////////////////////////////
+		//  Instance variables
+		////////////////////////////////////////////////////////////////
+
+			protected	int	index;
+			protected	int	height;
+
+		////////////////////////////////////////////////////////////////
+		//  Constructors
+		////////////////////////////////////////////////////////////////
+
+			protected Element(
+				int	index)
+			{
+				this.index = index;
+			}
+
+			//----------------------------------------------------------
+
+		////////////////////////////////////////////////////////////////
+		//  Abstract methods
+		////////////////////////////////////////////////////////////////
+
+			protected abstract Kind getKind();
+
+			//----------------------------------------------------------
+
+		}
+
+		//==============================================================
+
+	}
+
+	//==================================================================
 
 }
 

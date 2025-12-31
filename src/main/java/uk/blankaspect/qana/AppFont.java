@@ -99,7 +99,7 @@ public enum AppFont
 
 	//------------------------------------------------------------------
 
-	public static void setFontExs(FontEx[] fontExs)
+	public static void setFontExs(FontEx... fontExs)
 	{
 		for (AppFont appFont : values())
 		{

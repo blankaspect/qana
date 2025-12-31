@@ -131,8 +131,6 @@ class PreferencesDialog
 //  Constants
 ////////////////////////////////////////////////////////////////////////
 
-	private static final	String	KEY	= PreferencesDialog.class.getCanonicalName();
-
 	// Main panel
 	private static final	String	TITLE_STR				= "Preferences";
 	private static final	String	SAVE_CONFIGURATION_STR	= "Save configuration";
@@ -142,7 +140,6 @@ class PreferencesDialog
 	// General panel
 	private static final	int		MAX_EDIT_LIST_LENGTH_FIELD_LENGTH	= 4;
 
-	private static final	String	SHOW_UNIX_PATHNAMES_STR			= "Display UNIX-style pathnames";
 	private static final	String	SELECT_TEXT_ON_FOCUS_GAINED_STR	= "Select text when focus is gained";
 	private static final	String	SAVE_MAIN_WINDOW_LOCATION_STR	= "Save location of main window";
 	private static final	String	SAVE_MAIN_WINDOW_SIZE_STR		= "Save size of main window";
@@ -259,7 +256,6 @@ class PreferencesDialog
 	private	JTabbedPane									tabbedPanel;
 
 	// General panel
-	private	BooleanComboBox								showUnixPathnamesComboBox;
 	private	BooleanComboBox								selectTextOnFocusGainedComboBox;
 	private	BooleanComboBox								saveMainWindowLocationComboBox;
 	private	BooleanComboBox								saveMainWindowSizeComboBox;
@@ -714,8 +710,6 @@ class PreferencesDialog
 
 	private void onClose()
 	{
-		FPathnameField.removeObservers(KEY);
-
 		location = getLocation();
 		tabIndex = tabbedPanel.getSelectedIndex();
 		kdfUse = kdfParameterPanel.getKdfUse();
@@ -738,36 +732,6 @@ class PreferencesDialog
 		int gridY = 0;
 
 		AppConfig config = AppConfig.INSTANCE;
-
-		// Label: show UNIX pathnames
-		JLabel showUnixPathnamesLabel = new FLabel(SHOW_UNIX_PATHNAMES_STR);
-
-		gbc.gridx = 0;
-		gbc.gridy = gridY;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.weightx = 0.0;
-		gbc.weighty = 0.0;
-		gbc.anchor = GridBagConstraints.LINE_END;
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.insets = AppConstants.COMPONENT_INSETS;
-		gridBag.setConstraints(showUnixPathnamesLabel, gbc);
-		controlPanel.add(showUnixPathnamesLabel);
-
-		// Combo box: show UNIX pathnames
-		showUnixPathnamesComboBox = new BooleanComboBox(config.isShowUnixPathnames());
-
-		gbc.gridx = 1;
-		gbc.gridy = gridY++;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.weightx = 0.0;
-		gbc.weighty = 0.0;
-		gbc.anchor = GridBagConstraints.LINE_START;
-		gbc.fill = GridBagConstraints.NONE;
-		gbc.insets = AppConstants.COMPONENT_INSETS;
-		gridBag.setConstraints(showUnixPathnamesComboBox, gbc);
-		controlPanel.add(showUnixPathnamesComboBox);
 
 		// Label: select text on focus gained
 		JLabel selectTextOnFocusGainedLabel = new FLabel(SELECT_TEXT_ON_FOCUS_GAINED_STR);
@@ -2056,7 +2020,6 @@ class PreferencesDialog
 
 		// Panel: key database
 		keyDatabaseField = new FPathnameField(config.getKeyDatabasePathname());
-		FPathnameField.addObserver(KEY, keyDatabaseField);
 		JPanel keyDatabasePanel = new PathnamePanel(keyDatabaseField, Command.CHOOSE_KEY_DATABASE, this);
 
 		gbc.gridx = 1;
@@ -2179,7 +2142,6 @@ class PreferencesDialog
 
 		// Panel: seed-file directory
 		seedFileDirectoryField = new FPathnameField(config.getSeedFileDirectoryPathname());
-		FPathnameField.addObserver(KEY, seedFileDirectoryField);
 		JPanel seedFileDirectoryPanel =
 				new PathnamePanel(seedFileDirectoryField, Command.CHOOSE_SEED_FILE_DIRECTORY, this);
 
@@ -2702,7 +2664,6 @@ class PreferencesDialog
 	private void setPreferencesGeneral()
 	{
 		AppConfig config = AppConfig.INSTANCE;
-		config.setShowUnixPathnames(showUnixPathnamesComboBox.getSelectedValue());
 		config.setSelectTextOnFocusGained(selectTextOnFocusGainedComboBox.getSelectedValue());
 		if (saveMainWindowLocationComboBox.getSelectedValue() != config.isMainWindowLocation())
 			config.setMainWindowLocation(saveMainWindowLocationComboBox.getSelectedValue() ? new Point() : null);

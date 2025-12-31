@@ -2,7 +2,7 @@
 
 IEntropyConsumer.java
 
-Entropy consumer interface.
+Interface: entropy consumer.
 
 \*====================================================================*/
 
@@ -15,7 +15,7 @@ package uk.blankaspect.common.crypto;
 //----------------------------------------------------------------------
 
 
-// ENTROPY CONSUMER INTERFACE
+// INTERFACE: ENTROPY CONSUMER
 
 
 /**
@@ -32,24 +32,30 @@ public interface IEntropyConsumer
 	/**
 	 * Adds a specified byte of random data to this entropy consumer.
 	 *
-	 * @param b  the byte of random data that will be added to this entropy consumer.
+	 * @param b
+	 *          the byte of random data that will be added to this entropy consumer.
 	 */
 
-	void addRandomByte(byte b);
+	void addRandomByte(
+		byte	b);
 
 	//------------------------------------------------------------------
 
 	/**
 	 * Adds a specified number of bytes of random data to this entropy consumer.
 	 *
-	 * @param data    the random data that will be added to this entropy consumer.
-	 * @param offset  the offset of the start of the random data in {@code data}.
-	 * @param length  the number of bytes of random data to add.
+	 * @param data
+	 *          the random data that will be added to this entropy consumer.
+	 * @param offset
+	 *          the offset of the start of the random data in {@code data}.
+	 * @param length
+	 *          the number of bytes of random data to add.
 	 */
 
-	void addRandomBytes(byte[] data,
-						int    offset,
-						int    length);
+	void addRandomBytes(
+		byte[]	data,
+		int		offset,
+		int		length);
 
 	//------------------------------------------------------------------
 
