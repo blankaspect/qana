@@ -232,8 +232,8 @@ public class RandomDataFile
 		try
 		{
 			BinaryFile binaryFile = new BinaryFile(file);
-			if (progressView instanceof IProgressListener)
-				binaryFile.addProgressListener((IProgressListener)progressView);
+			if (progressView instanceof IProgressListener progressListener)
+				binaryFile.addProgressListener(progressListener);
 			parse(binaryFile.read());
 		}
 		catch (AppException e)
@@ -275,8 +275,8 @@ public class RandomDataFile
 
 		// Write file
 		BinaryFile binaryFile = new BinaryFile(file, dataBlocks);
-		if (progressView instanceof IProgressListener)
-			binaryFile.addProgressListener((IProgressListener)progressView);
+		if (progressView instanceof IProgressListener progressListener)
+			binaryFile.addProgressListener(progressListener);
 		binaryFile.write(FileWritingMode.USE_TEMP_FILE);
 	}
 

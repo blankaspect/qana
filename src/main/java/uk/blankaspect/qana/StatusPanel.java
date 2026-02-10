@@ -70,157 +70,14 @@ class StatusPanel
 	};
 
 ////////////////////////////////////////////////////////////////////////
-//  Member classes : non-inner classes
+//  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-
-	// STATUS FIELD CLASS
-
-
-	private static class StatusField
-		extends JComponent
-	{
-
-	////////////////////////////////////////////////////////////////////
-	//  Constants
-	////////////////////////////////////////////////////////////////////
-
-		private static final	int	VERTICAL_MARGIN		= 1;
-		private static final	int	HORIZONTAL_MARGIN	= 6;
-		private static final	int	SEPARATOR_WIDTH		= 1;
-
-		private static final	Color	LINE_COLOUR	= Color.GRAY;
-
-		private static final	String	PROTOTYPE_STR	= " ".repeat(4);
-
-	////////////////////////////////////////////////////////////////////
-	//  Constructors
-	////////////////////////////////////////////////////////////////////
-
-		private StatusField(boolean hasIcon)
-		{
-			// Set font
-			AppFont.MAIN.apply(this);
-
-			// Initialise instance variables
-			FontMetrics fontMetrics = getFontMetrics(getFont());
-			preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + fontMetrics.stringWidth(PROTOTYPE_STR);
-			if (hasIcon)
-			{
-				for (ImageIcon icon : ICONS)
-				{
-					int iconHeight = icon.getIconHeight();
-					if (preferredHeight < iconHeight)
-						preferredHeight = iconHeight;
-				}
-			}
-			else
-				preferredHeight = fontMetrics.getAscent() + fontMetrics.getDescent();
-			preferredHeight += 2 * VERTICAL_MARGIN;
-
-			// Set properties
-			setOpaque(true);
-			setFocusable(false);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods : overriding methods
-	////////////////////////////////////////////////////////////////////
-
-		@Override
-		public Dimension getPreferredSize()
-		{
-			return new Dimension(preferredWidth, preferredHeight);
-		}
-
-		//--------------------------------------------------------------
-
-		@Override
-		protected void paintComponent(Graphics gr)
-		{
-			// Create copy of graphics context
-			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
-
-			// Get dimensions
-			int width = getWidth();
-			int height = getHeight();
-
-			// Draw background
-			gr2d.setColor(getBackground());
-			gr2d.fillRect(0, 0, width, height);
-
-			// Draw icon
-			if (icon != null)
-				gr2d.drawImage(icon.getImage(), HORIZONTAL_MARGIN, (getHeight() - icon.getIconHeight()) / 2, null);
-
-			// Draw text
-			else if (text != null)
-			{
-				// Set rendering hints for text antialiasing and fractional metrics
-				TextRendering.setHints(gr2d);
-
-				// Draw text
-				FontMetrics fontMetrics = gr2d.getFontMetrics();
-				int maxWidth = width - 2 * HORIZONTAL_MARGIN - SEPARATOR_WIDTH;
-				String str = TextUtils.getLimitedWidthString(text, fontMetrics, maxWidth, TextUtils.RemovalMode.END);
-				gr2d.setColor(AppConfig.INSTANCE.getStatusTextColour());
-				gr2d.drawString(str, HORIZONTAL_MARGIN, VERTICAL_MARGIN + fontMetrics.getAscent());
-			}
-
-			// Draw separator
-			int x = width - SEPARATOR_WIDTH;
-			gr2d.setColor(LINE_COLOUR);
-			gr2d.drawLine(x, 0, x, height - 1);
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance methods
-	////////////////////////////////////////////////////////////////////
-
-		private void setIcon(ImageIcon icon)
-		{
-			if (this.icon != icon)
-			{
-				this.icon = icon;
-				preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + icon.getIconWidth();
-				revalidate();
-				repaint();
-			}
-		}
-
-		//--------------------------------------------------------------
-
-		private void setText(String text)
-		{
-			if (!Objects.equals(text, this.text))
-			{
-				this.text = text;
-				int textWidth = getFontMetrics(getFont()).
-													stringWidth((text == null) ? PROTOTYPE_STR : text);
-				preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + textWidth;
-				revalidate();
-				repaint();
-			}
-		}
-
-		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	int			preferredWidth;
-		private	int			preferredHeight;
-		private	ImageIcon	icon;
-		private	String		text;
-
-	}
-
-	//==================================================================
+	private	StatusField	prngCanReseedField;
+	private	StatusField	cipherField;
+	private	StatusField	globalKeyField;
+	private	StatusField	documentKeyField;
+	private	StatusField	documentInfoField;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -400,14 +257,156 @@ class StatusPanel
 	//------------------------------------------------------------------
 
 ////////////////////////////////////////////////////////////////////////
-//  Instance variables
+//  Member classes : non-inner classes
 ////////////////////////////////////////////////////////////////////////
 
-	private	StatusField	prngCanReseedField;
-	private	StatusField	cipherField;
-	private	StatusField	globalKeyField;
-	private	StatusField	documentKeyField;
-	private	StatusField	documentInfoField;
+
+	// STATUS FIELD CLASS
+
+
+	private static class StatusField
+		extends JComponent
+	{
+
+	////////////////////////////////////////////////////////////////////
+	//  Constants
+	////////////////////////////////////////////////////////////////////
+
+		private static final	int	VERTICAL_MARGIN		= 1;
+		private static final	int	HORIZONTAL_MARGIN	= 6;
+		private static final	int	SEPARATOR_WIDTH		= 1;
+
+		private static final	Color	LINE_COLOUR	= Color.GRAY;
+
+		private static final	String	PROTOTYPE_TEXT	= " ".repeat(4);
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance variables
+	////////////////////////////////////////////////////////////////////
+
+		private	int			preferredWidth;
+		private	int			preferredHeight;
+		private	ImageIcon	icon;
+		private	String		text;
+
+	////////////////////////////////////////////////////////////////////
+	//  Constructors
+	////////////////////////////////////////////////////////////////////
+
+		private StatusField(boolean hasIcon)
+		{
+			// Set font
+			AppFont.MAIN.apply(this);
+
+			// Initialise instance variables
+			FontMetrics fontMetrics = getFontMetrics(getFont());
+			preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + fontMetrics.stringWidth(PROTOTYPE_TEXT);
+			if (hasIcon)
+			{
+				for (ImageIcon icon : ICONS)
+				{
+					int iconHeight = icon.getIconHeight();
+					if (preferredHeight < iconHeight)
+						preferredHeight = iconHeight;
+				}
+			}
+			else
+				preferredHeight = fontMetrics.getAscent() + fontMetrics.getDescent();
+			preferredHeight += 2 * VERTICAL_MARGIN;
+
+			// Set properties
+			setOpaque(true);
+			setFocusable(false);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods : overriding methods
+	////////////////////////////////////////////////////////////////////
+
+		@Override
+		public Dimension getPreferredSize()
+		{
+			return new Dimension(preferredWidth, preferredHeight);
+		}
+
+		//--------------------------------------------------------------
+
+		@Override
+		protected void paintComponent(Graphics gr)
+		{
+			// Create copy of graphics context
+			Graphics2D gr2d = GuiUtils.copyGraphicsContext(gr);
+
+			// Get dimensions
+			int width = getWidth();
+			int height = getHeight();
+
+			// Draw background
+			gr2d.setColor(getBackground());
+			gr2d.fillRect(0, 0, width, height);
+
+			// Draw icon
+			if (icon != null)
+				gr2d.drawImage(icon.getImage(), HORIZONTAL_MARGIN, (getHeight() - icon.getIconHeight()) / 2, null);
+
+			// Draw text
+			else if (text != null)
+			{
+				// Set rendering hints for text antialiasing and fractional metrics
+				TextRendering.setHints(gr2d);
+
+				// Draw text
+				FontMetrics fontMetrics = gr2d.getFontMetrics();
+				int maxWidth = width - 2 * HORIZONTAL_MARGIN - SEPARATOR_WIDTH;
+				String str = TextUtils.getLimitedWidthString(text, fontMetrics, maxWidth, TextUtils.RemovalMode.END);
+				gr2d.setColor(AppConfig.INSTANCE.getStatusTextColour());
+				gr2d.drawString(str, HORIZONTAL_MARGIN, VERTICAL_MARGIN + fontMetrics.getAscent());
+			}
+
+			// Draw separator
+			int x = width - SEPARATOR_WIDTH;
+			gr2d.setColor(LINE_COLOUR);
+			gr2d.drawLine(x, 0, x, height - 1);
+		}
+
+		//--------------------------------------------------------------
+
+	////////////////////////////////////////////////////////////////////
+	//  Instance methods
+	////////////////////////////////////////////////////////////////////
+
+		private void setIcon(ImageIcon icon)
+		{
+			if (this.icon != icon)
+			{
+				this.icon = icon;
+				preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + icon.getIconWidth();
+				revalidate();
+				repaint();
+			}
+		}
+
+		//--------------------------------------------------------------
+
+		private void setText(String text)
+		{
+			if (!Objects.equals(text, this.text))
+			{
+				this.text = text;
+				int textWidth = getFontMetrics(getFont()).stringWidth((text == null) ? PROTOTYPE_TEXT : text);
+				preferredWidth = 2 * HORIZONTAL_MARGIN + SEPARATOR_WIDTH + textWidth;
+				revalidate();
+				repaint();
+			}
+		}
+
+		//--------------------------------------------------------------
+
+	}
+
+	//==================================================================
 
 }
 

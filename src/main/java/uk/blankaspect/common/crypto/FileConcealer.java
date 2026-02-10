@@ -323,10 +323,9 @@ public class FileConcealer
 		try
 		{
 			StreamConcealer concealer = new StreamConcealer();
-			if (progressView instanceof IProgressListener)
-				concealer.addProgressListener((IProgressListener)progressView);
-			outImage = concealer.conceal(inStream, image, length, lengthEncoder, maxReplacementDepth,
-										 randomSource);
+			if (progressView instanceof IProgressListener progressListener)
+				concealer.addProgressListener(progressListener);
+			outImage = concealer.conceal(inStream, image, length, lengthEncoder, maxReplacementDepth, randomSource);
 		}
 		catch (StreamConcealer.InputException e)
 		{
@@ -583,8 +582,8 @@ public class FileConcealer
 		try
 		{
 			StreamConcealer recoverer = new StreamConcealer();
-			if (progressView instanceof IProgressListener)
-				recoverer.addProgressListener((IProgressListener)progressView);
+			if (progressView instanceof IProgressListener progressListener)
+				recoverer.addProgressListener(progressListener);
 			recoverer.recover(image, outStream, lengthDecoder);
 		}
 		catch (StreamConcealer.InputException e)

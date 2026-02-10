@@ -79,8 +79,7 @@ import uk.blankaspect.ui.swing.workaround.LinuxWorkarounds;
 
 class MainWindow
 	extends JFrame
-	implements ChangeListener, IFileImporter, FlavorListener, ListSelectionListener, MenuListener,
-			   MouseListener
+	implements ChangeListener, IFileImporter, FlavorListener, ListSelectionListener, MenuListener, MouseListener
 {
 
 ////////////////////////////////////////////////////////////////////////
@@ -659,44 +658,44 @@ class MainWindow
 		if (event.isPopupTrigger())
 		{
 			// Create context menu
-			JPopupMenu contextMenu = new JPopupMenu();
+			JPopupMenu menu = new JPopupMenu();
 
-			contextMenu.add(new FMenuItem(AppCommand.ENCRYPT_FILE));
-			contextMenu.add(new FMenuItem(AppCommand.DECRYPT_FILE));
-			contextMenu.add(new FMenuItem(AppCommand.VALIDATE_FILE));
+			menu.add(new FMenuItem(AppCommand.ENCRYPT_FILE));
+			menu.add(new FMenuItem(AppCommand.DECRYPT_FILE));
+			menu.add(new FMenuItem(AppCommand.VALIDATE_FILE));
 
-			contextMenu.addSeparator();
+			menu.addSeparator();
 
-			contextMenu.add(new FMenuItem(AppCommand.CONCEAL_FILE));
-			contextMenu.add(new FMenuItem(AppCommand.RECOVER_FILE));
+			menu.add(new FMenuItem(AppCommand.CONCEAL_FILE));
+			menu.add(new FMenuItem(AppCommand.RECOVER_FILE));
 
-			contextMenu.addSeparator();
+			menu.addSeparator();
 
-			contextMenu.add(new FMenuItem(AppCommand.SPLIT_FILE));
-			contextMenu.add(new FMenuItem(AppCommand.JOIN_FILES));
+			menu.add(new FMenuItem(AppCommand.SPLIT_FILE));
+			menu.add(new FMenuItem(AppCommand.JOIN_FILES));
 
-			contextMenu.addSeparator();
+			menu.addSeparator();
 
-			contextMenu.add(new FMenuItem(AppCommand.ERASE_FILES));
+			menu.add(new FMenuItem(AppCommand.ERASE_FILES));
 
-			contextMenu.addSeparator();
+			menu.addSeparator();
 
 			JMenu submenu = new FMenu(DEFAULT_CIPHER_STR);
 			for (FortunaCipher cipher : FortunaCipher.values())
 				submenu.add(CipherAction.getMenuItem(CONTEXT_MENU_KEY, cipher));
-			contextMenu.add(submenu);
+			menu.add(submenu);
 
-			contextMenu.addSeparator();
+			menu.addSeparator();
 
-			contextMenu.add(new FMenuItem(AppCommand.SET_GLOBAL_KEY));
-			contextMenu.add(new FMenuItem(AppCommand.CLEAR_GLOBAL_KEY));
-			contextMenu.add(new FCheckBoxMenuItem(AppCommand.TOGGLE_AUTO_USE_GLOBAL_KEY));
+			menu.add(new FMenuItem(AppCommand.SET_GLOBAL_KEY));
+			menu.add(new FMenuItem(AppCommand.CLEAR_GLOBAL_KEY));
+			menu.add(new FCheckBoxMenuItem(AppCommand.TOGGLE_AUTO_USE_GLOBAL_KEY));
 
 			// Update commands for menu items
 			QanaApp.INSTANCE.updateCommands();
 
 			// Display menu
-			contextMenu.show(event.getComponent(), event.getX(), event.getY());
+			menu.show(event.getComponent(), event.getX(), event.getY());
 		}
 	}
 

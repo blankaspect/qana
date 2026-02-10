@@ -395,8 +395,8 @@ public class FileEncrypter
 			try
 			{
 				StreamEncrypter encrypter = new StreamEncrypter(cipher, kdfParams, header);
-				if (progressView instanceof IProgressListener)
-					encrypter.addProgressListener((IProgressListener)progressView);
+				if (progressView instanceof IProgressListener progressListener)
+					encrypter.addProgressListener(progressListener);
 				encrypter.encrypt(inStream, outStream, fileLength, timestamp, key, randomKey, kdfExecutor);
 			}
 			catch (StreamEncrypter.InputException e)
@@ -633,8 +633,8 @@ public class FileEncrypter
 			long timestamp = 0;
 			try
 			{
-				if (progressView instanceof IProgressListener)
-					decrypter.addProgressListener((IProgressListener)progressView);
+				if (progressView instanceof IProgressListener progressListener)
+					decrypter.addProgressListener(progressListener);
 				timestamp = decrypter.decrypt(inStream, outStream, fileLength, key, kdfExecutor);
 			}
 			catch (StreamEncrypter.InputException e)
@@ -816,8 +816,8 @@ public class FileEncrypter
 			// Decrypt file
 			try
 			{
-				if (progressView instanceof IProgressListener)
-					decrypter.addProgressListener((IProgressListener)progressView);
+				if (progressView instanceof IProgressListener progressListener)
+					decrypter.addProgressListener(progressListener);
 				decrypter.decrypt(inStream, new NullOutputStream(), fileLength, key, kdfExecutor);
 			}
 			catch (StreamEncrypter.InputException e)

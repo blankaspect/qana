@@ -118,10 +118,10 @@ public abstract class FileSelectionPanel
 	private static final	String	SELECT_FILE_OR_DIRECTORY_STR	= "Select file or directory";
 	private static final	String	PATHNAME_KIND_TOOLTIP_STR		= "Show %s pathnames";
 
-	private static final	KeyStroke	DELETE_KEY	= KeyStroke.getKeyStroke(KeyEvent.VK_DELETE,
-																			 KeyEvent.SHIFT_DOWN_MASK);
-	private static final	KeyStroke	PASTE_KEY	= KeyStroke.getKeyStroke(KeyEvent.VK_V,
-																			 KeyEvent.CTRL_DOWN_MASK);
+	private static final	KeyStroke	DELETE_KEY	=
+			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, KeyEvent.SHIFT_DOWN_MASK);
+	private static final	KeyStroke	PASTE_KEY	=
+			KeyStroke.getKeyStroke(KeyEvent.VK_V, KeyEvent.CTRL_DOWN_MASK);
 
 	// Commands
 	private interface Command
@@ -151,7 +151,6 @@ public abstract class FileSelectionPanel
 	private	JButton						removeButton;
 	private	JButton						pathnameKindButton;
 	private	JFileChooser				fileChooser;
-	private	JPopupMenu					contextMenu;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -667,11 +666,8 @@ public abstract class FileSelectionPanel
 		if (event.isPopupTrigger())
 		{
 			// Create context menu
-			if (contextMenu == null)
-			{
-				contextMenu = new JPopupMenu();
-				contextMenu.add(new FMenuItem(getPasteAction()));
-			}
+			JPopupMenu menu = new JPopupMenu();
+			menu.add(new FMenuItem(getPasteAction()));
 
 			// Update actions for menu items
 			try
@@ -685,7 +681,7 @@ public abstract class FileSelectionPanel
 			}
 
 			// Display menu
-			contextMenu.show(event.getComponent(), event.getX(), event.getY());
+			menu.show(event.getComponent(), event.getX(), event.getY());
 		}
 	}
 

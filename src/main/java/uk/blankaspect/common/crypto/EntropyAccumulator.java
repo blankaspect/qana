@@ -295,19 +295,19 @@ public class EntropyAccumulator
 		AWTEvent	event)
 	{
 		// Key event
-		if (event instanceof KeyEvent)
+		if (event instanceof KeyEvent keyEvent)
 		{
-			int id = ((KeyEvent)event).getID();
+			int id = keyEvent.getID();
 			if ((id == KeyEvent.KEY_PRESSED) || (id == KeyEvent.KEY_RELEASED))
 				processKeyEvent();
 		}
 
 		// Mouse event
-		else if (event instanceof MouseEvent)
+		else if (event instanceof MouseEvent mouseEvent)
 		{
-			int id = ((MouseEvent)event).getID();
+			int id = mouseEvent.getID();
 			if ((id == MouseEvent.MOUSE_MOVED) || (id == MouseEvent.MOUSE_DRAGGED))
-				processMouseEvent((MouseEvent)event);
+				processMouseEvent(mouseEvent);
 		}
 	}
 
@@ -630,7 +630,7 @@ public class EntropyAccumulator
 	{
 		// Validate arguments
 		if ((timerDivisor < MIN_TIMER_DIVISOR) || (timerDivisor > MAX_TIMER_DIVISOR))
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Timer divisor out of bounds");
 
 		// Set timer divisor
 		if (this.timerDivisor != timerDivisor)

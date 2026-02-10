@@ -534,38 +534,35 @@ class ArchiveView
 			if ((event == null) || event.isPopupTrigger())
 			{
 				// Create context menu
-				if (contextMenu == null)
-				{
-					contextMenu = new JPopupMenu();
+				JPopupMenu menu = new JPopupMenu();
 
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.CHOOSE_ARCHIVE_DIRECTORY));
+				menu.add(new FMenuItem(ArchiveDocument.Command.CHOOSE_ARCHIVE_DIRECTORY));
 
-					contextMenu.addSeparator();
+				menu.addSeparator();
 
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.ADD_FILES));
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.EXTRACT_FILES));
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.VALIDATE_FILES));
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.DELETE_FILES));
+				menu.add(new FMenuItem(ArchiveDocument.Command.ADD_FILES));
+				menu.add(new FMenuItem(ArchiveDocument.Command.EXTRACT_FILES));
+				menu.add(new FMenuItem(ArchiveDocument.Command.VALIDATE_FILES));
+				menu.add(new FMenuItem(ArchiveDocument.Command.DELETE_FILES));
 
-					contextMenu.addSeparator();
+				menu.addSeparator();
 
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.DISPLAY_FILE_LIST));
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.DISPLAY_FILE_MAP));
+				menu.add(new FMenuItem(ArchiveDocument.Command.DISPLAY_FILE_LIST));
+				menu.add(new FMenuItem(ArchiveDocument.Command.DISPLAY_FILE_MAP));
 
-					contextMenu.addSeparator();
+				menu.addSeparator();
 
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.SET_KEY));
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.CLEAR_KEY));
-				}
+				menu.add(new FMenuItem(ArchiveDocument.Command.SET_KEY));
+				menu.add(new FMenuItem(ArchiveDocument.Command.CLEAR_KEY));
 
 				// Update commands for menu items
 				QanaApp.INSTANCE.getArchiveDocument().updateCommands();
 
 				// Display menu
 				if (event == null)
-					contextMenu.show(getTableHeader(), 0, 0);
+					menu.show(getTableHeader(), 0, 0);
 				else
-					contextMenu.show(event.getComponent(), event.getX(), event.getY());
+					menu.show(event.getComponent(), event.getX(), event.getY());
 			}
 		}
 
@@ -577,12 +574,6 @@ class ArchiveView
 		}
 
 		//--------------------------------------------------------------
-
-	////////////////////////////////////////////////////////////////////
-	//  Instance variables
-	////////////////////////////////////////////////////////////////////
-
-		private	JPopupMenu	contextMenu;
 
 	}
 
@@ -1287,12 +1278,9 @@ class ArchiveView
 			if (event.isPopupTrigger())
 			{
 				// Create context menu
-				if (contextMenu == null)
-				{
-					contextMenu = new JPopupMenu();
-					contextMenu.add(new FMenuItem(ArchiveDocument.Command.CHOOSE_ARCHIVE_DIRECTORY));
-					contextMenu.add(new FMenuItem(pasteAction));
-				}
+				JPopupMenu menu = new JPopupMenu();
+				menu.add(new FMenuItem(ArchiveDocument.Command.CHOOSE_ARCHIVE_DIRECTORY));
+				menu.add(new FMenuItem(pasteAction));
 
 				// Update actions for menu items
 				try
@@ -1306,7 +1294,7 @@ class ArchiveView
 				}
 
 				// Display menu
-				contextMenu.show(event.getComponent(), event.getX(), event.getY());
+				menu.show(event.getComponent(), event.getX(), event.getY());
 			}
 		}
 
@@ -1336,7 +1324,6 @@ class ArchiveView
 		private	int				preferredHeight;
 		private	String			pathname;
 		private	CommandAction	pasteAction;
-		private	JPopupMenu		contextMenu;
 
 	}
 

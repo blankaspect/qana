@@ -230,7 +230,7 @@ class KdfParameterPanel
 		private static final	Color	BACKGROUND_COLOUR	= new Color(248, 240, 200);
 		private static final	Color	BORDER_COLOUR		= new Color(224, 200, 160);
 
-		private static final	String	PROTOTYPE_STR	= "0".repeat(10);
+		private static final	String	PROTOTYPE_TEXT	= "0".repeat(10);
 
 	////////////////////////////////////////////////////////////////////
 	//  Constructors
@@ -243,7 +243,7 @@ class KdfParameterPanel
 
 			// Set preferred size
 			FontMetrics fontMetrics = getFontMetrics(getFont());
-			int width = 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(PROTOTYPE_STR);
+			int width = 2 * HORIZONTAL_MARGIN + fontMetrics.stringWidth(PROTOTYPE_TEXT);
 			int height = 2 * VERTICAL_MARGIN + fontMetrics.getAscent() + fontMetrics.getDescent();
 			setPreferredSize(new Dimension(width, height));
 

@@ -524,7 +524,7 @@ class EntropyMetricsDialog
 		private static final	Color	BAR_COLOUR2				= new Color(192, 64, 0);
 
 		private static final	String	BIT_STR			= "Bit ";
-		private static final	String	PROTOTYPE_STR	= "00";
+		private static final	String	PROTOTYPE_TEXT	= "00";
 
 	////////////////////////////////////////////////////////////////////
 	//  Instance variables
@@ -548,7 +548,7 @@ class EntropyMetricsDialog
 			// Initialise instance variables
 			bitIndices = getBitIndices(bitMask);
 			FontMetrics fontMetrics = getFontMetrics(getFont());
-			barWidth = fontMetrics.stringWidth(PROTOTYPE_STR);
+			barWidth = fontMetrics.stringWidth(PROTOTYPE_TEXT);
 			height = TOP_MARGIN + PLOT_HEIGHT + INDEX_MARKER_HEIGHT + fontMetrics.getAscent() +
 																fontMetrics.getDescent() + BOTTOM_MARGIN;
 
@@ -1001,7 +1001,7 @@ class EntropyMetricsDialog
 
 		private static final	String	POOL_STR		= "Pool ";
 		private static final	String	BYTES_STR		= " bytes";
-		private static final	String	PROTOTYPE_STR	= "00";
+		private static final	String	PROTOTYPE_TEXT	= "00";
 
 	////////////////////////////////////////////////////////////////////
 	//  Instance variables
@@ -1021,7 +1021,7 @@ class EntropyMetricsDialog
 			// Set font
 			Font font = AppFont.MAIN.getFont();
 			FontMetrics fontMetrics = getFontMetrics(font);
-			int strWidth = fontMetrics.stringWidth(PROTOTYPE_STR);
+			int strWidth = fontMetrics.stringWidth(PROTOTYPE_TEXT);
 			int maxStrWidth = INDEX_INTERVAL * BAR_INTERVAL - 4;
 			if (strWidth > maxStrWidth)
 				font = font.deriveFont((float)maxStrWidth / (float)strWidth);

@@ -117,6 +117,8 @@ class KeyEditorDialog
 
 	private static final	Insets	BUTTON_MARGINS	= new Insets(2, 6, 2, 6);
 
+	private static final	String	KDF_PARAM_PROTOTYPE_TEXT	= "000, 00, 00, 00, 00";
+
 	private static final	String	EDIT_KEYS_STR				= "Edit keys";
 	private static final	String	NAME_STR					= "Name";
 	private static final	String	ADD_STR						= "Add";
@@ -136,7 +138,6 @@ class KeyEditorDialog
 	private static final	String	RENAME_TOOLTIP_STR			= "Rename the selected key";
 	private static final	String	EDIT_PROPERTIES_TOOLTIP_STR	= "Edit the properties of the selected key";
 	private static final	String	DELETE_TOOLTIP_STR			= "Delete the selected key";
-	private static final	String	KDF_PARAM_PROTOTYPE_STR		= "000, 00, 00, 00, 00";
 
 	// Commands
 	private interface Command
@@ -256,7 +257,7 @@ class KeyEditorDialog
 			kdfParameterInnerPanel.add(label);
 
 			// Field
-			ParameterField field = new ParameterField(KDF_PARAM_PROTOTYPE_STR);
+			ParameterField field = new ParameterField(KDF_PARAM_PROTOTYPE_TEXT);
 			kdfParamFields.put(kdfUse, field);
 
 			gbc.gridx = 1;

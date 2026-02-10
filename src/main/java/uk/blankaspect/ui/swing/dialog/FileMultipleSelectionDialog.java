@@ -167,7 +167,6 @@ public class FileMultipleSelectionDialog
 	private	JScrollPane				fileListScrollPane;
 	private	JPanel					mainPanel;
 	private	JButton					removeButton;
-	private	JPopupMenu				contextMenu;
 
 ////////////////////////////////////////////////////////////////////////
 //  Static initialiser
@@ -585,11 +584,8 @@ public class FileMultipleSelectionDialog
 		if (event.isPopupTrigger())
 		{
 			// Create context menu
-			if (contextMenu == null)
-			{
-				contextMenu = new JPopupMenu();
-				contextMenu.add(new FMenuItem(getPasteAction()));
-			}
+			JPopupMenu menu = new JPopupMenu();
+			menu.add(new FMenuItem(getPasteAction()));
 
 			// Update actions for menu items
 			try
@@ -603,7 +599,7 @@ public class FileMultipleSelectionDialog
 			}
 
 			// Display menu
-			contextMenu.show(event.getComponent(), event.getX(), event.getY());
+			menu.show(event.getComponent(), event.getX(), event.getY());
 		}
 	}
 
