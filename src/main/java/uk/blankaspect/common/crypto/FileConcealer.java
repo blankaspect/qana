@@ -272,13 +272,10 @@ public class FileConcealer
 		throws AppException, TaskCancelledException
 	{
 		// Validate arguments
-		if ((length < 0) || (length > StreamConcealer.MAX_PAYLOAD_LENGTH) ||
-			 (maxReplacementDepth < StreamConcealer.MIN_MAX_REPLACEMENT_DEPTH) ||
-			 (maxReplacementDepth > StreamConcealer.MAX_MAX_REPLACEMENT_DEPTH))
+		if ((length < 0) || (length > StreamConcealer.MAX_PAYLOAD_LENGTH)
+				|| (maxReplacementDepth < StreamConcealer.MIN_MAX_REPLACEMENT_DEPTH)
+				|| (maxReplacementDepth > StreamConcealer.MAX_MAX_REPLACEMENT_DEPTH))
 			throw new IllegalArgumentException();
-
-		// Run garbage collector to maximise available memory
-		System.gc();
 
 		// Get progress view
 		IProgressView progressView = Task.getProgressView();

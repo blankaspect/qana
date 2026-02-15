@@ -868,10 +868,7 @@ class TextDocument
 		if (JOptionPane.showOptionDialog(getWindow(), CLEAR_EDIT_LIST_STR, QanaApp.SHORT_NAME,
 										 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null,
 										 optionStrs, optionStrs[1]) == JOptionPane.OK_OPTION)
-		{
 			undoManager.discardAllEdits();
-			System.gc();
-		}
 	}
 
 	//------------------------------------------------------------------
