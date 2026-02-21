@@ -1152,13 +1152,13 @@ class ArchiveDocument
 	//------------------------------------------------------------------
 
 	private boolean resolveConflict(String   title,
-									String[] messageStrs)
+									String[] messageLines)
 		throws TaskCancelledException
 	{
 		boolean replace = false;
 		if (conflictOption == null)
 		{
-			String optionKey = QuestionDialog.showDialog(getWindow(), title, messageStrs, CONFLICT_OPTIONS, 2,
+			String optionKey = QuestionDialog.showDialog(getWindow(), title, messageLines, CONFLICT_OPTIONS, 2,
 														 QuestionDialog.CANCEL_KEY, null).selectedKey();
 			if (QuestionDialog.CANCEL_KEY.equals(optionKey))
 				throw new TaskCancelledException();
