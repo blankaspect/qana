@@ -155,36 +155,12 @@ class ArchiveDocument
 
 	private static final	QuestionDialog.Option[]	CONFLICT_OPTIONS	=
 	{
-		new QuestionDialog.Option
-		(
-			ConflictOption.REPLACE.key,
-			REPLACE_THIS_STR,
-			KeyEvent.VK_R
-		),
-		new QuestionDialog.Option
-		(
-			ConflictOption.REPLACE_ALL.key,
-			REPLACE_ALL_STR,
-			KeyEvent.VK_E
-		),
-		new QuestionDialog.Option
-		(
-			ConflictOption.SKIP.key,
-			SKIP_THIS_STR,
-			KeyEvent.VK_S
-		),
-		new QuestionDialog.Option
-		(
-			ConflictOption.SKIP_ALL.key,
-			SKIP_ALL_STR,
-			KeyEvent.VK_K
-		),
+		QuestionDialog.opt(ConflictOption.REPLACE.key,     REPLACE_THIS_STR, KeyEvent.VK_R),
+		QuestionDialog.opt(ConflictOption.REPLACE_ALL.key, REPLACE_ALL_STR,  KeyEvent.VK_E),
+		QuestionDialog.opt(ConflictOption.SKIP.key,        SKIP_THIS_STR,    KeyEvent.VK_S),
+		QuestionDialog.opt(ConflictOption.SKIP_ALL.key,    SKIP_ALL_STR,     KeyEvent.VK_K),
 		null,
-		new QuestionDialog.Option
-		(
-			QuestionDialog.CANCEL_KEY,
-			AppConstants.CANCEL_STR
-		)
+		QuestionDialog.opt(QuestionDialog.CANCEL_KEY,      AppConstants.CANCEL_STR)
 	};
 
 ////////////////////////////////////////////////////////////////////////
