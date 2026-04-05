@@ -59,10 +59,7 @@ interface AppConstants
 
 	// Filename extensions
 	String	BMP_FILENAME_EXTENSION		= ".bmp";
-	String	EXE_FILENAME_EXTENSION		= ".exe";
 	String	GIF_FILENAME_EXTENSION		= ".gif";
-	String	ICON_FILENAME_EXTENSION		= ".ico";
-	String	JAR_FILENAME_EXTENSION		= ".jar";
 	String	JPEG_FILENAME_EXTENSION1	= ".jpg";
 	String	JPEG_FILENAME_EXTENSION2	= ".jpeg";
 	String	KEY_FILENAME_EXTENSION		= ".keys";
@@ -72,14 +69,8 @@ interface AppConstants
 	// Filters for file choosers
 	FilenameSuffixFilter BMP_FILE_FILTER	=
 			new FilenameSuffixFilter("Bitmap files", BMP_FILENAME_EXTENSION);
-	FilenameSuffixFilter EXE_FILE_FILTER	=
-			new FilenameSuffixFilter("Windows executable files", EXE_FILENAME_EXTENSION);
 	FilenameSuffixFilter GIF_FILE_FILTER	=
 			new FilenameSuffixFilter("GIF files", GIF_FILENAME_EXTENSION);
-	FilenameSuffixFilter ICON_FILE_FILTER	=
-			new FilenameSuffixFilter("Windows icon files", ICON_FILENAME_EXTENSION);
-	FilenameSuffixFilter JAR_FILE_FILTER	=
-			new FilenameSuffixFilter("JAR files", JAR_FILENAME_EXTENSION);
 	FilenameSuffixFilter JPEG_FILE_FILTER	=
 			new FilenameSuffixFilter("JPEG files", JPEG_FILENAME_EXTENSION1, JPEG_FILENAME_EXTENSION2);
 	FilenameSuffixFilter KEY_FILE_FILTER	=

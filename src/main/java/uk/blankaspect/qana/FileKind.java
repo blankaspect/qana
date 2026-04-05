@@ -42,9 +42,9 @@ enum FileKind
 		"encrypted",
 		".qana",
 		"Encrypted files",
-		"BlankAspect." + QanaApp.SHORT_NAME + ".encryptedFile",
+		FileAssoc.KEY_PREFIX + ".encryptedFile",
 		"Qana-encrypted file",
-		"&Decrypt with Qana"
+		"&Decrypt with " + QanaApp.SHORT_NAME
 	),
 
 	ARCHIVE
@@ -52,10 +52,15 @@ enum FileKind
 		"archive",
 		".qarc",
 		"Encrypted archives",
-		"BlankAspect." + QanaApp.SHORT_NAME + ".archive",
+		FileAssoc.KEY_PREFIX + ".archive",
 		"Qana archive",
-		"&Open with Qana"
+		"&Open with " + QanaApp.SHORT_NAME
 	);
+
+	private interface FileAssoc
+	{
+		String	KEY_PREFIX	= "BlankAspect." + QanaApp.SHORT_NAME;
+	}
 
 ////////////////////////////////////////////////////////////////////////
 //  Instance variables

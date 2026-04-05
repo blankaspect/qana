@@ -93,6 +93,8 @@ import uk.blankaspect.ui.swing.dialog.RunnableMessageDialog;
 
 import uk.blankaspect.ui.swing.misc.GuiUtils;
 
+import uk.blankaspect.ui.swing.platform.windows.FileAssociationDialog;
+
 import uk.blankaspect.ui.swing.text.TextRendering;
 
 import uk.blankaspect.ui.swing.textfield.TextFieldUtils;
@@ -127,8 +129,6 @@ public class QanaApp
 	private static final	int		TIMER_INTERVAL	= 500;
 
 	private static final	String	BUILD_PROPERTIES_FILENAME	= "build.properties";
-
-	private static final	String	OS_NAME_KEY	= "os.name";
 
 	private static final	String	RX_ID	= MethodHandles.lookup().lookupClass().getCanonicalName();
 
@@ -171,51 +171,51 @@ public class QanaApp
 	private static final	String	PROCEED_STR				= "Proceed";
 	private static final	String	KEEP_STR				= "Keep";
 	private static final	String	EXIT_STR				= "Exit";
-	private static final	String	REVERT_MESSAGE_STR		= "\nDo you want discard the changes to the " +
-																"current document and reopen the " +
-																"original file?";
-	private static final	String	MODIFIED_MESSAGE_STR	= "\nThe file has been modified externally.\n" +
-																"Do you want to open the modified file?";
+	private static final	String	REVERT_MESSAGE_STR		=
+			"\nDo you want discard the changes to the current document and reopen the original file?";
+	private static final	String	MODIFIED_MESSAGE_STR	=
+			"\nThe file has been modified externally.\nDo you want to open the modified file?";
 	private static final	String	UNNAMED_FILE_STR		= "The unnamed file";
 	private static final	String	CHANGED_MESSAGE1_STR	= "\nThe file";
-	private static final	String	CHANGED_MESSAGE2_STR	= " has changed.\nDo you want to save the " +
-																"changed file?";
+	private static final	String	CHANGED_MESSAGE2_STR	= " has changed.\nDo you want to save the changed file?";
 	private static final	String	CLOSE_MESSAGE_STR		= "Do you want to close the text document?";
-	private static final	String	REMAINING_IMPORTS_STR	= "Do you want to continue to process the " +
-																"remaining files?";
-	private static final	String	PRNG_NOT_SEEDED_STR		= "The pseudo-random number generator was " +
-																"not seeded.\nYou should wait until " +
-																"enough entropy has accumulated before " +
-																"performing encryption.";
+	private static final	String	REMAINING_IMPORTS_STR	= "Do you want to continue to process the remaining files?";
+	private static final	String	PRNG_NOT_SEEDED_STR		= """
+		The pseudo-random number generator was not seeded.
+		You should wait until enough entropy has accumulated before performing encryption.""";
 	private static final	String	GENERATING_KEY_STR		= "Generating the content-encryption key ...";
 	private static final	String	SET_GLOBAL_KEY_STR		= "Set global key";
 	private static final	String	KEY_FOR_STR				= "Key for ";
 	private static final	String	TEMP_KEY_STR			= "Encrypt with temporary key";
-	private static final	String	TEMP_KEY_MESSAGE_STR	= "You are about to encrypt with a temporary " +
-																"key.\nDo you want to proceed?";
+	private static final	String	TEMP_KEY_MESSAGE_STR	=
+			"You are about to encrypt with a temporary key.\nDo you want to proceed?";
 	private static final	String	CLEAR_KEY_STR			= "Clear global key";
 	private static final	String	CLEAR_KEY_MESSAGE_STR	= "Do you want to clear the global key?";
-	private static final	String	NO_KEY_DATABASE1_STR	= "File: %s\nThe key database file does not " +
-																"exist.\nWhen the program exits, a key " +
-																"database will be created at the " +
-																"location\nspecified in the preferences.";
-	private static final	String	NO_KEY_DATABASE2_STR	= "No key database was specified.\nThe " +
-																"changes you have made to persistent " +
-																"keys will be lost if you exit now.\n" +
-																"To save the keys, specify the location " +
-																"of the key database in the preferences.";
+	private static final	String	NO_KEY_DATABASE1_STR	= """
+		File: %s
+		The key-database file does not exist.
+		When the program exits, a key database will be created at the location
+		specified in the preferences.""";
+	private static final	String	NO_KEY_DATABASE2_STR	= """
+		No key database was specified.
+		The changes that you have made to persistent keys will be lost if you exit now.
+		To save the keys, specify the location of the key database in the preferences.""";
 	private static final	String	SELECT_STR				= "Select";
 	private static final	String	WINDOWS_STR				= "Windows";
 	private static final	String	FILE_ASSOCIATIONS_STR	= "File associations";
-	private static final	String	FILE_PARTS_STR			= "The output directory already contains " +
-																"%d file part%s.\n" +
-																"Do you want to delete %s file%s?";
+	private static final	String	FILE_PARTS_STR			=
+			"The output directory already contains %d file part%s.\nDo you want to delete %s file%s?";
 	private static final	String[][]	FILE_PARTS_STRS	=
 	{
 		{ "", "s" },
 		{ "this", "these" },
 		{ "", "s" }
 	};
+
+	private interface SystemPropertyKey
+	{
+		String	OS_NAME	= "os.name";
+	}
 
 	private enum RandomDataStreamState
 	{
@@ -849,7 +849,7 @@ public class QanaApp
 		boolean isArchiveDocument = (archiveDocument != null);
 		boolean notFull = !isDocumentsFull();
 		boolean documentChanged = isArchiveDocument && archiveDocument.isChanged();
-		boolean isWindows = System.getProperty(OS_NAME_KEY, "").contains(WINDOWS_STR);
+		boolean isWindows = System.getProperty(SystemPropertyKey.OS_NAME, "").contains(WINDOWS_STR);
 
 		AppConfig config = AppConfig.INSTANCE;
 
@@ -2323,15 +2323,13 @@ public class QanaApp
 		FileAssociationDialog.Result result = FileAssociationDialog.showDialog(mainWindow);
 		if (result != null)
 		{
-			FileAssociations fileAssoc = new FileAssociations();
+			FileAssociations fileAssociations = new FileAssociations();
 			for (FileKind fileKind : FileKind.values())
-				fileKind.addFileAssocParams(fileAssoc);
+				fileKind.addFileAssocParams(fileAssociations);
 			TextOutputTaskDialog.showDialog(mainWindow, FILE_ASSOCIATIONS_STR,
-											new Task.SetFileAssociations(fileAssoc, result.javaLauncherPathname,
-																		 result.jarPathname, result.iconPathname,
-																		 ASSOC_SCRIPT_DIR_PREFIX,
-																		 ASSOC_SCRIPT_FILENAME,
-																		 result.removeEntries, result.scriptLifeCycle));
+					new Task.SetFileAssociations(fileAssociations, result.javaLauncherPathname(), result.jarPathname(),
+												 result.iconPathname(), ASSOC_SCRIPT_DIR_PREFIX, ASSOC_SCRIPT_FILENAME,
+												 result.removeEntries(), result.scriptLifeCycle()));
 		}
 	}
 

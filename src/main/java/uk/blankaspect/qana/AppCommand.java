@@ -220,7 +220,7 @@ enum AppCommand
 	MANAGE_FILE_ASSOCIATIONS
 	(
 		"manageFileAssociations",
-		"Manage file associations" + AppConstants.ELLIPSIS_STR
+		"Manage Windows file associations" + AppConstants.ELLIPSIS_STR
 	),
 
 	EDIT_PREFERENCES
