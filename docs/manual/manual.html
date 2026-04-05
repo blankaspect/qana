@@ -456,8 +456,9 @@
       <p class="wrap">
         Qana may be run indirectly by associating file types with its JAR file and opening a
         file of one of those types.  File associations can be created on Windows with the <a
-        class="command" href="#section8-7-2">Options &gt; Manage file associations</a> command.
-        You can use the same command to remove the file association when you no longer want it.
+        class="command" href="#section8-7-2">Options &gt; Manage Windows file associations</a>
+        command.  You can use the same command to remove the file associations when you no
+        longer want them.
       </p>
 
     </div>
@@ -2978,11 +2979,11 @@
         bar of the main window.
       </p>
 
-      <h4 id="section8-7-2">8.7.2&nbsp; <span class="command">Manage file associations</span></h4>
+      <h4 id="section8-7-2">8.7.2&nbsp; <span class="command">Manage Windows file associations</span></h4>
       <p class="wrap">
-        The <span class="command">Manage file associations</span> command provides, on Windows,
-        a means of adding or removing associations between the Qana application and files with
-        the filename suffixes of <a class="configProperty"
+        The <span class="command">Manage Windows file associations</span> command provides, on
+        Windows, a means of adding or removing associations between the Qana application and
+        files with the filename suffixes of <a class="configProperty"
         href="#cp-file-filenameSuffix-encrypted">Qana-encrypted files</a> and <a
         class="configProperty" href="#cp-file-filenameSuffix-archive">Qana archives</a>.  A file
         association will allow you, for example, to open an archive in Qana by double-clicking
@@ -3048,14 +3049,14 @@
       <dl class="fileAssoc">
         <dt>Java launcher</dt>
         <dd class="wrap">
-          This is the Windows executable that launches a Java program.  You have a choice of
-          <code>javaw.exe</code> (no console) or <code>java.exe</code> (console).  The
+          This is the Windows executable that launches a Java program, which will usually be
+          either <code>javaw.exe</code> (no console) or <code>java.exe</code> (console).  The
           corresponding <span class="command">Default</span> command sets the pathname to that
           of the file <code>bin\javaw.exe</code> in the directory specified by the
-          <code>java.home</code> system property, which is the Java installation directory that
-          is associated with the current Qana application.  If you install another version of
-          Java, the Java launcher might be at a different location; if so, you will need to
-          update the file association accordingly.
+          <code>java.home</code> system property, which is the directory that contains the
+          launcher of the current Qana application.  If you install another version of Java, the
+          Java launcher might be at a different location; if so, you will need to update the
+          file association accordingly.
         </dd>
         <dt>JAR</dt>
         <dd class="wrap">
@@ -4505,7 +4506,7 @@
     <div id="lastModified">
       <div>
         <div>
-          Last modified: 2026-02-15
+          Last modified: 2026-03-25
         </div>
         <div class="image">
           <a class="hideHover" href="http://validator.w3.org/check?uri=referer">
