@@ -243,7 +243,7 @@ public class QanaApp
 	private	int					newTextDocumentIndex;
 	private	boolean				exiting;
 	private	boolean				executingCommand;
-	private	List<File>			pendingFiles;
+	private	List<File>			receivedFiles;
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -934,11 +934,11 @@ public class QanaApp
 				mainWindow.updateTitleAndMenus();
 			}
 
-			// Process pending files
-			if (!pendingFiles.isEmpty())
+			// Process received files
+			if (!receivedFiles.isEmpty())
 			{
-				List<File> files = new ArrayList<>(pendingFiles);
-				pendingFiles.clear();
+				List<File> files = new ArrayList<>(receivedFiles);
+				receivedFiles.clear();
 				addImport(null, files);
 				intervalTimer.start();
 			}
@@ -1168,7 +1168,7 @@ public class QanaApp
 		temporaryKeyList = new KeyList();
 		documentsViews = new ArrayList<>();
 		importQueue = new ImportQueue();
-		pendingFiles = new ArrayList<>();
+		receivedFiles = new ArrayList<>();
 
 		// Read build properties and initialise version string
 		try
@@ -1209,11 +1209,11 @@ public class QanaApp
 			{
 				SwingUtilities.invokeLater(() ->
 				{
-					// Add pathnames to list of pending files
+					// Add pathnames to list of received files
 					List<String> pathnames = StringUtils.split(data, '\n');
 					if (!pathnames.isEmpty())
 					{
-						pendingFiles.addAll(pathnames.stream()
+						receivedFiles.addAll(pathnames.stream()
 								.filter(pathname -> !pathname.isEmpty())
 								.map(File::new)
 								.toList());
