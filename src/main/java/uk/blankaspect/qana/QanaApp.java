@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.util.random.RandomGenerator;
+
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -135,9 +137,12 @@ public class QanaApp
 	private static final	String	ASSOC_SCRIPT_DIR_PREFIX	= NAME_KEY + "_";
 	private static final	String	ASSOC_SCRIPT_FILENAME	= NAME_KEY + "Associations";
 
+	private static final	String	SPLITTABLE_PRNG_NAME	= "L128X256MixRandom";
+
 	private static final	String	CONFIG_ERROR_STR		= "Configuration error";
 	private static final	String	LAF_ERROR1_STR			= "Look-and-feel: ";
 	private static final	String	LAF_ERROR2_STR			= "\nThe look-and-feel is not installed.";
+	private static final	String	UNSUPPORTED_PRNG_STR	= "The PRNG '%s' is not supported by this version of Java.";
 	private static final	String	KEY_DATABASE_STR		= "Key database";
 	private static final	String	READ_KEYS_STR			= "Read keys";
 	private static final	String	WRITE_KEYS_STR			= "Write keys";
@@ -226,6 +231,12 @@ public class QanaApp
 	}
 
 ////////////////////////////////////////////////////////////////////////
+//  Class variables
+////////////////////////////////////////////////////////////////////////
+
+	private static	RandomGenerator.SplittableGenerator	splittablePrng;
+
+////////////////////////////////////////////////////////////////////////
 //  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
@@ -244,6 +255,23 @@ public class QanaApp
 	private	boolean				exiting;
 	private	boolean				executingCommand;
 	private	List<File>			receivedFiles;
+
+////////////////////////////////////////////////////////////////////////
+//  Static initialiser
+////////////////////////////////////////////////////////////////////////
+
+	static
+	{
+		// Initialise splittable PRNG
+		try
+		{
+			splittablePrng = RandomGenerator.SplittableGenerator.of(SPLITTABLE_PRNG_NAME);
+		}
+		catch (IllegalArgumentException e)
+		{
+			throw new UnexpectedRuntimeException(String.format(UNSUPPORTED_PRNG_STR, SPLITTABLE_PRNG_NAME), e);
+		}
+	}
 
 ////////////////////////////////////////////////////////////////////////
 //  Constructors
@@ -271,6 +299,13 @@ public class QanaApp
 	{
 		return new StreamEncrypter.Header(ENCRYPTION_ID, ENCRYPTION_VERSION, ENCRYPTION_MIN_SUPPORTED_VERSION,
 										  ENCRYPTION_MAX_SUPPORTED_VERSION);
+	}
+
+	//------------------------------------------------------------------
+
+	public static RandomGenerator.SplittableGenerator newPrng()
+	{
+		return splittablePrng.split();
 	}
 
 	//------------------------------------------------------------------

@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import java.util.random.RandomGenerator;
+
 import javax.swing.JOptionPane;
 
 import uk.blankaspect.common.exception.AppException;
@@ -34,8 +36,6 @@ import uk.blankaspect.common.exception.FileException;
 import uk.blankaspect.common.exception.TaskCancelledException;
 
 import uk.blankaspect.common.filesystem.PathnameUtils;
-
-import uk.blankaspect.common.random.Prng01;
 
 //----------------------------------------------------------------------
 
@@ -74,8 +74,8 @@ class FileEraser
 //  Instance variables
 ////////////////////////////////////////////////////////////////////////
 
-	private	byte[]	buffer;
-	private	Prng01	prng;
+	private	byte[]			buffer;
+	private	RandomGenerator	prng;
 
 ////////////////////////////////////////////////////////////////////////
 //  Static initialiser
@@ -100,7 +100,7 @@ class FileEraser
 	public FileEraser()
 	{
 		buffer = new byte[BUFFER_LENGTH];
-		prng = new Prng01();
+		prng = QanaApp.newPrng();
 	}
 
 	//------------------------------------------------------------------

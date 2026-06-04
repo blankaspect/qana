@@ -33,9 +33,9 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.blankaspect.common.misc.IStringKeyed;
+import java.util.random.RandomGenerator;
 
-import uk.blankaspect.common.random.Prng01;
+import uk.blankaspect.common.misc.IStringKeyed;
 
 import uk.blankaspect.common.range.DoubleRange;
 import uk.blankaspect.common.range.IntegerRange;
@@ -99,7 +99,8 @@ class CarrierImage
 		DoubleRange controlCoordRange = new DoubleRange(CONTROL_COORD_RANGE.lowerBound * (double)cellSize,
 														CONTROL_COORD_RANGE.upperBound * (double)cellSize);
 
-		Prng01 prng = new Prng01();
+		// Create PRNG
+		RandomGenerator prng = QanaApp.newPrng();
 
 		// Create image and graphics context
 		image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -114,17 +115,16 @@ class CarrierImage
 		gr.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,      RenderingHints.VALUE_STROKE_PURE);
 
 		// Fill image with background colour
-		Color colour = new Color(Color.HSBtoRGB((float)prng.nextDouble(), BACKGROUND_SATURATION,
-												BACKGROUND_BRIGHTNESS));
+		Color colour = new Color(Color.HSBtoRGB(prng.nextFloat(), BACKGROUND_SATURATION, BACKGROUND_BRIGHTNESS));
 		gr.setColor(colour);
 		gr.fillRect(0, 0, width, height);
 
 		// Create and draw shapes
 		for (int i = 0; i < numColumns * numRows; i++)
 		{
-			int numVertices = prng.nextInt(VERTEX_RANGE);
+			int numVertices = nextInt(prng, VERTEX_RANGE);
 			Shape shape = new Shape(numVertices, imageKind, initialLengthRange, NORMAL_OFFSET_RANGE, NORMAL_RATIO_RANGE,
-									controlCoordRange, (float)prng.nextDouble(), prng);
+									controlCoordRange, prng.nextFloat(), prng);
 
 			Rectangle2D bounds = shape.path.getBounds2D();
 			int ix = i % numColumns;
@@ -145,7 +145,7 @@ class CarrierImage
 		{
 			for (int y = 0; y < height; y++)
 			{
-				int value = prng.nextInt32();
+				int value = prng.nextInt();
 				int rgb = image.getRGB(x, y);
 				int r = (rgb >>> 16 & RGB_MASK) | (value & RANDOM_MASK);
 				value >>>= NUM_CARRIER_BITS;
@@ -155,6 +155,28 @@ class CarrierImage
 				image.setRGB(x, y, (0xFF << 24) | (r << 16) | (g << 8) | b);
 			}
 		}
+	}
+
+	//------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////
+//  Class methods
+////////////////////////////////////////////////////////////////////////
+
+	private static int nextInt(
+		RandomGenerator	prng,
+		IntegerRange	range)
+	{
+		return range.lowerBound + prng.nextInt(range.getInterval());
+	}
+
+	//------------------------------------------------------------------
+
+	private static double nextDouble(
+		RandomGenerator	prng,
+		DoubleRange		range)
+	{
+		return range.lowerBound + prng.nextDouble() * range.getInterval();
 	}
 
 	//------------------------------------------------------------------
@@ -297,14 +319,14 @@ class CarrierImage
 		 */
 
 		private Shape(
-			int			numVertices,
-			Kind		imageKind,
-			DoubleRange	initialLengthRange,
-			DoubleRange	normalOffsetRange,
-			DoubleRange	normalRatioRange,
-			DoubleRange	controlCoordRange,
-			float		hue,
-			Prng01		prng)
+			int				numVertices,
+			Kind			imageKind,
+			DoubleRange		initialLengthRange,
+			DoubleRange		normalOffsetRange,
+			DoubleRange		normalRatioRange,
+			DoubleRange		controlCoordRange,
+			float			hue,
+			RandomGenerator	prng)
 		{
 			final	double	TWO_PI				= 2.0 * StrictMath.PI;
 			final	double	MIN_DT_FACTOR		= 0.15;
@@ -333,15 +355,15 @@ class CarrierImage
 			vertices.add(v1);
 
 			// Generate second vertex, Q
-			double length = prng.nextDouble(initialLengthRange);
+			double length = nextDouble(prng, initialLengthRange);
 			double angle = prng.nextDouble() * TWO_PI;
 			Point2D.Double v2 = new Point2D.Double(length * StrictMath.cos(angle), length * StrictMath.sin(angle));
 			vertices.add(v2);
 
 			// Generate third vertex as normal displacement from line segment PQ
-			double p = prng.nextDouble(normalOffsetRange);
-			double d = prng.nextDouble(normalRatioRange) * length
-											* StrictMath.sqrt((p < 0.5) ? p * (2.0 - p) : 1.0 - p * p);
+			double p = nextDouble(prng, normalOffsetRange);
+			double d = nextDouble(prng, normalRatioRange) * length
+							* StrictMath.sqrt((p < 0.5) ? p * (2.0 - p) : 1.0 - p * p);
 			vertices.add(getNormalVertex(v1, v2, p, -d));
 
 			// Generate remaining vertices
@@ -365,9 +387,9 @@ class CarrierImage
 				}
 
 				// Generate normal from longest edge
-				p = prng.nextDouble(normalOffsetRange);
-				d = prng.nextDouble(normalRatioRange) * StrictMath.sqrt(maxLengthSq * ((p < 0.5) ? p * (2.0 - p)
-																								 : 1.0 - p * p));
+				p = nextDouble(prng, normalOffsetRange);
+				d = nextDouble(prng, normalRatioRange)
+						* StrictMath.sqrt(maxLengthSq * ((p < 0.5) ? p * (2.0 - p) : 1.0 - p * p));
 				if (prng.nextBoolean())
 					d = -0.5 * d;
 				v1 = vertices.get(index);
@@ -384,8 +406,8 @@ class CarrierImage
 						Point2D.Double vv2 = vertices.get((i == lastIndex) ? 0 : i + 1);
 						Line2D.Double edge = new Line2D.Double(vv1, vv2);
 
-						if ((!v1.equals(vv2) && edge.intersectsLine(v1.x, v1.y, v3.x, v3.y)) ||
-							 (!v2.equals(vv1) && edge.intersectsLine(v3.x, v3.y, v2.x, v2.y)))
+						if ((!v1.equals(vv2) && edge.intersectsLine(v1.x, v1.y, v3.x, v3.y))
+							 || (!v2.equals(vv1) && edge.intersectsLine(v3.x, v3.y, v2.x, v2.y)))
 						{
 							intersects = true;
 							break;
@@ -476,13 +498,13 @@ class CarrierImage
 								dt += TWO_PI;
 							while (dt >= StrictMath.PI)
 								dt -= TWO_PI;
-							dt *= MIN_DT_FACTOR + (1.0 - 2.0 * MIN_DT_FACTOR) * prng.nextDouble();
+							dt *= MIN_DT_FACTOR + prng.nextDouble() * (1.0 - 2.0 * MIN_DT_FACTOR);
 							t = t1 + dt;
 							break;
 						}
 					}
 
-					double r = prng.nextDouble(controlCoordRange);
+					double r = nextDouble(prng, controlCoordRange);
 					dx = r * StrictMath.cos(t);
 					dy = r * StrictMath.sin(t);
 
