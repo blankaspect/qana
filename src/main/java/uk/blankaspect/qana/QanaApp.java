@@ -30,6 +30,8 @@ import java.io.IOException;
 
 import java.lang.invoke.MethodHandles;
 
+import java.security.SecureRandom;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -137,12 +139,11 @@ public class QanaApp
 	private static final	String	ASSOC_SCRIPT_DIR_PREFIX	= NAME_KEY + "_";
 	private static final	String	ASSOC_SCRIPT_FILENAME	= NAME_KEY + "Associations";
 
-	private static final	String	SPLITTABLE_PRNG_NAME	= "L128X256MixRandom";
+	private static final	String	PARENT_PRNG_NAME	= "L128X256MixRandom";
 
 	private static final	String	CONFIG_ERROR_STR		= "Configuration error";
 	private static final	String	LAF_ERROR1_STR			= "Look-and-feel: ";
 	private static final	String	LAF_ERROR2_STR			= "\nThe look-and-feel is not installed.";
-	private static final	String	UNSUPPORTED_PRNG_STR	= "The PRNG '%s' is not supported by this version of Java.";
 	private static final	String	KEY_DATABASE_STR		= "Key database";
 	private static final	String	READ_KEYS_STR			= "Read keys";
 	private static final	String	WRITE_KEYS_STR			= "Write keys";
@@ -222,6 +223,12 @@ public class QanaApp
 		String	OS_NAME	= "os.name";
 	}
 
+	private interface ErrorMsg
+	{
+		String	UNSUPPORTED_PRNG =
+				"The '%s' PRNG is not supported by this version of Java; using the 'SecureRandom' class instead.";
+	}
+
 	private enum RandomDataStreamState
 	{
 		HEADER,
@@ -234,7 +241,7 @@ public class QanaApp
 //  Class variables
 ////////////////////////////////////////////////////////////////////////
 
-	private static	RandomGenerator.SplittableGenerator	splittablePrng;
+	private static	RandomGenerator	parentPrng;
 
 ////////////////////////////////////////////////////////////////////////
 //  Instance variables
@@ -262,14 +269,17 @@ public class QanaApp
 
 	static
 	{
-		// Initialise splittable PRNG
+		// Initialise parent PRNG
 		try
 		{
-			splittablePrng = RandomGenerator.SplittableGenerator.of(SPLITTABLE_PRNG_NAME);
+			parentPrng = RandomGenerator.SplittableGenerator.of(PARENT_PRNG_NAME);
 		}
 		catch (IllegalArgumentException e)
 		{
-			throw new UnexpectedRuntimeException(String.format(UNSUPPORTED_PRNG_STR, SPLITTABLE_PRNG_NAME), e);
+			parentPrng = new SecureRandom();
+
+			System.err.println(String.format(ErrorMsg.UNSUPPORTED_PRNG, PARENT_PRNG_NAME));
+			e.printStackTrace();
 		}
 	}
 
@@ -303,9 +313,14 @@ public class QanaApp
 
 	//------------------------------------------------------------------
 
-	public static RandomGenerator.SplittableGenerator newPrng()
+	public static RandomGenerator newPrng()
 	{
-		return splittablePrng.split();
+		if (parentPrng instanceof RandomGenerator.SplittableGenerator splittablePrng)
+			return splittablePrng.split();
+
+		byte[] seed = new byte[256];
+		parentPrng.nextBytes(seed);
+		return new SecureRandom(seed);
 	}
 
 	//------------------------------------------------------------------
